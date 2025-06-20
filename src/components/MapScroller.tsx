@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
+import BlackSquare from './BlackSquare';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -120,6 +121,8 @@ const MapScroller: React.FC = () => {
             zIndex: 2,
           }}
         >
+          {/* Carré noir centré sur la map */}
+          <BlackSquare mapWidth={svgSize.width} mapHeight={svgSize.height} />
           <svg
             ref={svgRef}
             width={svgSize.width}

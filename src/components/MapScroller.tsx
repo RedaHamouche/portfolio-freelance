@@ -14,6 +14,7 @@ if (typeof window !== 'undefined') {
 const PATH_SVG_URL = '/path.svg';
 const POINT_ID = 'moving-point';
 const SCROLL_PER_PX = 1.5; // 1px de scroll = 1.5px de chemin (ajuste ce ratio pour la sensation)
+const MAP_SCALE = 0.3; // facteur de zoom (0.7 = 70%)
 
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -81,16 +82,17 @@ const MapScroller: React.FC = () => {
       const path = pathRef.current;
       const totalLength = path.getTotalLength();
       const pos = path.getPointAtLength(progress * totalLength);
-      // Centrer la map sur le point courant
-      const idealX = pos.x - window.innerWidth / 2;
-      const idealY = pos.y - window.innerHeight / 2;
+      // Centrer la map sur le point courant, en tenant compte du scale
+      const idealX = pos.x * MAP_SCALE - window.innerWidth / 2;
+      const idealY = pos.y * MAP_SCALE - window.innerHeight / 2;
       const minX = 0;
       const minY = 0;
-      const maxX = Math.max(0, svgSize.width - window.innerWidth);
-      const maxY = Math.max(0, svgSize.height - window.innerHeight);
+      const maxX = Math.max(0, svgSize.width * MAP_SCALE - window.innerWidth);
+      const maxY = Math.max(0, svgSize.height * MAP_SCALE - window.innerHeight);
       const clampedX = Math.max(minX, Math.min(idealX, maxX));
       const clampedY = Math.max(minY, Math.min(idealY, maxY));
-      mapWrapperRef.current.style.transform = `translate(${-clampedX}px, ${-clampedY}px)`;
+      mapWrapperRef.current.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
+      mapWrapperRef.current.style.transformOrigin = 'top left';
       // Déplacer le point rouge
       if (pointRef.current) {
         pointRef.current.setAttribute('cx', pos.x.toString());

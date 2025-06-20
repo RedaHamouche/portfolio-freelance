@@ -62,18 +62,28 @@ const MapScroller: React.FC = () => {
     document.body.style.background = '#fff';
     document.body.style.overflowX = 'hidden';
     window.scrollTo(0, 0);
+    let ticking = false;
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const maxScroll = Math.max(1, pathLength * SCROLL_PER_PX - window.innerHeight);
-      const progress = Math.max(0, Math.min(1, scrollY / maxScroll));
+      const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+      let scrollY = window.scrollY;
+      // Scroll infini : replacer le scroll à l'autre extrémité si besoin
+      if (scrollY <= 0) {
+        window.scrollTo(0, maxScroll - 2); // -2 pour éviter de reboucler instantanément
+        scrollY = maxScroll - 2;
+      } else if (scrollY >= maxScroll - 1) {
+        window.scrollTo(1, 1); // 1 pour éviter de reboucler instantanément
+        scrollY = 1;
+      }
+      // Progression cyclique inversée
+      const progress = 1 - (((scrollY / maxScroll) % 1 + 1) % 1); // toujours entre 0 et 1, inversé
       if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
       const path = pathRef.current;
       const totalLength = path.getTotalLength();
       const pos = path.getPointAtLength(progress * totalLength);
-      // Centrer la map sur le point courant, mais ne jamais sortir des bords du SVG
+      // Centrer la map sur le point courant
       const idealX = pos.x - window.innerWidth / 2;
       const idealY = pos.y - window.innerHeight / 2;
-      // Clamp pour ne jamais sortir des bords
       const minX = 0;
       const minY = 0;
       const maxX = Math.max(0, svgSize.width - window.innerWidth);
@@ -87,10 +97,19 @@ const MapScroller: React.FC = () => {
         pointRef.current.setAttribute('cy', pos.y.toString());
       }
     };
-    window.addEventListener('scroll', handleScroll);
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll);
     handleScroll();
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', onScroll);
       document.body.style.margin = '';
       document.body.style.padding = '';
       document.body.style.width = '';

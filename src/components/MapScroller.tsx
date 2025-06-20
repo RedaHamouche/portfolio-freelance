@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import BlackSquare from './BlackSquare';
+import Cursor from './Cursor';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -126,6 +127,8 @@ const MapScroller: React.FC = () => {
 
   return (
     <>
+      {/* Cursor interactif au-dessus de tout */}
+      <Cursor />
       {/* Faux scroll vertical, dans le flux du body */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
       {/* Map géante centrée sur le point courant, en fixed par-dessus */}

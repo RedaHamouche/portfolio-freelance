@@ -1,0 +1,29 @@
+// @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+
+@font-face {
+    font-family: 'Montreal';
+    src: local('Montreal'), url(../../../public/fonts/Montreal-Regular.woff) format('woff');
+}
+@font-face {
+    font-family: 'Montreal-Bold';
+    src: local('Montreal-Bold'), url(../../../public/fonts/Montreal-Bold.woff) format('woff');
+}
+
+@mixin text-nav-1 {
+	font-size: 12px;
+	font-family: "Montreal";
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: none;
+    text-transform: uppercase;
+}
+
+@mixin montreal-16-bold {
+	font-size: 16px;
+	font-family: "Montreal";
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: none;
+    text-transform: uppercase;
+}

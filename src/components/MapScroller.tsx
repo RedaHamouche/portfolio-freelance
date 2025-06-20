@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
@@ -10,17 +10,47 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 }
 
-const SVG_WIDTH = 3000;
-const SVG_HEIGHT = 2000;
-const PATH_ID = 'main-path';
+const PATH_SVG_URL = '/path.svg';
 const POINT_ID = 'moving-point';
-const FAKE_SCROLL_HEIGHT = 4000; // hauteur du faux scroll (plus grand = scroll plus long)
+const SCROLL_PER_PX = 1.5; // 1px de scroll = 1.5px de chemin (ajuste ce ratio pour la sensation)
 
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const pointRef = useRef<SVGCircleElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
+
+  const [pathD, setPathD] = useState<string | null>(null);
+  const [svgSize, setSvgSize] = useState<{width: number, height: number}>({width: 3000, height: 2000});
+  const [pathLength, setPathLength] = useState<number>(2000);
+
+  // Charger le SVG et extraire le premier chemin <path>
+  useEffect(() => {
+    fetch(PATH_SVG_URL)
+      .then(res => res.text())
+      .then(svgText => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const path = doc.querySelector('path');
+        const svg = doc.querySelector('svg');
+        if (path && svg) {
+          setPathD(path.getAttribute('d'));
+          setSvgSize({
+            width: Number(svg.getAttribute('width')) || 3000,
+            height: Number(svg.getAttribute('height')) || 2000,
+          });
+        }
+      });
+  }, []);
+
+  // Calculer la longueur du chemin une fois le d chargé
+  useEffect(() => {
+    if (pathD && pathRef.current) {
+      setTimeout(() => {
+        setPathLength(pathRef.current!.getTotalLength());
+      }, 0);
+    }
+  }, [pathD]);
 
   // Centrage initial et scroll à 0 au mount
   useEffect(() => {
@@ -31,19 +61,25 @@ const MapScroller: React.FC = () => {
     document.body.style.background = '#fff';
     document.body.style.overflowX = 'hidden';
     window.scrollTo(0, 0);
-    // Centrage initial
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const maxScroll = FAKE_SCROLL_HEIGHT - window.innerHeight;
+      const maxScroll = Math.max(1, pathLength * SCROLL_PER_PX - window.innerHeight);
       const progress = Math.max(0, Math.min(1, scrollY / maxScroll));
       if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
       const path = pathRef.current;
       const totalLength = path.getTotalLength();
       const pos = path.getPointAtLength(progress * totalLength);
-      // Centrer la map sur le point courant
-      const centerX = pos.x - window.innerWidth / 2;
-      const centerY = pos.y - window.innerHeight / 2;
-      mapWrapperRef.current.style.transform = `translate(${-centerX}px, ${-centerY}px)`;
+      // Centrer la map sur le point courant, mais ne jamais sortir des bords du SVG
+      const idealX = pos.x - window.innerWidth / 2;
+      const idealY = pos.y - window.innerHeight / 2;
+      // Clamp pour ne jamais sortir des bords
+      const minX = 0;
+      const minY = 0;
+      const maxX = Math.max(0, svgSize.width - window.innerWidth);
+      const maxY = Math.max(0, svgSize.height - window.innerHeight);
+      const clampedX = Math.max(minX, Math.min(idealX, maxX));
+      const clampedY = Math.max(minY, Math.min(idealY, maxY));
+      mapWrapperRef.current.style.transform = `translate(${-clampedX}px, ${-clampedY}px)`;
       // Déplacer le point rouge
       if (pointRef.current) {
         pointRef.current.setAttribute('cx', pos.x.toString());
@@ -51,7 +87,6 @@ const MapScroller: React.FC = () => {
       }
     };
     window.addEventListener('scroll', handleScroll);
-    // Centrage immédiat au mount
     handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -62,12 +97,15 @@ const MapScroller: React.FC = () => {
       document.body.style.background = '';
       document.body.style.overflowX = '';
     };
-  }, []);
+  }, [pathLength, svgSize]);
+
+  // Faux scroll height dépendant de la longueur du chemin
+  const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
 
   return (
     <>
       {/* Faux scroll vertical, dans le flux du body */}
-      <div style={{ width: '100vw', height: FAKE_SCROLL_HEIGHT, position: 'relative', zIndex: 0 }} />
+      <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
       {/* Map géante centrée sur le point courant, en fixed par-dessus */}
       <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, background: '#fff', margin: 0, padding: 0, zIndex: 1 }}>
         <div
@@ -76,27 +114,28 @@ const MapScroller: React.FC = () => {
             position: 'absolute',
             top: 0,
             left: 0,
-            width: SVG_WIDTH,
-            height: SVG_HEIGHT,
+            width: svgSize.width,
+            height: svgSize.height,
             willChange: 'transform',
             zIndex: 2,
           }}
         >
           <svg
             ref={svgRef}
-            width={SVG_WIDTH}
-            height={SVG_HEIGHT}
-            style={{ display: 'block', width: SVG_WIDTH, height: SVG_HEIGHT, background: '#fff' }}
+            width={svgSize.width}
+            height={svgSize.height}
+            style={{ display: 'block', width: svgSize.width, height: svgSize.height, background: '#fff' }}
           >
-            <path
-              id={PATH_ID}
-              ref={pathRef}
-              d="M 200 300 Q 800 100 1200 800 T 2500 1800"
-              fill="none"
-              stroke="#6ad7b3"
-              strokeWidth={6}
-              strokeDasharray="12 8"
-            />
+            {pathD && (
+              <path
+                ref={pathRef}
+                d={pathD}
+                fill="none"
+                stroke="#6ad7b3"
+                strokeWidth={6}
+                strokeDasharray="12 8"
+              />
+            )}
             <circle
               id={POINT_ID}
               ref={pointRef}

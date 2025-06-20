@@ -6,6 +6,13 @@
         "top": 1000,
         "left": 2590
       }
+    },
+    {
+      "type": "Hello3",
+      "position": {
+        "top": 1000,
+        "left": 2590
+      }
     }
   ]
 } 

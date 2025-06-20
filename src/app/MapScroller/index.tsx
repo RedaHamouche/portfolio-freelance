@@ -4,13 +4,13 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
-import Cursor from './Cursor';
+import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import Cadre from './Cadre';
-import { cursorClasses } from './Cursor/Svgs/cursorStates';
-import Dynamic from '../app/templating/Dynamic';
-import { setMapSize } from '../store/mapSlice';
+import { RootState } from '../../store';
+import Cadre from '../Cadre';
+import { cursorClasses } from '../Cursor/Svgs/cursorStates';
+import Dynamic from '../../templating/Dynamic';
+import { setMapSize } from '../../store/mapSlice';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {

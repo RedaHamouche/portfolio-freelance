@@ -6,5 +6,3 @@ to: src/components/<%= h.changeCase.pascal(name) %>/index.module.scss
 // .main {
 //   
 // }
-
-// Styles pour <%= h.changeCase.pascal(name) %> 

@@ -1,3 +1,4 @@
+import styles from './index.module.scss'
 export type BlackSquareType = {
   mapWidth: number
   mapHeight: number

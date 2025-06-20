@@ -1,0 +1,48 @@
+.header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    height: 100vh;
+    width: var(--header-width);
+
+    background: $color-primary;
+
+    border: 2px dashed $color-mono-black;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-right-width: 0;
+
+    will-change: width;
+
+    transform: 0.4s all ease-out;
+
+    &::before {
+        @include beforeMixin(100vw, 1px);
+        bottom: 0;
+        left: 0;
+        background-color: $color-mono-black;
+    }
+    nav {
+        @include flex(space-between);
+        @include text-nav-1;
+
+        padding: 0 4vw;
+
+        ul {
+            
+        }
+    }
+}
+
+.arrowOpen {
+    width: calc($border-cadre-size + 24px);
+    height: 42px;
+    position: absolute;
+    top: 50%;
+    transform: translateX(-$border-cadre-size);
+    background: $color-secondary;
+    border: 1px dashed $color-mono-black;
+    border-radius: $border-radius-s;
+    @include flex(center, center);
+}

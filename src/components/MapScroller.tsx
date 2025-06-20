@@ -4,12 +4,13 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
-import BlackSquare from './BlackSquare';
 import Cursor from './Cursor';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import Cadre from './Cadre';
 import { cursorClasses } from './Cursor/Svgs/cursorStates';
+import Dynamic from '../app/templating/Dynamic';
+import { setMapSize } from '../store/mapSlice';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -35,6 +36,8 @@ const MapScroller: React.FC = () => {
   const animationRef = useRef<number | null>(null);
   const [progress, setProgress] = useState(0); // progress sur le chemin (0-1)
   const [useNativeScroll, setUseNativeScroll] = useState(true);
+
+  const dispatch = useDispatch();
 
   // Charger le SVG et extraire le premier chemin <path>
   useEffect(() => {
@@ -166,6 +169,10 @@ const MapScroller: React.FC = () => {
   // Faux scroll height dépendant de la longueur du chemin
   const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
 
+  useEffect(() => {
+    dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
+  }, [svgSize, dispatch]);
+
   return (
     <>
       {/* Cursor interactif au-dessus de tout */}
@@ -188,8 +195,7 @@ const MapScroller: React.FC = () => {
             zIndex: 2,
           }}
         >
-          {/* Carré noir centré sur la map */}
-          <BlackSquare mapWidth={svgSize.width} mapHeight={svgSize.height} />
+          <Dynamic mapWidth={svgSize.width} mapHeight={svgSize.height} />
           <svg
             ref={svgRef}
             width={svgSize.width}

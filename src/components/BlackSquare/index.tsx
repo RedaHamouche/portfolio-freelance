@@ -1,30 +1,17 @@
-import React from 'react';
-
-interface BlackSquareProps {
-  mapWidth: number;
-  mapHeight: number;
+export type BlackSquareType = {
+  mapWidth: number
+  mapHeight: number
 }
 
-const SQUARE_SIZE = 2000;
-
-const BlackSquare: React.FC<BlackSquareProps> = ({ mapWidth, mapHeight }) => {
-  // Calculer la position pour centrer le carré sur la map
-  const left = 1000
-  const top = 2000
-
+export default function BlackSquare({ mapWidth, mapHieght }: BlackSquareType ) {
   return (
     <div
       style={{
-        position: 'absolute',
-        left,
-        top,
-        width: SQUARE_SIZE,
-        height: SQUARE_SIZE,
+        width: 2000,
+        height: 2000,
         background: 'black',
         zIndex: 10,
       }}
     />
   );
-};
-
-export default BlackSquare; 
+} 

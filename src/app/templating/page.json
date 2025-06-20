@@ -1,0 +1,11 @@
+{
+  "components": [
+    {
+      "type": "BlackSquare",
+      "position": {
+        "top": 1000,
+        "left": 2590
+      }
+    }
+  ]
+} 

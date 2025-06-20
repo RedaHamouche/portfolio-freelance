@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './index.module.scss';
 import cx from 'classnames';
 import { cursorClasses } from './Svgs/cursorStates';

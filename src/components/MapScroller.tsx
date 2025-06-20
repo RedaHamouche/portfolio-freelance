@@ -6,6 +6,10 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import BlackSquare from './BlackSquare';
 import Cursor from './Cursor';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import Cadre from './Cadre';
+import { cursorClasses } from './Cursor/Svgs/cursorStates';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -26,6 +30,11 @@ const MapScroller: React.FC = () => {
   const [pathD, setPathD] = useState<string | null>(null);
   const [svgSize, setSvgSize] = useState<{width: number, height: number}>({width: 3000, height: 2000});
   const [pathLength, setPathLength] = useState<number>(2000);
+  const direction = useSelector((state: RootState) => state.scroll.direction);
+  const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
+  const animationRef = useRef<number | null>(null);
+  const [progress, setProgress] = useState(0); // progress sur le chemin (0-1)
+  const [useNativeScroll, setUseNativeScroll] = useState(true);
 
   // Charger le SVG et extraire le premier chemin <path>
   useEffect(() => {
@@ -55,72 +64,104 @@ const MapScroller: React.FC = () => {
     }
   }, [pathD]);
 
-  // Centrage initial et scroll à 0 au mount
+  // Progress natif (scroll) et progress animé (cadre)
   useEffect(() => {
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    document.body.style.width = '100vw';
-    document.body.style.height = '100vh';
-    document.body.style.background = '#fff';
-    document.body.style.overflowX = 'hidden';
-    window.scrollTo(0, 0);
-    let ticking = false;
+    if (!useNativeScroll) return;
     const handleScroll = () => {
       const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
       const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
       let scrollY = window.scrollY;
       // Scroll infini : replacer le scroll à l'autre extrémité si besoin
       if (scrollY <= 0) {
-        window.scrollTo(0, maxScroll - 2); // -2 pour éviter de reboucler instantanément
+        window.scrollTo(0, maxScroll - 2);
         scrollY = maxScroll - 2;
       } else if (scrollY >= maxScroll - 1) {
-        window.scrollTo(1, 1); // 1 pour éviter de reboucler instantanément
+        window.scrollTo(1, 1);
         scrollY = 1;
       }
       // Progression cyclique inversée
-      const progress = 1 - (((scrollY / maxScroll) % 1 + 1) % 1); // toujours entre 0 et 1, inversé
-      if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
-      const path = pathRef.current;
-      const totalLength = path.getTotalLength();
-      const pos = path.getPointAtLength(progress * totalLength);
-      // Centrer la map sur le point courant, en tenant compte du scale
-      const idealX = pos.x * MAP_SCALE - window.innerWidth / 2;
-      const idealY = pos.y * MAP_SCALE - window.innerHeight / 2;
-      const minX = 0;
-      const minY = 0;
-      const maxX = Math.max(0, svgSize.width * MAP_SCALE - window.innerWidth);
-      const maxY = Math.max(0, svgSize.height * MAP_SCALE - window.innerHeight);
-      const clampedX = Math.max(minX, Math.min(idealX, maxX));
-      const clampedY = Math.max(minY, Math.min(idealY, maxY));
-      mapWrapperRef.current.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
-      mapWrapperRef.current.style.transformOrigin = 'top left';
-      // Déplacer le point rouge
-      if (pointRef.current) {
-        pointRef.current.setAttribute('cx', pos.x.toString());
-        pointRef.current.setAttribute('cy', pos.y.toString());
-      }
+      const progress = 1 - (((scrollY / maxScroll) % 1 + 1) % 1);
+      setProgress(progress);
     };
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      document.body.style.margin = '';
-      document.body.style.padding = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.background = '';
-      document.body.style.overflowX = '';
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [pathLength, svgSize]);
+  }, [useNativeScroll, pathLength, svgSize]);
+
+  // Mouvement automatique selon la direction du cadre (haut/bas uniquement)
+  useEffect(() => {
+    if (!direction) {
+      setUseNativeScroll(true); // réactive le scroll natif
+      return;
+    }
+    setUseNativeScroll(false); // désactive le scroll natif
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    let lastTimestamp: number | null = null;
+    const move = (timestamp: number) => {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const delta = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+      // Vitesse de déplacement (ajustable)
+      const pxPerMs = speed / 1000; // px/ms
+      let newProgress = progress;
+      // Déterminer le sens selon la direction
+      if (direction === 'bas') {
+        newProgress += pxPerMs * delta / pathLength;
+      } else if (direction === 'haut') {
+        newProgress -= pxPerMs * delta / pathLength;
+      }
+      // Boucle infinie
+      if (newProgress > 1) newProgress -= 1;
+      if (newProgress < 0) newProgress += 1;
+      setProgress(newProgress);
+      animationRef.current = requestAnimationFrame(move);
+    };
+    animationRef.current = requestAnimationFrame(move);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [direction, speed, pathLength, progress]);
+
+  // Quand on quitte le hover, resynchroniser le progress avec le scroll natif
+  useEffect(() => {
+    if (!direction && !useNativeScroll) {
+      // Synchronise le progress avec la position du scroll natif
+      const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+      let scrollY = window.scrollY;
+      if (scrollY <= 0) scrollY = maxScroll - 2;
+      else if (scrollY >= maxScroll - 1) scrollY = 1;
+      const progress = 1 - (((scrollY / maxScroll) % 1 + 1) % 1);
+      setProgress(progress);
+      setUseNativeScroll(true);
+    }
+  }, [direction, useNativeScroll, pathLength]);
+
+  // Appliquer le progress calculé par le cadre OU par le scroll
+  useEffect(() => {
+    if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
+    const path = pathRef.current;
+    const totalLength = path.getTotalLength();
+    const pos = path.getPointAtLength(progress * totalLength);
+    // Centrage de la map
+    const idealX = pos.x * MAP_SCALE - window.innerWidth / 2;
+    const idealY = pos.y * MAP_SCALE - window.innerHeight / 2;
+    const minX = 0;
+    const minY = 0;
+    const maxX = Math.max(0, svgSize.width * MAP_SCALE - window.innerWidth);
+    const maxY = Math.max(0, svgSize.height * MAP_SCALE - window.innerHeight);
+    const clampedX = Math.max(minX, Math.min(idealX, maxX));
+    const clampedY = Math.max(minY, Math.min(idealY, maxY));
+    mapWrapperRef.current.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
+    mapWrapperRef.current.style.transformOrigin = 'top left';
+    // Déplacer le point rouge
+    if (pointRef.current) {
+      pointRef.current.setAttribute('cx', pos.x.toString());
+      pointRef.current.setAttribute('cy', pos.y.toString());
+    }
+  }, [progress, svgSize, pathLength]);
 
   // Faux scroll height dépendant de la longueur du chemin
   const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
@@ -129,6 +170,8 @@ const MapScroller: React.FC = () => {
     <>
       {/* Cursor interactif au-dessus de tout */}
       <Cursor />
+      {/* Cadre directionnel */}
+      {/* <Cadre /> */}
       {/* Faux scroll vertical, dans le flux du body */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
       {/* Map géante centrée sur le point courant, en fixed par-dessus */}

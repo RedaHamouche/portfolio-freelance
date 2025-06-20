@@ -1,0 +1,29 @@
+.cadre {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight {
+  position: absolute;
+  pointer-events: auto;
+  opacity: 0.1;
+  transition: opacity 0.2s;
+  background: #000;
+}
+
+.top    { top: 0; left: 33%; width: 34%; height: 40px; }
+.bottom { bottom: 0; left: 33%; width: 34%; height: 40px; }
+.left   { left: 0; top: 33%; width: 40px; height: 34%; }
+.right  { right: 0; top: 33%; width: 40px; height: 34%; }
+
+.topLeft     { top: 0; left: 0; width: 80px; height: 80px; }
+.topRight    { top: 0; right: 0; width: 80px; height: 80px; }
+.bottomLeft  { bottom: 0; left: 0; width: 80px; height: 80px; }
+.bottomRight { bottom: 0; right: 0; width: 80px; height: 80px; }
+
+.top:hover, .bottom:hover, .left:hover, .right:hover,
+.topLeft:hover, .topRight:hover, .bottomLeft:hover, .bottomRight:hover {
+  opacity: 0.3;
+} 

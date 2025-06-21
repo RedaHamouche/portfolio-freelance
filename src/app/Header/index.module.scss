@@ -1,48 +1,87 @@
 .header {
     position: fixed;
     top: 0;
-    right: 0;
-    z-index: 1000;
-    height: 100vh;
-    width: var(--header-width);
+    left: 0;
+    z-index: 9000;
+    height: 56px;
+    width: 100vw;
+    background: rgba(255, 254, 254, 0.4);
+    backdrop-filter: blur(4px);
+    border-bottom: 1px dashed $color-primary;
+}
 
-    background: $color-primary;
 
-    border: 2px dashed $color-mono-black;
-    border-top-width: 0;
-    border-bottom-width: 0;
-    border-right-width: 0;
+.announce {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: $spacing-xs 0 $spacing-xs $spacing-xs;
+    border: 1px dashed $color-mono-black;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 160px;
+    stroke-dasharray: 1;
+    animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
+}
 
-    will-change: width;
+.scrollContainer {
+    display: flex;
+    align-items: center;
+    animation: scroll 6s ease-in-out infinite;
+    white-space: nowrap;
+}
 
-    transform: 0.4s all ease-out;
-
-    &::before {
-        @include beforeMixin(100vw, 1px);
-        bottom: 0;
-        left: 0;
-        background-color: $color-mono-black;
+@keyframes scroll {
+    0% {
+        transform: translateX(100%);
     }
-    nav {
-        @include flex(space-between);
-        @include text-nav-1;
-
-        padding: 0 4vw;
-
-        ul {
-            
-        }
+    100% {
+        transform: translateX(-150%);
     }
 }
 
-.arrowOpen {
-    width: calc($border-cadre-size + 24px);
-    height: 42px;
-    position: absolute;
-    top: 50%;
-    transform: translateX(-$border-cadre-size);
-    background: $color-secondary;
-    border: 1px dashed $color-mono-black;
-    border-radius: $border-radius-s;
-    @include flex(center, center);
+
+
+.freelance {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    @include playfair(12px);
+    letter-spacing: 1.2;
+}
+
+.dot {
+    $dot-size: 12px;
+    width: $dot-size;
+    height: $dot-size;
+    border-radius: 100%;
+    flex-shrink: 0;
+
+
+    &.green {
+        background-color: $color-success;
+    }
+}
+
+.text {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+
+// MOVING BORDER
+@keyframes movingBorderAnimationKeyFrame {
+
+    to {
+        stroke-dashoffset: 100;
+    }
+}
+
+.movingBorderAnimation {
+    stroke-dasharray: 1;
+    animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
 }

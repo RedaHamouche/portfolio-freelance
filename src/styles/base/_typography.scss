@@ -3,27 +3,40 @@
 
 @font-face {
     font-family: 'Montreal';
-    src: local('Montreal'), url(../../../public/fonts/Montreal-Regular.woff) format('woff');
+    src: local('Montreal'), 
+         url('/fonts/Montreal/Montreal-Regular.woff2') format('woff2'),
+         url('/fonts/Montreal/Montreal-Regular.woff') format('woff');
 }
 @font-face {
     font-family: 'Montreal-Bold';
-    src: local('Montreal-Bold'), url(../../../public/fonts/Montreal-Bold.woff) format('woff');
+    src: local('Montreal-Bold'), 
+         url('/fonts/Montreal/Montreal-Bold.woff2') format('woff2'),
+         url('/fonts/Montreal/Montreal-Bold.woff') format('woff');
 }
 
-@mixin text-nav-1 {
-	font-size: 12px;
-	font-family: "Montreal";
-	font-weight: normal;
-	font-style: normal;
-	text-decoration: none;
-    text-transform: uppercase;
+@font-face {
+    font-family: 'Playfair Display';
+    src: local('Playfair Display'), 
+         url('/fonts/PlayfairDisplay/PlayfairDisplay.woff') format('woff');
+}
+@font-face {
+    font-family: 'Playfair Display';
+    src: local('Playfair Display'), 
+         url('/fonts/PlayfairDisplay/PlayfairDisplay-Italic.woff') format('woff');
+    font-style: italic;
 }
 
-@mixin montreal-16-bold {
-	font-size: 16px;
-	font-family: "Montreal";
-	font-weight: normal;
-	font-style: normal;
-	text-decoration: none;
-    text-transform: uppercase;
+
+@mixin montreal($fontSize: 16px, $fontWeight: normal, $lineHeight: 1.4, $fontFamily: 'Montreal') {
+	font-family: $fontFamily;
+	font-size: $fontSize;
+	font-weight: $fontWeight;
+	line-height: $lineHeight;
+}
+
+@mixin playfair($fontSize: 16px, $fontStyle: normal, $lineHeight: 1.4) {
+	font-family: 'Playfair Display';
+	font-size: $fontSize;
+	font-style: $fontStyle;
+	line-height: $lineHeight;
 }

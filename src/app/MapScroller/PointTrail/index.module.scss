@@ -6,13 +6,31 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  
+  gap: $spacing-xxs;
+  transition: width 0.3s ease;
   border: 2px dashed $color-primary;
-  padding: 6px 14px;
-}
-
-.pointText {
-  @include montreal(10px);
+  padding: 10px 20px;
+  white-space: nowrap;
 
   color: $color-black;
-} 
+  font-size: 12px;
+  font-weight: bold;
+
+  @include montreal(10px);
+}
+
+.pointContainer:hover, .pointContainer:focus {
+  
+}
+
+.arrowContainer {
+  display: flex;
+  align-items: center;
+
+  .arrow {
+    path {
+      fill: $color-primary;
+  
+    }
+  }
+}

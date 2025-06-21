@@ -4,12 +4,12 @@ export type BlackSquareType = {
   mapHeight: number
 }
 
-export default function BlackSquare({ mapWidth, mapHieght }: BlackSquareType ) {
+export default function BlackSquare({ mapWidth, mapHeight }: BlackSquareType ) {
   return (
     <div
       style={{
-        width: 2000,
-        height: 2000,
+        width: 100,
+        height: 100,
         background: 'black',
         zIndex: 10,
       }}

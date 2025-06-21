@@ -4,9 +4,19 @@
     "type": "ProjectsBanner",
     "displayName": "Projets ejbjbfjblejfb",
     "position": {
-      "progress": 0.125,
+      "progress": 0.8,
       "start": 0.120,
       "end": 0.130
+    }
+  },
+  {
+    "id": "black-square",
+    "type": "BlackSquare",
+    "displayName": "carré noir",
+    "position": {
+      "progress": 0.3,
+      "start": 0.125,
+      "end": 0.135
     }
   }
 ] 

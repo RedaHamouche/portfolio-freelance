@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,7 +19,7 @@ import PointTrail from './PointTrail';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+  gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, ScrollToPlugin);
 }
 
 const PATH_SVG_URL = '/path.svg';
@@ -62,6 +63,7 @@ const MapScroller: React.FC = () => {
   const [dashOffset, setDashOffset] = useState<number>(0);
   const [distancePoints, setDistancePoints] = useState<Array<{x: number, y: number, distance: number, progress: number}>>([]);
   const [currentComponent, setCurrentComponent] = useState<PathComponentData | null>(null);
+  const [nextComponent, setNextComponent] = useState<PathComponentData | null>(null);
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
@@ -78,6 +80,14 @@ const MapScroller: React.FC = () => {
   useEffect(() => {
     const component = getCurrentComponent(progress);
     setCurrentComponent(component);
+
+    // Correction du sens : chercher le plus grand progress < progress actuel
+    const sortedComponents = [...pathComponents].sort((a, b) => b.position.progress - a.position.progress);
+    let findNext = sortedComponents.find(c => c.position.progress < progress);
+    if (!findNext) {
+      findNext = sortedComponents[0]; // boucle au "dernier" (le plus à droite)
+    }
+    setNextComponent(findNext);
   }, [progress, getCurrentComponent]);
 
   const handleScrollState = useCallback((isScrolling: boolean) => {
@@ -274,6 +284,23 @@ const MapScroller: React.FC = () => {
   const pointPosition = getCurrentPointPosition();
   const displayName = currentComponent ? currentComponent.displayName : DEFAULT_PATH_TRAIL_NAME;
 
+  const handleGoToNext = useCallback(() => {
+    if (!nextComponent) return;
+
+    const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+    const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+    const targetScrollY = (1 - nextComponent.position.progress) * maxScroll;
+
+    gsap.to(window, {
+      scrollTo: {
+        y: targetScrollY,
+        autoKill: true
+      },
+      duration: 0.8,
+      ease: 'power2.out'
+    });
+  }, [nextComponent, pathLength]);
+
   return (
     <div className={styles.main}>
       <Cursor />
@@ -319,7 +346,8 @@ const MapScroller: React.FC = () => {
           <PointTrail 
             x={pointPosition.x}
             y={pointPosition.y}
-            text={displayName}
+            nextComponent={nextComponent}
+            onGoToNext={handleGoToNext}
           />
         </div>
       </div>

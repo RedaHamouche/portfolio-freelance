@@ -281,7 +281,31 @@ const MapScroller: React.FC = () => {
     return { x: pos.x, y: pos.y };
   };
 
+  // Calculer l'angle de tangente du path pour la rotation du point
+  const getCurrentPointAngle = () => {
+    if (!pathRef.current) return 0;
+    const totalLength = pathRef.current.getTotalLength();
+    const currentLength = progress * totalLength;
+    const delta = 1; // px sur le path
+    const p1 = pathRef.current.getPointAtLength(Math.max(0, currentLength - delta));
+    const p2 = pathRef.current.getPointAtLength(Math.min(totalLength, currentLength + delta));
+    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+    return angle;
+  };
+
   const pointPosition = getCurrentPointPosition();
+  const pointAngle = getCurrentPointAngle();
+
+  // Calculer la position de la flèche (gauche ou droite)
+  let arrowPosition: 'left' | 'right' = 'right';
+  if (nextComponent) {
+    if (nextComponent.position.progress < progress) {
+      arrowPosition = 'left';
+    } else {
+      arrowPosition = 'right';
+    }
+  }
+
   const displayName = currentComponent ? currentComponent.displayName : DEFAULT_PATH_TRAIL_NAME;
 
   const handleGoToNext = useCallback(() => {
@@ -348,6 +372,8 @@ const MapScroller: React.FC = () => {
             y={pointPosition.y}
             nextComponent={nextComponent}
             onGoToNext={handleGoToNext}
+            angle={pointAngle}
+            arrowPosition={arrowPosition}
           />
         </div>
       </div>

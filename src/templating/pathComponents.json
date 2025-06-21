@@ -18,5 +18,15 @@
       "start": 0.125,
       "end": 0.135
     }
+  },
+  {
+    "id": "black-square-2",
+    "type": "BlackSquare",
+    "displayName": "carré noir 2 plus loins",
+    "position": {
+      "progress": 0.35,
+      "start": 0.125,
+      "end": 0.135
+    }
   }
 ] 

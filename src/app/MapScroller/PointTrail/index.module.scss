@@ -2,26 +2,26 @@
   position: absolute;
   transform: translate(-50%, -50%);
   background-color: $color-mono-white-bg;
-  border-radius: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-radius: 60px;
+  @include flex;
   gap: $spacing-xxs;
-  transition: width 0.3s ease;
   border: 2px dashed $color-primary;
-  padding: 10px 20px;
-  white-space: nowrap;
-
+  padding: 7px 14px;
   color: $color-black;
-  font-size: 12px;
-  font-weight: bold;
 
   @include montreal(10px);
+
+  &.position-left {
+    flex-direction: row-reverse;
+    .arrow {
+      transform: rotate(180deg);
+    }
+  }
 }
 
-.pointContainer:hover, .pointContainer:focus {
+// .pointContainer:hover, .pointContainer:focus {
   
-}
+// }
 
 .arrowContainer {
   display: flex;

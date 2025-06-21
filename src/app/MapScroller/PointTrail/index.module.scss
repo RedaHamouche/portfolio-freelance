@@ -1,0 +1,18 @@
+.pointContainer {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background-color: $color-mono-white-bg;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  border: 2px dashed $color-primary;
+  padding: 6px 14px;
+}
+
+.pointText {
+  @include montreal(10px);
+
+  color: $color-black;
+} 

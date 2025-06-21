@@ -12,6 +12,9 @@ import { RootState } from '../../store';
 import { setIsScrolling } from '../../store/scrollSlice';
 import { setMapSize } from '../../store/mapSlice';
 import Dynamic from '../../templating/Dynamic';
+import DynamicPathComponents from '../../templating/DynamicPathComponents';
+import pathComponents from '../../templating/pathComponents.json';
+import PointTrail from './PointTrail';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -22,10 +25,22 @@ const PATH_SVG_URL = '/path.svg';
 const POINT_ID = 'moving-point';
 const SCROLL_PER_PX = 1.5;
 const MAP_SCALE = 1;
+const DEFAULT_PATH_TRAIL_NAME = 'scroll';
 
 interface SvgSize {
   width: number;
   height: number;
+}
+
+interface PathComponentData {
+  id: string;
+  type: string;
+  displayName: string;
+  position: {
+    progress: number;
+    start: number;
+    end: number;
+  };
 }
 
 const computeScrollProgress = (scrollY: number, maxScroll: number): number => {
@@ -35,7 +50,6 @@ const computeScrollProgress = (scrollY: number, maxScroll: number): number => {
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
-  const pointRef = useRef<SVGCircleElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -47,10 +61,24 @@ const MapScroller: React.FC = () => {
   const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);
   const [dashOffset, setDashOffset] = useState<number>(0);
   const [distancePoints, setDistancePoints] = useState<Array<{x: number, y: number, distance: number, progress: number}>>([]);
+  const [currentComponent, setCurrentComponent] = useState<PathComponentData | null>(null);
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
   const dispatch = useDispatch();
+
+  // Fonction pour détecter la zone actuelle
+  const getCurrentComponent = useCallback((currentProgress: number): PathComponentData | null => {
+    return pathComponents.find((component: PathComponentData) => 
+      currentProgress >= component.position.start && currentProgress <= component.position.end
+    ) || null;
+  }, []);
+
+  // Mettre à jour la zone actuelle quand le progress change
+  useEffect(() => {
+    const component = getCurrentComponent(progress);
+    setCurrentComponent(component);
+  }, [progress, getCurrentComponent]);
 
   const handleScrollState = useCallback((isScrolling: boolean) => {
     dispatch(setIsScrolling(isScrolling));
@@ -227,11 +255,6 @@ const MapScroller: React.FC = () => {
     const wrapper = mapWrapperRef.current;
     wrapper.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
     wrapper.style.transformOrigin = 'top left';
-
-    if (pointRef.current) {
-      pointRef.current.setAttribute('cx', pos.x.toString());
-      pointRef.current.setAttribute('cy', pos.y.toString());
-    }
   }, [progress, svgSize]);
 
   const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
@@ -239,6 +262,17 @@ const MapScroller: React.FC = () => {
   useEffect(() => {
     dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
   }, [svgSize, dispatch]);
+
+  // Calculer la position actuelle du point pour le texte
+  const getCurrentPointPosition = () => {
+    if (!pathRef.current) return { x: 200, y: 300 };
+    const totalLength = pathRef.current.getTotalLength();
+    const pos = pathRef.current.getPointAtLength(progress * totalLength);
+    return { x: pos.x, y: pos.y };
+  };
+
+  const pointPosition = getCurrentPointPosition();
+  const displayName = currentComponent ? currentComponent.displayName : DEFAULT_PATH_TRAIL_NAME;
 
   return (
     <div className={styles.main}>
@@ -258,11 +292,16 @@ const MapScroller: React.FC = () => {
           }}
         >
           <Dynamic mapWidth={svgSize.width} mapHeight={svgSize.height} />
+          <DynamicPathComponents 
+            pathRef={pathRef}
+            mapWidth={svgSize.width} 
+            mapHeight={svgSize.height}
+          />
           <svg
             ref={svgRef}
             width={svgSize.width}
             height={svgSize.height}
-            style={{ display: 'block', background: '#fff' }}
+            className={styles.mainSvg}
           >
             {pathD && (
               <path
@@ -276,17 +315,12 @@ const MapScroller: React.FC = () => {
                 style={{ strokeDashoffset: dashOffset }}
               />
             )}
-            <circle
-              id={POINT_ID}
-              ref={pointRef}
-              r={24}
-              fill="#f44336"
-              stroke="#fff"
-              strokeWidth={4}
-              cx={200}
-              cy={300}
-            />
           </svg>
+          <PointTrail 
+            x={pointPosition.x}
+            y={pointPosition.y}
+            text={displayName}
+          />
         </div>
       </div>
     </div>

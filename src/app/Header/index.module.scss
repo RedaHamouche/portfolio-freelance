@@ -21,8 +21,8 @@
     border-radius: 6px;
     overflow: hidden;
     width: 160px;
-    stroke-dasharray: 1;
-    animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
+    background-color: $color-white;
+    // animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
 }
 
 .scrollContainer {
@@ -37,7 +37,7 @@
         transform: translateX(100%);
     }
     100% {
-        transform: translateX(-150%);
+        transform: translateX(-190%);
     }
 }
 
@@ -51,19 +51,6 @@
     flex-shrink: 0;
     @include playfair(12px);
     letter-spacing: 1.2;
-}
-
-.dot {
-    $dot-size: 12px;
-    width: $dot-size;
-    height: $dot-size;
-    border-radius: 100%;
-    flex-shrink: 0;
-
-
-    &.green {
-        background-color: $color-success;
-    }
 }
 
 .text {

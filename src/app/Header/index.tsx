@@ -2,6 +2,7 @@
 import styles from './index.module.scss';
 import classnames from 'classnames';
 import PlayPauseButton from './PlayPauseButton';
+import DotIcon from './DotIcon'
 
 type announcementsType = {
   color: string
@@ -13,14 +14,6 @@ export type HeaderType = {
 }
 
 function Header({announcements = []}: HeaderType) {
-  // useEffect(() => {
-  //   const rootStyle = document.documentElement?.style;
-  //   rootStyle.setProperty(
-  //     '--header-width',
-  //     `${headerSize}px`
-  //   );
-  // }, [headerOpen, headerSize]);
-
   return (
     <header className={styles.header}>   
       <div className={styles.announce}>
@@ -29,10 +22,11 @@ function Header({announcements = []}: HeaderType) {
             const {color, text} = announce;
             return (
                 <div key={text} className={styles.freelance}>
-                  <span className={classnames(styles.dot, styles[color])} />
+                  <DotIcon color={color} />
                     <p className={styles.text}>
                       {text}
                     </p>
+                    <DotIcon color={color} />
                 </div>
             );
           })}
@@ -40,17 +34,6 @@ function Header({announcements = []}: HeaderType) {
       </div>
 
       <PlayPauseButton />
-
-      {/* <nav>
-        <a href="#">Hamouche Reda</a>
-        <div>Banniere ici</div>
-        <ul>
-          <li>projects</li>
-          <li>about</li>
-          <li>contact</li>
-        </ul>
-      </nav> */}
-
     </header>
   );
 }

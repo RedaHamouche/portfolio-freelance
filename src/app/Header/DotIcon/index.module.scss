@@ -1,0 +1,15 @@
+.main {
+    $dot-size: 12px;
+    width: $dot-size;
+    height: $dot-size;
+    border-radius: 100%;
+    flex-shrink: 0;
+    stroke-dasharray: 1;
+    transform: translateY(1px);
+
+    // &.green {
+    //     .circle {
+
+    //     }
+    // }
+}

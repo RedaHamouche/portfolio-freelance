@@ -43,7 +43,7 @@ const Cursor = () => {
 
   const innerSvg = isClickable
     ? <Click toClick={toClick} />
-    : <Arrow direction={direction} className={styles.arrow} onClick={() => {}} />;
+    : <Arrow className={styles.arrow} />;
 
       
   return (

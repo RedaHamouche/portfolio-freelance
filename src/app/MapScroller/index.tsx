@@ -10,7 +10,7 @@ import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
-import { setIsScrolling } from '../../store/scrollSlice';
+import { setIsScrolling, setProgress, setPathLength, setAutoScrollDirection } from '../../store/scrollSlice';
 import { setMapSize } from '../../store/mapSlice';
 import Dynamic from '../../templating/Dynamic';
 import DynamicPathComponents from '../../templating/DynamicPathComponents';
@@ -57,8 +57,6 @@ const MapScroller: React.FC = () => {
 
   const [pathD, setPathD] = useState<string | null>(null);
   const [svgSize, setSvgSize] = useState<SvgSize>({ width: 3000, height: 2000 });
-  const [pathLength, setPathLength] = useState<number>(2000);
-  const [progress, setProgress] = useState<number>(0);
   const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);
   const [dashOffset, setDashOffset] = useState<number>(0);
   const [distancePoints, setDistancePoints] = useState<Array<{x: number, y: number, distance: number, progress: number}>>([]);
@@ -67,7 +65,24 @@ const MapScroller: React.FC = () => {
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
+  const isAutoScrolling = useSelector((state: RootState) => state.scroll.isAutoScrolling);
+  const progress = useSelector((state: RootState) => state.scroll.progress);
+  const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
+  const autoScrollDirection = useSelector((state: RootState) => state.scroll.autoScrollDirection);
   const dispatch = useDispatch();
+
+  // Référence pour accéder au state actuel dans les callbacks
+  const progressRef = useRef(progress);
+  const globalPathLengthRef = useRef(globalPathLength);
+  
+  // Mettre à jour les refs quand les valeurs changent
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+  
+  useEffect(() => {
+    globalPathLengthRef.current = globalPathLength;
+  }, [globalPathLength]);
 
   // Fonction pour détecter la zone actuelle
   const getCurrentComponent = useCallback((currentProgress: number): PathComponentData | null => {
@@ -139,7 +154,7 @@ const MapScroller: React.FC = () => {
       const points = getPathPointsAtDistances(quarterPoints);
       console.log('Points de distance sur le path:', points);
     }
-  }, [pathLength, getPathPointsAtDistances]);
+  }, [globalPathLength, getPathPointsAtDistances]);
 
   useEffect(() => {
     fetch(PATH_SVG_URL)
@@ -164,9 +179,10 @@ const MapScroller: React.FC = () => {
 
   useLayoutEffect(() => {
     if (pathD && pathRef.current) {
-      setPathLength(pathRef.current.getTotalLength());
+      const newPathLength = pathRef.current.getTotalLength();
+      dispatch(setPathLength(newPathLength));
     }
-  }, [pathD]);
+  }, [pathD, dispatch]);
 
   useEffect(() => {
     if (!useNativeScroll) return;
@@ -175,7 +191,7 @@ const MapScroller: React.FC = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           handleScrollState(true);
-          const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+          const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
           const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
           let scrollY = window.scrollY;
 
@@ -188,7 +204,7 @@ const MapScroller: React.FC = () => {
           }
 
           const newProgress = computeScrollProgress(scrollY, maxScroll);
-          setProgress(newProgress);
+          dispatch(setProgress(newProgress));
           ticking = false;
         });
         ticking = true;
@@ -198,7 +214,7 @@ const MapScroller: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [useNativeScroll, pathLength, handleScrollState]);
+  }, [useNativeScroll, globalPathLength, handleScrollState]);
 
   useEffect(() => {
     if (!direction) {
@@ -216,10 +232,9 @@ const MapScroller: React.FC = () => {
       lastTimestamp = timestamp;
 
       const pxPerMs = speed / 1000;
-      setProgress(prevProgress => {
-        let newProgress = prevProgress + (direction === 'bas' ? 1 : -1) * (pxPerMs * delta / pathLength);
-        return (newProgress + 1) % 1;
-      });
+      const currentProgress = progressRef.current;
+      const newProgress = (currentProgress + (direction === 'bas' ? 1 : -1) * (pxPerMs * delta / globalPathLengthRef.current) + 1) % 1;
+      dispatch(setProgress(newProgress));
 
       animationRef.current = requestAnimationFrame(move);
     };
@@ -228,20 +243,7 @@ const MapScroller: React.FC = () => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [direction, speed, pathLength, handleScrollState]);
-
-  useEffect(() => {
-    if (!direction && !useNativeScroll) {
-      const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
-      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
-      let scrollY = window.scrollY;
-      if (scrollY <= 0) scrollY = maxScroll - 2;
-      else if (scrollY >= maxScroll - 1) scrollY = 1;
-      const newProgress = computeScrollProgress(scrollY, maxScroll);
-      setProgress(newProgress);
-      setUseNativeScroll(true);
-    }
-  }, [direction, useNativeScroll, pathLength]);
+  }, [direction, speed, globalPathLength, handleScrollState]);
 
   useEffect(() => {
     return () => {
@@ -267,7 +269,7 @@ const MapScroller: React.FC = () => {
     wrapper.style.transformOrigin = 'top left';
   }, [progress, svgSize]);
 
-  const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+  const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
 
   useEffect(() => {
     dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
@@ -311,7 +313,7 @@ const MapScroller: React.FC = () => {
   const handleGoToNext = useCallback(() => {
     if (!nextComponent) return;
 
-    const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
+    const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
     const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
     const targetScrollY = (1 - nextComponent.position.progress) * maxScroll;
 
@@ -323,7 +325,50 @@ const MapScroller: React.FC = () => {
       duration: 0.8,
       ease: 'power2.out'
     });
-  }, [nextComponent, pathLength]);
+  }, [nextComponent, globalPathLength]);
+
+  // Scroll automatique (play/pause)
+  useEffect(() => {
+    if (!isAutoScrolling) {
+      // Quand on arrête le scroll automatique, synchroniser la position de scroll
+      const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
+      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+      const targetScrollY = (1 - progress) * maxScroll;
+      window.scrollTo(0, targetScrollY);
+      setUseNativeScroll(true);
+      return;
+    }
+    
+    // Désactiver le scroll manuel pendant le scroll automatique
+    setUseNativeScroll(false);
+    
+    let raf: number;
+    let lastTime = performance.now();
+    const speed = 0.04; // 0.04 progress/seconde (ajuste si besoin)
+
+    const animate = (now: number) => {
+      if (!isAutoScrolling) return; // Vérifier encore une fois
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      const currentProgress = progressRef.current;
+      const newProgress = (currentProgress + autoScrollDirection * speed * dt) % 1;
+      dispatch(setProgress(newProgress));
+      
+      // Synchroniser la position de scroll en temps réel
+      const fakeScrollHeight = Math.round(globalPathLengthRef.current * SCROLL_PER_PX);
+      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+      const targetScrollY = (1 - newProgress) * maxScroll;
+      window.scrollTo(0, targetScrollY);
+      
+      raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(raf);
+      // Réactiver le scroll manuel quand on arrête
+      setUseNativeScroll(true);
+    };
+  }, [isAutoScrolling, progress, globalPathLength]);
 
   return (
     <div className={styles.main}>

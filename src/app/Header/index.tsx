@@ -2,6 +2,7 @@
 import {useEffect, useState} from 'react';
 import styles from './index.module.scss';
 import classnames from 'classnames';
+import PlayPauseButton from './PlayPauseButton';
 
 type announcementsType = {
   color: string
@@ -38,6 +39,8 @@ function Header({announcements = []}: HeaderType) {
           })}
         </div>
       </div>
+
+      <PlayPauseButton />
 
       {/* <nav>
         <a href="#">Hamouche Reda</a>

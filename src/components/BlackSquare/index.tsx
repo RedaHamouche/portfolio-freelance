@@ -1,10 +1,4 @@
-import styles from './index.module.scss'
-export type BlackSquareType = {
-  mapWidth: number
-  mapHeight: number
-}
-
-export default function BlackSquare({ mapWidth, mapHeight }: BlackSquareType ) {
+export default function BlackSquare() {
   return (
     <div
       style={{

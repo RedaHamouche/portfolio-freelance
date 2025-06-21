@@ -13,7 +13,7 @@ const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
 
   // Utiliser l'état global Redux
-  const { isClickable, direction } = useSelector((state: RootState) => state.cursor);
+  const { isClickable } = useSelector((state: RootState) => state.cursor);
   const { isScrolling } = useSelector((state: RootState) => state.scroll);
 
   const toggleClick = useCallback((boolean = false) => {

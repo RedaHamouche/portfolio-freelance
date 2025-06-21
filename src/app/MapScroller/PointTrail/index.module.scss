@@ -13,6 +13,7 @@
 
   &.position-left {
     flex-direction: row-reverse;
+
     .arrow {
       transform: rotate(180deg);
     }
@@ -28,9 +29,8 @@
   align-items: center;
 
   .arrow {
-    path {
+    .path {
       fill: $color-primary;
-  
     }
   }
 }

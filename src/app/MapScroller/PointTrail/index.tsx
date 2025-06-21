@@ -44,6 +44,7 @@ const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext
           height={15}
         >
           <path
+            className={styles.path}
             fill="#F6F6F6"
             d="m6.318 14.23 7.212-6.228a.6.6 0 0 0 0-.906L6.318.869a.15.15 0 0 0-.249.113v1.52c0 .086.038.169.104.227l4.757 4.108H.313a.15.15 0 0 0-.151.15v1.126c0 .082.068.15.15.15H10.93L6.173 12.37a.3.3 0 0 0-.104.227v1.52c0 .127.151.197.25.112"
           />

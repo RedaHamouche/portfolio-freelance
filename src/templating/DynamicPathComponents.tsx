@@ -4,8 +4,6 @@ import pathComponents from './pathComponents.json';
 
 interface DynamicPathComponentsProps {
   pathRef: React.RefObject<SVGPathElement | null>;
-  mapWidth: number;
-  mapHeight: number;
 }
 
 interface PathComponent {
@@ -19,7 +17,7 @@ interface PathComponent {
   };
 }
 
-export default function DynamicPathComponents({ pathRef, mapWidth, mapHeight }: DynamicPathComponentsProps) {
+export default function DynamicPathComponents({ pathRef }: DynamicPathComponentsProps) {
   if (!pathRef.current || !pathComponents) return null;
 
   const getPositionOnPath = (progress: number) => {
@@ -53,8 +51,6 @@ export default function DynamicPathComponents({ pathRef, mapWidth, mapHeight }: 
           >
             <Comp 
               {...component} 
-              mapWidth={mapWidth} 
-              mapHeight={mapHeight}
             />
           </div>
         );

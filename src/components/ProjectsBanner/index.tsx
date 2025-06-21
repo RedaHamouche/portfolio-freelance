@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import SingleProjectBanner from './SingleProjectBanner';
 
 export type ProjectsBannerType = {
-  customStyle?: any
+  customStyle?: React.CSSProperties
   className?: string
 }
 

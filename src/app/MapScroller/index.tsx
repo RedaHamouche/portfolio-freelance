@@ -6,11 +6,10 @@ import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
-import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
-import { setIsScrolling, setProgress, setPathLength, setAutoScrollDirection } from '../../store/scrollSlice';
+import { setIsScrolling, setProgress, setPathLength } from '../../store/scrollSlice';
 import { setMapSize } from '../../store/mapSlice';
 import Dynamic from '../../templating/Dynamic';
 import DynamicPathComponents from '../../templating/DynamicPathComponents';
@@ -23,10 +22,8 @@ if (typeof window !== 'undefined') {
 }
 
 const PATH_SVG_URL = '/path.svg';
-const POINT_ID = 'moving-point';
 const SCROLL_PER_PX = 1.5;
 const MAP_SCALE = 1;
-const DEFAULT_PATH_TRAIL_NAME = 'scroll';
 
 interface SvgSize {
   width: number;
@@ -59,8 +56,6 @@ const MapScroller: React.FC = () => {
   const [svgSize, setSvgSize] = useState<SvgSize>({ width: 3000, height: 2000 });
   const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);
   const [dashOffset, setDashOffset] = useState<number>(0);
-  const [distancePoints, setDistancePoints] = useState<Array<{x: number, y: number, distance: number, progress: number}>>([]);
-  const [currentComponent, setCurrentComponent] = useState<PathComponentData | null>(null);
   const [nextComponent, setNextComponent] = useState<PathComponentData | null>(null);
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
@@ -93,9 +88,6 @@ const MapScroller: React.FC = () => {
 
   // Mettre à jour la zone actuelle quand le progress change
   useEffect(() => {
-    const component = getCurrentComponent(progress);
-    setCurrentComponent(component);
-
     // Correction du sens : chercher le plus grand progress < progress actuel
     const sortedComponents = [...pathComponents].sort((a, b) => b.position.progress - a.position.progress);
     let findNext = sortedComponents.find(c => c.position.progress < progress);
@@ -214,7 +206,7 @@ const MapScroller: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [useNativeScroll, globalPathLength, handleScrollState]);
+  }, [useNativeScroll, globalPathLength, handleScrollState, dispatch]);
 
   useEffect(() => {
     if (!direction) {
@@ -243,7 +235,7 @@ const MapScroller: React.FC = () => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [direction, speed, globalPathLength, handleScrollState]);
+  }, [direction, speed, globalPathLength, handleScrollState, dispatch]);
 
   useEffect(() => {
     return () => {
@@ -308,8 +300,6 @@ const MapScroller: React.FC = () => {
     }
   }
 
-  const displayName = currentComponent ? currentComponent.displayName : DEFAULT_PATH_TRAIL_NAME;
-
   const handleGoToNext = useCallback(() => {
     if (!nextComponent) return;
 
@@ -368,7 +358,7 @@ const MapScroller: React.FC = () => {
       // Réactiver le scroll manuel quand on arrête
       setUseNativeScroll(true);
     };
-  }, [isAutoScrolling, progress, globalPathLength]);
+  }, [isAutoScrolling, progress, globalPathLength, dispatch, autoScrollDirection]);
 
   return (
     <div className={styles.main}>
@@ -387,11 +377,9 @@ const MapScroller: React.FC = () => {
             zIndex: 2,
           }}
         >
-          <Dynamic mapWidth={svgSize.width} mapHeight={svgSize.height} />
+          <Dynamic />
           <DynamicPathComponents 
             pathRef={pathRef}
-            mapWidth={svgSize.width} 
-            mapHeight={svgSize.height}
           />
           <svg
             ref={svgRef}

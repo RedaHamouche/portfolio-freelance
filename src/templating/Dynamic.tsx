@@ -1,12 +1,10 @@
-type DynamicProps = {
-  mapWidth: number;
-  mapHeight: number;
-};
-
+import React from 'react';
 import mappingComponent from './mappingComponent';
 import config from './page.json';
 
-export default function Dynamic({ mapWidth, mapHeight }: DynamicProps) {
+type DynamicProps = Record<string, never>;
+
+export default function Dynamic({}: DynamicProps) {
   if (!config.components) return null;
   return (
     <>
@@ -14,6 +12,9 @@ export default function Dynamic({ mapWidth, mapHeight }: DynamicProps) {
         const Comp = mappingComponent[item.type];
         if (!Comp) return null;
         const { position, ...rest } = item;
+        const componentProps = {
+          ...rest
+        };
         return (
           <div
             key={idx}
@@ -24,7 +25,7 @@ export default function Dynamic({ mapWidth, mapHeight }: DynamicProps) {
               pointerEvents: 'auto',
             }}
           >
-            <Comp {...rest} mapWidth={mapWidth} mapHeight={mapHeight} />
+            <Comp {...componentProps} />
           </div>
         );
       })}

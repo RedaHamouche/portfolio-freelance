@@ -1,0 +1,20 @@
+.main {
+    @include montreal(16px, bold);
+    @include flex;
+    padding: 8px 0;
+    display: flex;
+    width: 100%;
+    border-top: 1px dashed rgba(0, 0, 0, 0.91);
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.91);
+    color: $color-mono-black;
+    display: flex;
+    + .main {
+        margin-top: $spacing-xs;
+    }
+
+    &:hover {
+        background-color: $color-primary;
+        color: $color-mono-white;
+    }
+    
+}

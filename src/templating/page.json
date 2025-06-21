@@ -6,6 +6,13 @@
         "top": 1000,
         "left": 2590
       }
+    },
+    {
+      "type": "ProjectsBanner",
+      "position": {
+        "top": 1000,
+        "left": 4590
+      }
     }
   ]
 } 

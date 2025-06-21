@@ -1,6 +1,5 @@
 "use client"
 import styles from './index.module.scss';
-import classnames from 'classnames';
 import PlayPauseButton from './PlayPauseButton';
 import DotIcon from './DotIcon'
 

@@ -7,8 +7,7 @@ import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
-import Cadre from '../Cadre';
-import { cursorClasses } from '../Cursor/Svgs/cursorStates';
+import { setIsScrolling } from '../../store/scrollSlice';
 import Dynamic from '../../templating/Dynamic';
 import { setMapSize } from '../../store/mapSlice';
 
@@ -20,13 +19,14 @@ if (typeof window !== 'undefined') {
 const PATH_SVG_URL = '/path.svg';
 const POINT_ID = 'moving-point';
 const SCROLL_PER_PX = 1.5; // 1px de scroll = 1.5px de chemin (ajuste ce ratio pour la sensation)
-const MAP_SCALE = 0.3; // facteur de zoom (0.7 = 70%)
+const MAP_SCALE = 1; // facteur de zoom (0.7 = 70%)
 
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const pointRef = useRef<SVGCircleElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [pathD, setPathD] = useState<string | null>(null);
   const [svgSize, setSvgSize] = useState<{width: number, height: number}>({width: 3000, height: 2000});
@@ -38,6 +38,22 @@ const MapScroller: React.FC = () => {
   const [useNativeScroll, setUseNativeScroll] = useState(true);
 
   const dispatch = useDispatch();
+
+  // Fonction pour gérer isScrolling avec timeout
+  const handleScrollState = (isScrolling: boolean) => {
+    dispatch(setIsScrolling(isScrolling));
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    if (isScrolling) {
+      // Remettre isScrolling à false après 150ms d'inactivité
+      scrollTimeoutRef.current = setTimeout(() => {
+        dispatch(setIsScrolling(false));
+      }, 150);
+    }
+  };
 
   // Charger le SVG et extraire le premier chemin <path>
   useEffect(() => {
@@ -71,6 +87,8 @@ const MapScroller: React.FC = () => {
   useEffect(() => {
     if (!useNativeScroll) return;
     const handleScroll = () => {
+      handleScrollState(true); // Indiquer qu'on scrolle
+      
       const fakeScrollHeight = Math.round(pathLength * SCROLL_PER_PX);
       const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
       let scrollY = window.scrollY;
@@ -100,6 +118,8 @@ const MapScroller: React.FC = () => {
       return;
     }
     setUseNativeScroll(false); // désactive le scroll natif
+    handleScrollState(true); // Indiquer qu'on scrolle avec le cadre
+    
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     let lastTimestamp: number | null = null;
     const move = (timestamp: number) => {
@@ -141,6 +161,15 @@ const MapScroller: React.FC = () => {
       setUseNativeScroll(true);
     }
   }, [direction, useNativeScroll, pathLength]);
+
+  // Cleanup du timeout au démontage
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Appliquer le progress calculé par le cadre OU par le scroll
   useEffect(() => {

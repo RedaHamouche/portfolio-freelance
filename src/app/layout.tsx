@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import '@/styles/global.scss';
 import '@/styles/reset.scss';
 import ReduxProvider from './ReduxProvider';
+import CursorProvider from './CursorProvider';
 import Header from './Header';
 
 const geistSans = Geist({
@@ -36,8 +37,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ReduxProvider>
-          <Header announcements={announcements}/>
-          {children}
+          <CursorProvider>
+            <Header announcements={announcements}/>
+            {children}
+          </CursorProvider>
         </ReduxProvider>
       </body>
     </html>

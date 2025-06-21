@@ -7,7 +7,7 @@ export type SingleProjectBannerType = {
 
 const SingleProjectBanner = ({}: SingleProjectBannerType) => {
   return (
-    <div className={styles.main}>Chanels</div>
+    <div className={styles.main} data-clickable>Chanels</div>
   )
 }
 

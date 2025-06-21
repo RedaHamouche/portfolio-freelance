@@ -1,43 +1,36 @@
 .cursor {
-    @include square(248px);
+    @include square(64px);
     position: fixed;
-    z-index: 2000;
+    z-index: 10000;
     transform: translate(-50%, -50%);
     pointer-events: none;
-}
-
-.outerSvg {
-    position: absolute;
-    will-change: transform;
-}
-
-.innerSvg {
-    position: absolute;
-    @include flex(center, center);
-    @include absoluteCenter();
-}
-
-.background {
-    @include square(50%);
-    background-color: $color-primary;
-}
-
-.background, .cursor {
     @include flex(center, center);
     border-radius: 50%;
 }
 
 
-// TO CLICK STATE
-.click {
-    transform: scale(0.7);
+.outerSvg {
+    position: absolute;
+    will-change: transform;
+
+    &.movingBorderAnimation {
+        stroke-dasharray: 1;
+        animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
+    }
+
+    &.ToClick {
+        &:not(.clickedAnimation ) {
+            animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
+
+        }
+    }
+
+    &.clickedAnimation {
+        transition: 0.1s ease-out;
+        transform: scale(0.7);
+    }
 }
 
-// ONNCE CLICKED
-.clickedAnimation {
-    transition: 0.1s ease-out;
-    transform: scale(1);
-}
 // MOVING BORDER
 @keyframes movingBorderAnimationKeyFrame {
     from {
@@ -49,7 +42,15 @@
     }
 }
 
-.movingBorderAnimation {
-    stroke-dasharray: 1;
-    animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
+.innerSvg {
+    position: absolute;
+    @include flex(center, center);
+    @include absoluteCenter();
+}
+
+.background {
+    @include square(50%);
+    background-color: $color-primary;
+    @include flex(center, center);
+    border-radius: 50%;
 }

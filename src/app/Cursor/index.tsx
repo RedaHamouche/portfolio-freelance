@@ -1,29 +1,34 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import styles from './index.module.scss';
 import cx from 'classnames';
-import { cursorClasses } from './Svgs/cursorStates';
 import Arrow from './Svgs/Arrow';
 import Click from './Svgs/Click';
 
-const Cursor = ({ direction }: { direction?: string }) => {
+const Cursor = () => {
   const [cursorPosition, setCursorPosition] = useState({ x: '50%', y: '50%' });
   const [clicked, setClicked] = useState(false);
   const [toClick, setToClick] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
 
-  // isClickable toujours true pour l'instant
-  const clickable = direction === cursorClasses.click;
+  // Utiliser l'état global Redux
+  const { isClickable, direction } = useSelector((state: RootState) => state.cursor);
+  const { isScrolling } = useSelector((state: RootState) => state.scroll);
 
   const toggleClick = useCallback((boolean = false) => {
-    if (clickable) {
-      setClicked(boolean);
-    }
-  }, [clickable]);
+    // Toujours déclencher l'animation de clic, peu importe si l'élément est clickable
+    setClicked(boolean);
+  }, []);
 
   const mouseMove = (e: MouseEvent) => {
-    setToClick(true);
     setCursorPosition({ x: e.clientX + 'px', y: e.clientY + 'px' });
   };
+
+  // Mettre à jour toClick en fonction de isClickable
+  useEffect(() => {
+    setToClick(isClickable);
+  }, [isClickable]);
 
   useEffect(() => {
     window.addEventListener('mousemove', mouseMove, false);
@@ -36,12 +41,14 @@ const Cursor = ({ direction }: { direction?: string }) => {
     };
   }, [toggleClick]);
 
-  const innerSvg = clickable
+  const innerSvg = isClickable
     ? <Click toClick={toClick} />
     : <Arrow direction={direction} className={styles.arrow} onClick={() => {}} />;
 
+      
   return (
     <div
+      aria-hidden="true"
       className={styles.cursor}
       ref={cursorRef}
       style={{ left: cursorPosition.x, top: cursorPosition.y }}
@@ -50,8 +57,8 @@ const Cursor = ({ direction }: { direction?: string }) => {
         className={cx(
           styles.outerSvg,
           {
-            [styles.click]: toClick,
-            [styles.movingBorderAnimation]: !clickable,
+            [styles.ToClick]: toClick,
+            [styles.movingBorderAnimation]: isScrolling,
             [styles.clickedAnimation]: clicked,
           }
         )}

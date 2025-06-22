@@ -20,7 +20,7 @@ interface DynamicPathComponentsProps {
 //   };
 // }
 
-const DISTANCE_BEFORE_LOAD = 0.005;
+const DISTANCE_BEFORE_LOAD = 0.01;
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs
 function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNears: boolean[], threshold = DISTANCE_BEFORE_LOAD) {
@@ -70,7 +70,7 @@ export default function DynamicPathComponents({ pathRef }: DynamicPathComponents
 
   // Calcule pour chaque composant s'il est proche du point
   const isNears = pathComponents.map(
-    (component) => Math.abs(progress - component.position.progress) < 0.1
+    (component) => Math.abs(progress - component.position.progress) < DISTANCE_BEFORE_LOAD
   );
 
   // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser isNears comme critère)

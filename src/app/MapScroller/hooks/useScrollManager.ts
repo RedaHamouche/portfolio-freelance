@@ -113,7 +113,7 @@ export const useScrollManager = () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [globalPathLength, handleScrollState, dispatch]);
+  }, [globalPathLength, handleScrollState, dispatch, isAutoScrolling]);
 
   // Scroll directionnel (clavier)
   const setupDirectionalScroll = useCallback(() => {
@@ -142,8 +142,8 @@ export const useScrollManager = () => {
   }, [direction, speed, dispatch]);
 
   // Scroll automatique
-  const setupAutoScroll = useCallback((isAutoScrolling: boolean) => {
-    if (!isAutoScrolling) {
+  const setupAutoScroll = useCallback((shouldScroll: boolean) => {
+    if (!shouldScroll) {
       // Synchroniser la position de scroll quand on arrête
       const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
       const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
@@ -160,7 +160,7 @@ export const useScrollManager = () => {
     const speed = 0.04;
 
     const animate = (now: number) => {
-      if (!isAutoScrolling) return;
+      if (!shouldScroll) return;
       const dt = (now - lastTime) / 1000;
       lastTime = now;
       const currentProgress = progressRef.current;
@@ -182,7 +182,7 @@ export const useScrollManager = () => {
     return () => {
       cancelAnimationFrame(raf);
     };
-  }, [isAutoScrolling, progress, globalPathLength, autoScrollDirection, dispatch]);
+  }, [progress, globalPathLength, autoScrollDirection, dispatch, isAutoScrolling]);
 
   // Synchronisation Play/Pause pour éviter les décalages
   useEffect(() => {

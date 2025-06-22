@@ -17,11 +17,13 @@
 @font-face {
     font-family: 'Playfair Display';
     src: local('Playfair Display'), 
+         url('/fonts/PlayfairDisplay/PlayfairDisplay.woff2') format('woff2'),
          url('/fonts/PlayfairDisplay/PlayfairDisplay.woff') format('woff');
 }
 @font-face {
     font-family: 'Playfair Display';
     src: local('Playfair Display'), 
+         url('/fonts/PlayfairDisplay/PlayfairDisplay-Italic.woff2') format('woff2'),
          url('/fonts/PlayfairDisplay/PlayfairDisplay-Italic.woff') format('woff');
     font-style: italic;
 }

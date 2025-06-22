@@ -33,7 +33,7 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], thres
 type DynamicProps = Record<string, never>;
 
 export default function Dynamic({}: DynamicProps) {
-  if (!config.components) return null;
+
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -43,6 +43,8 @@ export default function Dynamic({}: DynamicProps) {
 
   // Hook pour savoir si chaque ref est dans le viewport
   const inViews = useMultipleInView(refs, 0.1);
+
+  if (!config.components) return null;
 
   return (
     <>

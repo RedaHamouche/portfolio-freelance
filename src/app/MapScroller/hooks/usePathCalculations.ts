@@ -3,16 +3,16 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import pathComponents from '../../../templating/pathComponents.json';
 
-interface PathComponentData {
-  id: string;
-  type: string;
-  displayName: string;
-  position: {
-    progress: number;
-    start: number;
-    end: number;
-  };
-}
+// interface PathComponentData {
+//   id: string;
+//   type: string;
+//   displayName: string;
+//   position: {
+//     progress: number;
+//     start: number;
+//     end: number;
+//   };
+// }
 
 interface PointPosition {
   x: number;

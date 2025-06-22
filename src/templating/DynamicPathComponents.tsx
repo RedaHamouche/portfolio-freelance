@@ -9,21 +9,21 @@ interface DynamicPathComponentsProps {
   pathRef: React.RefObject<SVGPathElement | null>;
 }
 
-interface PathComponent {
-  id: string;
-  type: string;
-  displayName: string;
-  position: {
-    progress: number;
-    start: number;
-    end: number;
-  };
-}
+// interface PathComponent {
+//   id: string;
+//   type: string;
+//   displayName: string;
+//   position: {
+//     progress: number;
+//     start: number;
+//     end: number;
+//   };
+// }
 
 const DISTANCE_BEFORE_LOAD = 0.005;
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs
-function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNears: boolean[], threshold = 0.1) {
+function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNears: boolean[], threshold = DISTANCE_BEFORE_LOAD) {
   const [inViews, setInViews] = useState<boolean[]>(refs.map(() => false));
 
   useEffect(() => {

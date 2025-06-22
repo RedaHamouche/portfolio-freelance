@@ -113,7 +113,7 @@ export const useScrollManager = () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [globalPathLength, handleScrollState, dispatch, isAutoScrolling]);
+  }, [globalPathLength, handleScrollState, dispatch]);
 
   // Scroll directionnel (clavier)
   const setupDirectionalScroll = useCallback(() => {

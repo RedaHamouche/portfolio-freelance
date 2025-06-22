@@ -1,7 +1,7 @@
-import React from 'react';
+import dynamic from 'next/dynamic';
 
-const BlackSquare = React.lazy(() => import('@/components/BlackSquare'));
-const ProjectsBanner = React.lazy(() => import('@/components/ProjectsBanner'));
+const BlackSquare = dynamic(() => import('@/components/BlackSquare'), { ssr: true });
+const ProjectsBanner = dynamic(() => import('@/components/ProjectsBanner'), { ssr: true });
 // HYGEN_IMPORT_COMPONENT DO_NOT_REMOVE
 
 const mappingComponent: Record<string, React.ComponentType<Record<string, unknown>>> = {

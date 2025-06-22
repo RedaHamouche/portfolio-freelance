@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import mappingComponent from './mappingComponent';
 import config from './page.json';
 
@@ -33,9 +33,7 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], thres
 type DynamicProps = Record<string, never>;
 
 export default function Dynamic({}: DynamicProps) {
-
-  // State pour mémoriser les composants déjà chargés
-  const [hasLoaded, setHasLoaded] = useState<Record<number, boolean>>({});
+  if (!config.components) return null;
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -46,48 +44,27 @@ export default function Dynamic({}: DynamicProps) {
   // Hook pour savoir si chaque ref est dans le viewport
   const inViews = useMultipleInView(refs, 0.1);
 
-  // Met à jour hasLoaded si un composant est vu
-  useEffect(() => {
-    let updated = false;
-    const newHasLoaded = { ...hasLoaded };
-    inViews.forEach((inView, idx) => {
-      if (inView && !newHasLoaded[idx]) {
-        newHasLoaded[idx] = true;
-        updated = true;
-      }
-    });
-    if (updated) setHasLoaded(newHasLoaded);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inViews]);
-
-  if (!config.components) return null;
-
   return (
     <>
       {config.components.map((item, idx) => {
         const Comp = mappingComponent[item.type];
-        const loaded = hasLoaded[idx];
         const { position, ...rest } = item;
         const componentProps = { ...rest };
         return (
           <div
             key={idx}
             ref={refs[idx]}
-            className={loaded ? 'lazyLoadAnimation' : ''}
+            className={inViews[idx] ? 'lazyLoadAnimation' : ''}
             style={{
               position: 'absolute',
               top: position?.top,
               left: position?.left,
               pointerEvents: 'auto',
-              opacity: loaded ? 1 : 0,
+              opacity: inViews[idx] ? 1 : 0,
               transition: 'opacity 0.5s',
             }}
           >
-            {loaded && Comp && (
-              <Suspense fallback={<div>Chargement...</div>}>
-                <Comp {...componentProps} />
-              </Suspense>
-            )}
+            {Comp && <Comp {...componentProps} />}
           </div>
         );
       })}

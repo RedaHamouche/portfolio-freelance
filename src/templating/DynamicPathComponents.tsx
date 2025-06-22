@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
 import { useSelector } from 'react-redux';
@@ -54,7 +54,6 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
 export default function DynamicPathComponents({ pathRef }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
 
-
   const getPositionOnPath = (progressValue: number) => {
     const path = pathRef.current;
     if (!path) return { x: 0, y: 0 };
@@ -77,36 +76,19 @@ export default function DynamicPathComponents({ pathRef }: DynamicPathComponents
   // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser isNears comme critère)
   const inViews = useMultipleInView(refs, isNears, 0.1);
 
-  // State pour mémoriser les composants déjà chargés
-  const [hasLoaded, setHasLoaded] = useState<Record<string, boolean>>({});
-
-  // Met à jour hasLoaded si un composant est proche ET dans le viewport
-  useEffect(() => {
-    let updated = false;
-    const newHasLoaded = { ...hasLoaded };
-    pathComponents.forEach((component, idx) => {
-      if (isNears[idx] && inViews[idx] && !newHasLoaded[component.id]) {
-        newHasLoaded[component.id] = true;
-        updated = true;
-      }
-    });
-    if (updated) setHasLoaded(newHasLoaded);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inViews, isNears.join(','), progress]);
-
   if (!pathRef.current || !pathComponents) return null;
 
   return (
     <>
       {pathComponents.map((component, idx) => {
         const Comp = mappingComponent[component.type];
-        const loaded = hasLoaded[component.id];
         const position = getPositionOnPath(component.position.progress);
         return (
           <div
+            data-name={`${component.displayName}-PATH-COMPONENT`}
             key={component.id}
             ref={refs[idx]}
-            className={loaded ? 'lazyLoadAnimation' : ''}
+            className={inViews[idx] ? 'lazyLoadAnimation' : ''}
             style={{
               position: 'absolute',
               top: position.y,
@@ -114,15 +96,11 @@ export default function DynamicPathComponents({ pathRef }: DynamicPathComponents
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'auto',
               zIndex: 10,
-              opacity: loaded ? 1 : 0,
+              opacity: inViews[idx] ? 1 : 0,
               transition: 'opacity 0.5s',
             }}
           >
-            {loaded && Comp && (
-              <Suspense fallback={<div>Chargement...</div>}>
-                <Comp {...component} />
-              </Suspense>
-            )}
+            {Comp && <Comp {...component} />}
           </div>
         );
       })}

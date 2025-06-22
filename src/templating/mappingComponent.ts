@@ -1,10 +1,12 @@
-import BlackSquare from '@/components/BlackSquare';
-import ProjectsBanner from '@/components/ProjectsBanner'; 
+import React from 'react';
+
+const BlackSquare = React.lazy(() => import('@/components/BlackSquare'));
+const ProjectsBanner = React.lazy(() => import('@/components/ProjectsBanner'));
 // HYGEN_IMPORT_COMPONENT DO_NOT_REMOVE
 
 const mappingComponent: Record<string, React.ComponentType<Record<string, unknown>>> = {
   BlackSquare,
-  ProjectsBanner, 
+  ProjectsBanner,
   // HYGEN_MAP_COMPONENT DO_NOT_REMOVE
 };
 

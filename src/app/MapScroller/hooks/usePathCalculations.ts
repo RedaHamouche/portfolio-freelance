@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import pathComponents from '../../../templating/pathComponents.json';
@@ -22,25 +22,16 @@ interface PointPosition {
 export const usePathCalculations = (pathRef: React.RefObject<SVGPathElement | null>) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const [dashOffset, setDashOffset] = useState<number>(0);
-  const [nextComponent, setNextComponent] = useState<PathComponentData | null>(null);
 
-  // Fonction pour détecter la zone actuelle
-  const getCurrentComponent = useCallback((currentProgress: number): PathComponentData | null => {
-    return pathComponents.find((component: PathComponentData) => 
-      currentProgress >= component.position.start && currentProgress <= component.position.end
-    ) || null;
-  }, []);
-
-  // Mettre à jour la zone actuelle quand le progress change
-  useEffect(() => {
-    // Correction du sens : chercher le plus grand progress < progress actuel
+  // Calculer le nextComponent via useMemo (plus de boucle infinie)
+  const nextComponent = useMemo(() => {
     const sortedComponents = [...pathComponents].sort((a, b) => b.position.progress - a.position.progress);
     let findNext = sortedComponents.find(c => c.position.progress < progress);
     if (!findNext) {
       findNext = sortedComponents[0]; // boucle au "dernier" (le plus à droite)
     }
-    setNextComponent(findNext);
-  }, [progress, getCurrentComponent]);
+    return findNext;
+  }, [progress]);
 
   // Calculer le dashOffset en fonction du progress
   useEffect(() => {
@@ -74,7 +65,6 @@ export const usePathCalculations = (pathRef: React.RefObject<SVGPathElement | nu
   // Calculer la position de la flèche (gauche ou droite)
   const getArrowPosition = useCallback((): 'left' | 'right' => {
     if (!nextComponent) return 'right';
-    
     if (nextComponent.position.progress < progress) {
       return 'left';
     } else {

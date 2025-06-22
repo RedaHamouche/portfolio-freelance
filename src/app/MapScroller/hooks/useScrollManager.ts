@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
-import { setIsScrolling, setProgress } from '../../../store/scrollSlice';
+import { setIsScrolling, setProgress, setAutoScrolling } from '../../../store/scrollSlice';
 
 const SCROLL_PER_PX = 1.5;
 
@@ -9,10 +9,39 @@ const computeScrollProgress = (scrollY: number, maxScroll: number): number => {
   return 1 - (((scrollY / maxScroll) % 1 + 1) % 1);
 };
 
+// Hook pour désactiver l'auto-scroll dès qu'un scroll manuel est détecté
+export function useAutoScrollPauseOnManual() {
+  const dispatch = useDispatch();
+  const isAutoScrolling = useSelector((state: RootState) => state.scroll.isAutoScrolling);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isAutoScrolling) return;
+
+    const pauseAutoScroll = () => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        dispatch(setAutoScrolling(false));
+        rafRef.current = null;
+      });
+    };
+
+    window.addEventListener('wheel', pauseAutoScroll, { passive: true });
+    window.addEventListener('touchmove', pauseAutoScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', pauseAutoScroll);
+      window.removeEventListener('touchmove', pauseAutoScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isAutoScrolling, dispatch]);
+}
+
 export const useScrollManager = () => {
   const dispatch = useDispatch();
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
+  const lastProgrammaticScroll = useRef(0);
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
@@ -20,6 +49,9 @@ export const useScrollManager = () => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const autoScrollDirection = useSelector((state: RootState) => state.scroll.autoScrollDirection);
+
+  // Appelle le hook de pause auto-scroll sur scroll manuel
+  useAutoScrollPauseOnManual();
 
   // Références pour accéder au state actuel dans les callbacks
   const progressRef = useRef(progress);
@@ -57,9 +89,15 @@ export const useScrollManager = () => {
           let scrollY = window.scrollY;
 
           if (scrollY <= 0) {
+            if (isAutoScrolling) {
+              lastProgrammaticScroll.current = Date.now();
+            }
             window.scrollTo(0, maxScroll - 2);
             scrollY = maxScroll - 2;
           } else if (scrollY >= maxScroll - 1) {
+            if (isAutoScrolling) {
+              lastProgrammaticScroll.current = Date.now();
+            }
             window.scrollTo(1, 1);
             scrollY = 1;
           }
@@ -75,7 +113,7 @@ export const useScrollManager = () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [globalPathLength, handleScrollState, dispatch]);
+  }, [globalPathLength, handleScrollState, dispatch, isAutoScrolling]);
 
   // Scroll directionnel (clavier)
   const setupDirectionalScroll = useCallback(() => {
@@ -110,6 +148,9 @@ export const useScrollManager = () => {
       const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
       const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
       const targetScrollY = (1 - progress) * maxScroll;
+      if (isAutoScrolling) {
+        lastProgrammaticScroll.current = Date.now();
+      }
       window.scrollTo(0, targetScrollY);
       return;
     }
@@ -130,6 +171,9 @@ export const useScrollManager = () => {
       const fakeScrollHeight = Math.round(globalPathLengthRef.current * SCROLL_PER_PX);
       const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
       const targetScrollY = (1 - newProgress) * maxScroll;
+      if (isAutoScrolling) {
+        lastProgrammaticScroll.current = Date.now();
+      }
       window.scrollTo(0, targetScrollY);
       
       raf = requestAnimationFrame(animate);
@@ -139,6 +183,27 @@ export const useScrollManager = () => {
       cancelAnimationFrame(raf);
     };
   }, [isAutoScrolling, progress, globalPathLength, autoScrollDirection, dispatch]);
+
+  // Synchronisation Play/Pause pour éviter les décalages
+  useEffect(() => {
+    const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
+    const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+
+    if (isAutoScrolling) {
+      // Quand on passe en Play, synchronise le scroll natif avec le progress
+      const targetScrollY = (1 - progress) * maxScroll;
+      if (isAutoScrolling) {
+        lastProgrammaticScroll.current = Date.now();
+      }
+      window.scrollTo(0, targetScrollY);
+    } else {
+      // Quand on passe en Pause, synchronise le progress avec la position de scroll réelle
+      const scrollY = window.scrollY;
+      const newProgress = computeScrollProgress(scrollY, maxScroll);
+      dispatch(setProgress(newProgress));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoScrolling]);
 
   // Cleanup
   useEffect(() => {

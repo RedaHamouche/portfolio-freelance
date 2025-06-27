@@ -21,18 +21,16 @@ interface PointTrailProps {
   onGoToNext: () => void;
   angle: number;
   arrowPosition: 'left' | 'right';
-  paddingX: number;
-  paddingY: number;
 }
 
-const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext, angle, arrowPosition, paddingX, paddingY }) => {
+const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext, angle, arrowPosition }) => {
   return (
     <button
       type="button"
       className={classnames(styles.pointContainer, styles[`position-${arrowPosition}`])}
       style={{
-        top: `${y + paddingY}px`,
-        left: `${x + paddingX}px`,
+        top: `${y}px`,
+        left: `${x}px`,
         transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE}) rotate(${angle}deg)`,
         transformOrigin: 'center',
       }}

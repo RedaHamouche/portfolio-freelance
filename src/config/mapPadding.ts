@@ -1,1 +1,1 @@
-export const MAP_PADDING_RATIO = 0.01; // 5% de padding autour du SVG 
+export const MAP_PADDING_RATIO = 0.02; // 5% de padding autour du SVG 

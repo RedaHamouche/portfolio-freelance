@@ -5,7 +5,6 @@ import pathComponents from './pathComponents.json';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { MAP_SCALE } from '@/config/mapScale';
-import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 import classnames from 'classnames';
 
 interface DynamicPathComponentsProps {

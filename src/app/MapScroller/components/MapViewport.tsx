@@ -85,8 +85,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
   const paddingX = svgSize.width * MAP_PADDING_RATIO;
   const paddingY = svgSize.height * MAP_PADDING_RATIO;
-  const paddedWidth = svgSize.width + 2 * paddingX;
-  const paddedHeight = svgSize.height + 2 * paddingY;
 
   return (
     <div
@@ -95,8 +93,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: svgSize.width + 2 * (svgSize.width * MAP_PADDING_RATIO),
-        height: svgSize.height + 2 * (svgSize.height * MAP_PADDING_RATIO),
+        width: svgSize.width + 2 * paddingX,
+        height: svgSize.height + 2 * paddingY,
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',
@@ -123,8 +121,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         onGoToNext={handleGoToNext}
         angle={pointAngle}
         arrowPosition={arrowPosition}
-        paddingX={0}
-        paddingY={0}
       />
     </div>
   );

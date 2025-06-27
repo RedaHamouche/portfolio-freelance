@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import pathComponents from '../../../templating/pathComponents.json';
-import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 
 // interface PathComponentData {
 //   id: string;
@@ -20,7 +19,7 @@ interface PointPosition {
   y: number;
 }
 
-export const usePathCalculations = (pathRef: React.RefObject<SVGPathElement | null>, paddingX: number, paddingY: number) => {
+export const usePathCalculations = (pathRef: React.RefObject<SVGPathElement | null>) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const [dashOffset, setDashOffset] = useState<number>(0);
 

@@ -35,7 +35,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getCurrentPointPosition,
     getCurrentPointAngle,
     getArrowPosition
-  } = usePathCalculations(pathRef, svgSize.width * MAP_PADDING_RATIO, svgSize.height * MAP_PADDING_RATIO);
+  } = usePathCalculations(pathRef);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {

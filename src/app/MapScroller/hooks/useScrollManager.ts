@@ -1,9 +1,23 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store';
+import { RootState } from '@/store';
 import { setIsScrolling, setProgress, setAutoScrollTemporarilyPaused } from '../../../store/scrollSlice';
 import pathComponents from '@/templating/pathComponents.json';
 import { AUTO_SCROLL_SPEED } from '@/config/autoScroll';
+import gsap from 'gsap';
+
+// Typage explicite pour robustesse
+export type PathComponent = {
+  id: string;
+  type: string;
+  displayName: string;
+  anchorId: string;
+  position: {
+    progress: number;
+  };
+  autoScrollPauseTime?: number;
+};
+const typedPathComponents: PathComponent[] = pathComponents as PathComponent[];
 
 const SCROLL_PER_PX = 1.5;
 
@@ -37,13 +51,17 @@ export function useAutoScrollPauseOnManual() {
 
 export const useScrollManager = () => {
   const dispatch = useDispatch();
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const autoScrollRafRef = useRef<number | null>(null);
+  const gsapTickerRef = useRef<boolean>(false);
+  const gsapStepRef = useRef<(() => void) | null>(null);
+  const gsapPauseTimeoutRef = useRef<gsap.core.Tween | null>(null);
   const lastProgrammaticScroll = useRef(0);
+  const lastTimeRef = useRef(performance.now());
+  const pauseStartTimeRef = useRef<number | null>(null);
 
   const isPausedRef = useRef(false);
   const lastPausedAnchorIdRef = useRef<string | null>(null);
   const prevProgressRef = useRef(0);
+  const isAutoPlayingRef = useRef(false);
 
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
@@ -52,8 +70,122 @@ export const useScrollManager = () => {
   const autoScrollDirection = useSelector((state: RootState) => state.scroll.autoScrollDirection);
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
 
-  // Appelle le hook de pause auto-scroll sur scroll manuel
   useAutoScrollPauseOnManual();
+
+  useEffect(() => {
+    isAutoPlayingRef.current = isAutoPlaying;
+  }, [isAutoPlaying]);
+
+  // Centralise le cleanup GSAP
+  const cleanupAutoScroll = useCallback(() => {
+    if (gsapTickerRef.current && gsapStepRef.current) {
+      gsap.ticker.remove(gsapStepRef.current);
+      gsapTickerRef.current = false;
+    }
+    if (gsapPauseTimeoutRef.current) {
+      gsapPauseTimeoutRef.current.kill();
+      gsapPauseTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Fonction d'animation GSAP centralisée avec pause temporaire
+  const animateAutoScrollWithGSAP = useCallback(() => {
+    let lastTime = performance.now();
+    
+    const getNextAnchor = (from: number, to: number) => {
+      return typedPathComponents.find(c => {
+        if (!c.autoScrollPauseTime || c.autoScrollPauseTime <= 0) return false;
+        const tol = 0.002;
+        if (from < to) {
+          return from < c.position.progress && c.position.progress <= to + tol;
+        } else {
+          return to - tol <= c.position.progress && c.position.progress < from;
+        }
+      });
+    };
+
+    const step = () => {
+      if (!isAutoPlayingRef.current) return;
+      if (isPausedRef.current) return;
+      
+      const now = performance.now();
+      const dt = (now - lastTimeRef.current) / 1000;
+      lastTimeRef.current = now;
+      
+      const currentProgress = prevProgressRef.current;
+      const newProgress = (currentProgress + autoScrollDirection * AUTO_SCROLL_SPEED * dt + 1) % 1;
+
+      // Vérifier si on franchit un anchor avec pause
+      const anchor = getNextAnchor(prevProgressRef.current, newProgress);
+      if (anchor && anchor.anchorId !== lastPausedAnchorIdRef.current) {
+        // --- PAUSE TEMPORAIRE ---
+        console.log('Début de pause temporaire pour', anchor.anchorId, 'durée:', anchor.autoScrollPauseTime);
+        isPausedRef.current = true;
+        lastPausedAnchorIdRef.current = anchor.anchorId;
+        pauseStartTimeRef.current = performance.now();
+        dispatch(setAutoScrollTemporarilyPaused(true));
+        
+        // Nettoyer le timeout précédent s'il existe
+        if (gsapPauseTimeoutRef.current) {
+          gsapPauseTimeoutRef.current.kill();
+        }
+        
+        // Lancer le timeout de pause
+        gsapPauseTimeoutRef.current = gsap.delayedCall((anchor.autoScrollPauseTime || 0) / 1000, () => {
+          console.log('Pause terminée, reprise de l\'animation');
+          isPausedRef.current = false;
+          dispatch(setAutoScrollTemporarilyPaused(false));
+          
+          // Ajuster lastTime pour compenser le temps de pause
+          if (pauseStartTimeRef.current) {
+            const pauseDuration = performance.now() - pauseStartTimeRef.current;
+            lastTimeRef.current = performance.now() - pauseDuration;
+            pauseStartTimeRef.current = null;
+          }
+          
+          gsapPauseTimeoutRef.current = null;
+        });
+        
+        // NE PAS mettre à jour prevProgressRef pendant la pause
+        // prevProgressRef.current = newProgress; // ← Cette ligne est supprimée
+        return;
+      }
+      
+      // Réinitialiser si on n'est plus sur un anchor
+      if (!anchor) {
+        lastPausedAnchorIdRef.current = null;
+        dispatch(setAutoScrollTemporarilyPaused(false));
+      }
+      
+      // Mettre à jour le progress seulement si on n'est pas en pause
+      if (!isPausedRef.current) {
+        dispatch(setProgress(newProgress));
+        prevProgressRef.current = newProgress;
+        
+        // Synchroniser la position de scroll
+        const fakeScrollHeight = Math.round(globalPathLength * SCROLL_PER_PX);
+        const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+        const targetScrollY = (1 - newProgress) * maxScroll;
+        lastProgrammaticScroll.current = Date.now();
+        window.scrollTo(0, targetScrollY);
+      }
+    };
+
+    // Nettoyer avant de lancer
+    cleanupAutoScroll();
+    gsapStepRef.current = step;
+    gsap.ticker.add(step);
+    gsapTickerRef.current = true;
+  }, [autoScrollDirection, dispatch, globalPathLength, cleanupAutoScroll]);
+
+  // Hook d'initialisation/cleanup de l'auto-scroll
+  const setupAutoScroll = useCallback(() => {
+    cleanupAutoScroll();
+    if (isAutoPlaying) {
+      animateAutoScrollWithGSAP();
+    }
+    return cleanupAutoScroll;
+  }, [isAutoPlaying, animateAutoScrollWithGSAP, cleanupAutoScroll]);
 
   // Références pour accéder au state actuel dans les callbacks
   const progressRef = useRef(progress);
@@ -73,11 +205,11 @@ export const useScrollManager = () => {
 
   const handleScrollState = useCallback((isScrolling: boolean) => {
     dispatch(setIsScrolling(isScrolling));
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    if (gsapPauseTimeoutRef.current) gsapPauseTimeoutRef.current.kill();
     if (isScrolling) {
-      scrollTimeoutRef.current = setTimeout(() => {
+      gsapPauseTimeoutRef.current = gsap.delayedCall(150 / 1000, () => {
         dispatch(setIsScrolling(false));
-      }, 150);
+      });
     }
   }, [dispatch]);
 
@@ -118,138 +250,32 @@ export const useScrollManager = () => {
   // Scroll directionnel (clavier)
   const setupDirectionalScroll = useCallback(() => {
     if (!direction) return;
-    
-    if (autoScrollRafRef.current) cancelAnimationFrame(autoScrollRafRef.current);
-
+    cleanupAutoScroll();
     let lastTimestamp: number | null = null;
-    const move = (timestamp: number) => {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const delta = timestamp - lastTimestamp;
-      lastTimestamp = timestamp;
-
+    const move = () => {
+      if (!direction) return;
+      if (lastTimestamp === null) {
+        lastTimestamp = performance.now();
+        return;
+      }
+      const now = performance.now();
+      const delta = now - lastTimestamp;
+      lastTimestamp = now;
       const pxPerMs = speed / 1000;
       const currentProgress = progressRef.current;
       const newProgress = (currentProgress + (direction === 'bas' ? 1 : -1) * (pxPerMs * delta / globalPathLengthRef.current) + 1) % 1;
       dispatch(setProgress(newProgress));
-
-      autoScrollRafRef.current = requestAnimationFrame(move);
     };
-
-    autoScrollRafRef.current = requestAnimationFrame(move);
+    gsap.ticker.add(move);
     return () => {
-      if (autoScrollRafRef.current) cancelAnimationFrame(autoScrollRafRef.current);
+      gsap.ticker.remove(move);
     };
-  }, [direction, speed, dispatch]);
-
-  // --- Centralisation de la boucle d'animation auto-scroll ---
-  const startAutoScrollAnimation = useCallback(() => {
-    if (autoScrollRafRef.current) {
-      cancelAnimationFrame(autoScrollRafRef.current);
-    }
-    let lastTime = performance.now();
-    console.log('[AutoScroll] Animation démarrée');
-
-    const getNextAnchor = (from: number, to: number) => {
-      return pathComponents.find(c => {
-        if (!c.autoScrollPauseTime || c.autoScrollPauseTime <= 0) return false;
-        const tol = 0.002;
-        if (from < to) {
-          return from < c.position.progress && c.position.progress <= to + tol;
-        } else {
-          return to - tol <= c.position.progress && c.position.progress < from;
-        }
-      });
-    };
-
-    const animate = (now: number) => {
-      if (!isAutoPlaying) {
-        console.log('[AutoScroll] Animation stoppée (isAutoPlaying false)');
-        return;
-      }
-      if (isPausedRef.current) {
-        console.log('[AutoScroll] Animation en pause temporaire');
-        return;
-      }
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
-      const currentProgress = progressRef.current;
-      const newProgress = (currentProgress + autoScrollDirection * AUTO_SCROLL_SPEED * dt + 1) % 1;
-      dispatch(setProgress(newProgress));
-
-      // Pause auto-scroll si on franchit un anchor
-      const anchor = getNextAnchor(prevProgressRef.current, newProgress);
-      if (anchor && anchor.anchorId !== lastPausedAnchorIdRef.current) {
-        isPausedRef.current = true;
-        lastPausedAnchorIdRef.current = anchor.anchorId;
-        dispatch(setAutoScrollTemporarilyPaused(true));
-        console.log('[AutoScroll] Pause temporaire sur anchor', anchor.anchorId);
-        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = setTimeout(() => {
-          isPausedRef.current = false;
-          dispatch(setAutoScrollTemporarilyPaused(false));
-          // Avance légèrement le progress pour sortir de la zone de l'anchor
-          const bump = 0.002 * autoScrollDirection;
-          const newProgressAfterPause = (progressRef.current + bump + 1) % 1;
-          dispatch(setProgress(newProgressAfterPause));
-          console.log('[AutoScroll] Reprise après pause temporaire');
-          startAutoScrollAnimation(); // Relance explicite
-        }, anchor.autoScrollPauseTime);
-        prevProgressRef.current = newProgress;
-        return;
-      }
-      if (!anchor) {
-        lastPausedAnchorIdRef.current = null;
-        dispatch(setAutoScrollTemporarilyPaused(false));
-      }
-      prevProgressRef.current = newProgress;
-
-      // Synchroniser la position de scroll en temps réel
-      const fakeScrollHeight = Math.round(globalPathLengthRef.current * SCROLL_PER_PX);
-      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
-      const targetScrollY = (1 - newProgress) * maxScroll;
-      lastProgrammaticScroll.current = Date.now();
-      window.scrollTo(0, targetScrollY);
-
-      autoScrollRafRef.current = requestAnimationFrame(animate);
-    };
-    autoScrollRafRef.current = requestAnimationFrame(animate);
-  }, [isAutoPlaying, autoScrollDirection, dispatch]);
-
-  const stopAutoScrollAnimation = useCallback(() => {
-    if (autoScrollRafRef.current) {
-      cancelAnimationFrame(autoScrollRafRef.current);
-      autoScrollRafRef.current = null;
-      console.log('[AutoScroll] Animation stoppée');
-    }
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = null;
-      console.log('[AutoScroll] Timeout nettoyé');
-    }
-  }, []);
-
-  // --- Gestion Play/Pause global ---
-  useEffect(() => {
-    if (isAutoPlaying) {
-      stopAutoScrollAnimation(); // Nettoie avant de relancer
-      startAutoScrollAnimation();
-    } else {
-      stopAutoScrollAnimation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoPlaying, startAutoScrollAnimation, stopAutoScrollAnimation]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      stopAutoScrollAnimation();
-    };
-  }, [stopAutoScrollAnimation]);
+  }, [direction, speed, dispatch, cleanupAutoScroll]);
 
   return {
     setupManualScroll,
     setupDirectionalScroll,
-    setupAutoScroll: startAutoScrollAnimation,
+    setupAutoScroll,
     handleScrollState
   };
 }; 

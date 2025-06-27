@@ -28,6 +28,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   globalPathLength
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const isAutoScrollTemporarilyPaused = useSelector((state: RootState) => state.scroll.isAutoScrollTemporarilyPaused);
   
   const {
     dashOffset,
@@ -37,9 +38,9 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getArrowPosition
   } = usePathCalculations(pathRef);
 
-  // Gérer le positionnement de la vue
+  // Gérer le positionnement de la vue (seulement si pas en pause temporaire)
   useLayoutEffect(() => {
-    if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
+    if (!svgRef.current || !pathRef.current || !mapWrapperRef.current || isAutoScrollTemporarilyPaused) return;
     
     const path = pathRef.current;
     const totalLength = path.getTotalLength();
@@ -60,7 +61,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     const wrapper = mapWrapperRef.current;
     wrapper.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
     wrapper.style.transformOrigin = 'top left';
-  }, [progress, svgSize, svgRef, pathRef, mapWrapperRef]);
+  }, [progress, svgSize, svgRef, pathRef, mapWrapperRef, isAutoScrollTemporarilyPaused]);
 
   const handleGoToNext = () => {
     if (!nextComponent) return;

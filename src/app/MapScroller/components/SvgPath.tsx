@@ -32,16 +32,16 @@ export const SvgPath: React.FC<SvgPathProps> = ({
     >
       {pathD && (
         <g transform={`translate(${paddingX}, ${paddingY})`}>
-          <path
-            ref={pathRef}
-            d={pathD}
-            fill="none"
-            stroke="#6ad7b3"
-            strokeWidth={6}
-            strokeDasharray="20 10"
-            className={styles.path}
-            style={{ strokeDashoffset: dashOffset }}
-          />
+        <path
+          ref={pathRef}
+          d={pathD}
+          fill="none"
+          stroke="#6ad7b3"
+          strokeWidth={6}
+          strokeDasharray="20 10"
+          className={styles.path}
+          style={{ strokeDashoffset: dashOffset }}
+        />
         </g>
       )}
     </svg>

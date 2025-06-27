@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../index.module.scss';
+import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 
 interface SvgPathProps {
   pathD: string | null;
@@ -16,24 +17,32 @@ export const SvgPath: React.FC<SvgPathProps> = ({
   pathRef,
   svgRef
 }) => {
+  // Padding basé sur la config globale
+  const paddingX = svgSize.width * MAP_PADDING_RATIO;
+  const paddingY = svgSize.height * MAP_PADDING_RATIO;
+  const paddedWidth = svgSize.width + 2 * paddingX;
+  const paddedHeight = svgSize.height + 2 * paddingY;
+
   return (
     <svg
       ref={svgRef}
-      width={svgSize.width}
-      height={svgSize.height}
+      width={paddedWidth}
+      height={paddedHeight}
       className={styles.mainSvg}
     >
       {pathD && (
-        <path
-          ref={pathRef}
-          d={pathD}
-          fill="none"
-          stroke="#6ad7b3"
-          strokeWidth={6}
-          strokeDasharray="20 10"
-          className={styles.path}
-          style={{ strokeDashoffset: dashOffset }}
-        />
+        <g transform={`translate(${paddingX}, ${paddingY})`}>
+          <path
+            ref={pathRef}
+            d={pathD}
+            fill="none"
+            stroke="#6ad7b3"
+            strokeWidth={6}
+            strokeDasharray="20 10"
+            className={styles.path}
+            style={{ strokeDashoffset: dashOffset }}
+          />
+        </g>
       )}
     </svg>
   );

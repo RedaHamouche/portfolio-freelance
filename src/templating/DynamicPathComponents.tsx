@@ -5,10 +5,13 @@ import pathComponents from './pathComponents.json';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { MAP_SCALE } from '@/config/mapScale';
+import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 import classnames from 'classnames';
 
 interface DynamicPathComponentsProps {
   pathRef: React.RefObject<SVGPathElement | null>;
+  paddingX: number;
+  paddingY: number;
 }
 
 // interface PathComponent {
@@ -53,7 +56,7 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
   return inViews;
 }
 
-export default function DynamicPathComponents({ pathRef }: DynamicPathComponentsProps) {
+export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
 
   const getPositionOnPath = (progressValue: number) => {
@@ -61,7 +64,7 @@ export default function DynamicPathComponents({ pathRef }: DynamicPathComponents
     if (!path) return { x: 0, y: 0 };
     const totalLength = path.getTotalLength();
     const position = path.getPointAtLength(progressValue * totalLength);
-    return { x: position.x, y: position.y };
+    return { x: position.x + paddingX, y: position.y + paddingY };
   };
 
   // Utilise useMemo pour initialiser les refs une seule fois

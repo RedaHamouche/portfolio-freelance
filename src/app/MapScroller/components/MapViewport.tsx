@@ -8,6 +8,7 @@ import PointTrail from '../PointTrail';
 import { usePathCalculations } from '../hooks/usePathCalculations';
 import gsap from 'gsap';
 import { MAP_SCALE } from '@/config/mapScale';
+import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 
 interface MapViewportProps {
   svgSize: { width: number; height: number };
@@ -34,7 +35,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getCurrentPointPosition,
     getCurrentPointAngle,
     getArrowPosition
-  } = usePathCalculations(pathRef);
+  } = usePathCalculations(pathRef, svgSize.width * MAP_PADDING_RATIO, svgSize.height * MAP_PADDING_RATIO);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
@@ -44,10 +45,15 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     const totalLength = path.getTotalLength();
     const pos = path.getPointAtLength(progress * totalLength);
 
-    const idealX = pos.x * MAP_SCALE - window.innerWidth / 2;
-    const idealY = pos.y * MAP_SCALE - window.innerHeight / 2;
-    const maxX = Math.max(0, svgSize.width * MAP_SCALE - window.innerWidth);
-    const maxY = Math.max(0, svgSize.height * MAP_SCALE - window.innerHeight);
+    const paddingX = svgSize.width * MAP_PADDING_RATIO;
+    const paddingY = svgSize.height * MAP_PADDING_RATIO;
+    const paddedWidth = svgSize.width + 2 * paddingX;
+    const paddedHeight = svgSize.height + 2 * paddingY;
+
+    const idealX = (pos.x + paddingX) * MAP_SCALE - window.innerWidth / 2;
+    const idealY = (pos.y + paddingY) * MAP_SCALE - window.innerHeight / 2;
+    const maxX = Math.max(0, paddedWidth * MAP_SCALE - window.innerWidth);
+    const maxY = Math.max(0, paddedHeight * MAP_SCALE - window.innerHeight);
     const clampedX = Math.max(0, Math.min(idealX, maxX));
     const clampedY = Math.max(0, Math.min(idealY, maxY));
 
@@ -77,6 +83,11 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const pointAngle = getCurrentPointAngle();
   const arrowPosition = getArrowPosition();
 
+  const paddingX = svgSize.width * MAP_PADDING_RATIO;
+  const paddingY = svgSize.height * MAP_PADDING_RATIO;
+  const paddedWidth = svgSize.width + 2 * paddingX;
+  const paddedHeight = svgSize.height + 2 * paddingY;
+
   return (
     <div
       ref={mapWrapperRef}
@@ -84,8 +95,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: svgSize.width,
-        height: svgSize.height,
+        width: svgSize.width + 2 * (svgSize.width * MAP_PADDING_RATIO),
+        height: svgSize.height + 2 * (svgSize.height * MAP_PADDING_RATIO),
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',
@@ -95,6 +106,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       <Dynamic />
       <DynamicPathComponents 
         pathRef={pathRef}
+        paddingX={paddingX}
+        paddingY={paddingY}
       />
       <SvgPath
         pathD={pathD}
@@ -104,12 +117,14 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         svgRef={svgRef}
       />
       <PointTrail 
-        x={pointPosition.x}
-        y={pointPosition.y}
+        x={pointPosition.x + paddingX}
+        y={pointPosition.y + paddingY}
         nextComponent={nextComponent}
         onGoToNext={handleGoToNext}
         angle={pointAngle}
         arrowPosition={arrowPosition}
+        paddingX={0}
+        paddingY={0}
       />
     </div>
   );

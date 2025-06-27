@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './index.module.scss';
 import classnames from 'classnames';
+import { MAP_SCALE } from '@/config/mapScale';
 
 interface PathComponentData {
   id: string;
@@ -20,17 +21,20 @@ interface PointTrailProps {
   onGoToNext: () => void;
   angle: number;
   arrowPosition: 'left' | 'right';
+  paddingX: number;
+  paddingY: number;
 }
 
-const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext, angle, arrowPosition }) => {
+const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext, angle, arrowPosition, paddingX, paddingY }) => {
   return (
     <button
       type="button"
       className={classnames(styles.pointContainer, styles[`position-${arrowPosition}`])}
       style={{
-        top: `${y}px`,
-        left: `${x}px`,
-        transform: `translate(-50%, -50%) rotate(${angle}deg)`
+        top: `${y + paddingY}px`,
+        left: `${x + paddingX}px`,
+        transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE}) rotate(${angle}deg)`,
+        transformOrigin: 'center',
       }}
       onClick={onGoToNext}
       tabIndex={0}

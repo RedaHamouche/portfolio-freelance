@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "jest",
     "component-create": "hygen component-create new --name"
   },
   "dependencies": {
@@ -22,14 +23,20 @@
     "@eslint/eslintrc": "^3",
     "@netlify/plugin-nextjs": "^5.11.3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "hygen": "^6.2.11",
+    "jest": "^30.0.3",
+    "jest-environment-jsdom": "^30.0.2",
     "sass": "^1.89.2",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.0",
     "typescript": "^5"
   }
 }

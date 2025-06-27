@@ -1,8 +1,8 @@
 import React, { useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../store';
-import Dynamic from '../../../templating/Dynamic';
-import DynamicPathComponents from '../../../templating/DynamicPathComponents';
+import { RootState } from '@/store';
+import Dynamic from '@/templating/Dynamic';
+import DynamicPathComponents from '@/templating/DynamicPathComponents';
 import { SvgPath } from './SvgPath';
 import PointTrail from '../PointTrail';
 import { usePathCalculations } from '../hooks/usePathCalculations';

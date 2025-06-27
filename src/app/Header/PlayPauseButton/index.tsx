@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store';
-import { setAutoScrollDirection, setAutoPlaying } from '../../../store/scrollSlice';
+import { RootState } from '@/store';
+import { setAutoScrollDirection, setAutoPlaying } from '@/store/scrollSlice';
 
 const PlayPauseButton: React.FC = () => {
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);

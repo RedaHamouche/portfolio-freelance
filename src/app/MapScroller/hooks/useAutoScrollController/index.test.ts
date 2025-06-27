@@ -13,7 +13,7 @@ jest.mock('react-redux', () => ({
 }));
 
 // Mock useRafLoop
-jest.mock('../../../../hooks/useRafLoop', () => ({
+jest.mock('@/hooks/useRafLoop', () => ({
   useRafLoop: () => ({
     start: jest.fn(),
     stop: jest.fn()

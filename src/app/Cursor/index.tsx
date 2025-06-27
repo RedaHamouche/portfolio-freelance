@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { RootState } from '@/store';
 import styles from './index.module.scss';
 import cx from 'classnames';
 import Arrow from './Svgs/Arrow';

@@ -8,9 +8,9 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
-import { setPathLength } from '../../store/scrollSlice';
-import { setMapSize } from '../../store/mapSlice';
+import { RootState } from '@/store';
+import { setPathLength } from '@/store/scrollSlice';
+import { setMapSize } from '@/store/mapSlice';
 import { MapViewport } from './components';
 import { usePathLoader, useScrollManager } from './hooks';
 
@@ -21,7 +21,7 @@ if (typeof window !== 'undefined') {
 
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
+  const pathRef = useRef<SVGPathElement | null>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
   
   const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);

@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:all": "jest --passWithNoTests",
     "component-create": "hygen component-create new --name"
   },
   "dependencies": {

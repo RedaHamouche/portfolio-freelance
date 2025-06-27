@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../../store';
-import pathComponents from '../../../../templating/pathComponents.json';
+import { RootState } from '@/store';
+import pathComponents from '@/templating/pathComponents.json';
 
 // interface PathComponentData {
 //   id: string;

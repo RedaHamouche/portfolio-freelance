@@ -69,7 +69,7 @@ const MapScroller: React.FC = () => {
   }, [setupDirectionalScroll]);
 
   useEffect(() => {
-    const cleanupAuto = setupAutoScroll(isAutoPlaying);
+    const cleanupAuto = setupAutoScroll();
     return cleanupAuto;
   }, [isAutoPlaying, setupAutoScroll]);
 

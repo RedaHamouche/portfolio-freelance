@@ -4,6 +4,8 @@ import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { MAP_SCALE } from '@/config/mapScale';
+import classnames from 'classnames';
 
 interface DynamicPathComponentsProps {
   pathRef: React.RefObject<SVGPathElement | null>;
@@ -88,16 +90,17 @@ export default function DynamicPathComponents({ pathRef }: DynamicPathComponents
             data-name={`${component.displayName}-PATH-COMPONENT`}
             key={component.id}
             ref={refs[idx]}
-            className={inViews[idx] ? 'lazyLoadAnimation' : ''}
+            className={classnames({ lazyLoadAnimation: inViews[idx] })}
             style={{
               position: 'absolute',
               top: position.y,
               left: position.x,
-              transform: 'translate(-50%, -50%)',
               pointerEvents: 'auto',
               zIndex: 10,
               opacity: inViews[idx] ? 1 : 0,
               transition: 'opacity 0.5s',
+              transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE})`,
+              transformOrigin: 'center',
             }}
           >
             {Comp && <Comp {...component} />}

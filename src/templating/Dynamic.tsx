@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import mappingComponent from './mappingComponent';
 import config from './page.json';
+import { MAP_SCALE } from '@/config/mapScale';
+import classnames from 'classnames';
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs
 function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], threshold = 0.1) {
@@ -56,7 +58,7 @@ export default function Dynamic({}: DynamicProps) {
           <div
             key={idx}
             ref={refs[idx]}
-            className={inViews[idx] ? 'lazyLoadAnimation' : ''}
+            className={classnames({ lazyLoadAnimation: inViews[idx] })}
             style={{
               position: 'absolute',
               top: position?.top,
@@ -64,6 +66,8 @@ export default function Dynamic({}: DynamicProps) {
               pointerEvents: 'auto',
               opacity: inViews[idx] ? 1 : 0,
               transition: 'opacity 0.5s',
+              transform: `scale(${1 / MAP_SCALE})`,
+              transformOrigin: 'top left',
             }}
           >
             {Comp && <Comp {...componentProps} />}

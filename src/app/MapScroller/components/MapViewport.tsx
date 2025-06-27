@@ -7,8 +7,7 @@ import { SvgPath } from './SvgPath';
 import PointTrail from '../PointTrail';
 import { usePathCalculations } from '../hooks/usePathCalculations';
 import gsap from 'gsap';
-
-const MAP_SCALE = 1;
+import { MAP_SCALE } from '@/config/mapScale';
 
 interface MapViewportProps {
   svgSize: { width: number; height: number };
@@ -87,6 +86,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         left: 0,
         width: svgSize.width,
         height: svgSize.height,
+        minWidth: '100vw',
+        minHeight: '100vh',
         willChange: 'transform',
         zIndex: 2,
       }}

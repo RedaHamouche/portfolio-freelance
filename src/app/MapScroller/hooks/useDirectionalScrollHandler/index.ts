@@ -29,7 +29,7 @@ export function useDirectionalScrollHandler({
     globalPathLengthRef.current = globalPathLength;
   }, [globalPathLength]);
 
-  const animate = useCallback((timestamp: number) => {
+  const animate = useCallback(() => {
     if (!direction) return;
     const pxPerMs = speed / 1000;
     const newProgress = (progressRef.current + (direction === 'bas' ? 1 : -1) * (pxPerMs * SCROLL_CONFIG.FRAME_DELAY / globalPathLengthRef.current) + 1) % 1;

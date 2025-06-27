@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,8 +23,6 @@ const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement | null>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
-  
-  const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);
 
   const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
@@ -37,8 +35,7 @@ const MapScroller: React.FC = () => {
     startDirectionalScroll,
     stopDirectionalScroll,
     startAutoScroll,
-    stopAutoScroll,
-    handleScrollState
+    stopAutoScroll
   } = useScrollManager();
 
   // Mettre à jour la longueur du path dans le store
@@ -73,15 +70,6 @@ const MapScroller: React.FC = () => {
     }
     return undefined;
   }, [isAutoPlaying, startAutoScroll, stopAutoScroll]);
-
-  // Gérer la transition entre scroll automatique et manuel
-  useEffect(() => {
-    if (!isAutoPlaying) {
-      setUseNativeScroll(true);
-    } else {
-      setUseNativeScroll(false);
-    }
-  }, [isAutoPlaying]);
 
   // Calculer la hauteur du scroll factice
   const fakeScrollHeight = Math.round(globalPathLength * 1.5);

@@ -27,7 +27,6 @@ jest.mock('react-redux', () => ({
 describe('useManualScrollSync', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // @ts-ignore
     window.scrollY = 0;
   });
 
@@ -46,7 +45,6 @@ describe('useManualScrollSync', () => {
     const fakeScrollHeight = Math.round(globalPathLength * 1.5);
     const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
     
-    // @ts-ignore
     window.scrollY = -10; // En dessous de 0
     
     renderHook(() => useManualScrollSync(globalPathLength));
@@ -59,7 +57,6 @@ describe('useManualScrollSync', () => {
     const fakeScrollHeight = Math.round(globalPathLength * 1.5);
     const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
     
-    // @ts-ignore
     window.scrollY = maxScroll / 2; // Au milieu
     
     const { result } = renderHook(() => useManualScrollSync(globalPathLength));

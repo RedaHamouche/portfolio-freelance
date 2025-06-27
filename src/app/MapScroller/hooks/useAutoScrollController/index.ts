@@ -52,7 +52,7 @@ export function useAutoScrollController({
     prevProgressRef.current = progress;
   }, [progress]);
 
-  const animate = useCallback((now: number) => {
+  const animate = useCallback(() => {
     if (!isAutoPlaying) return;
     if (isPausedRef.current) return;
     

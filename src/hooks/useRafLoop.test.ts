@@ -15,7 +15,7 @@ describe('useRafLoop', () => {
     // Simule 3 frames
     for (let i = 0; i < 3; i++) {
       act(() => {
-        // @ts-ignore
+        // @ts-expect-error - Mocking requestAnimationFrame
         window.requestAnimationFrame.mock.calls[i][0](performance.now());
       });
     }
@@ -36,7 +36,7 @@ describe('useRafLoop', () => {
     });
 
     act(() => {
-      // @ts-ignore
+      // @ts-expect-error - Mocking requestAnimationFrame
       window.requestAnimationFrame.mock.calls[0][0](performance.now());
     });
 
@@ -46,7 +46,7 @@ describe('useRafLoop', () => {
 
     // Simule une frame supplémentaire
     act(() => {
-      // @ts-ignore
+      // @ts-expect-error - Mocking requestAnimationFrame
       window.requestAnimationFrame.mock.calls[1][0](performance.now());
     });
 

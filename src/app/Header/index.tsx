@@ -1,7 +1,7 @@
 "use client"
 import styles from './index.module.scss';
 import PlayPauseButton from './PlayPauseButton';
-import DotIcon from './DotIcon'
+import Announce from './Announce';
 
 type announcementsType = {
   color: string
@@ -15,23 +15,7 @@ export type HeaderType = {
 function Header({announcements = []}: HeaderType) {
   return (
     <header className={styles.header}>   
-      <div className={styles.announce}>
-        <div className={styles.scrollContainer}>
-          {announcements.map((announce) => {
-            const {color, text} = announce;
-            return (
-                <div key={text} className={styles.freelance}>
-                  <DotIcon color={color} />
-                    <p className={styles.text}>
-                      {text}
-                    </p>
-                    <DotIcon color={color} />
-                </div>
-            );
-          })}
-        </div>
-      </div>
-
+      <Announce announcements={announcements} />
       <PlayPauseButton />
     </header>
   );

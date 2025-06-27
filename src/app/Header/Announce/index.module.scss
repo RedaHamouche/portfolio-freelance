@@ -1,13 +1,15 @@
-.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9000;
-    height: 56px;
-    width: 100vw;
-    background: rgba(255, 254, 254, 0.4);
-    backdrop-filter: blur(4px);
-    border-bottom: 1px dashed $color-primary;
+.announce {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: $spacing-xs 0 $spacing-xs $spacing-xs;
+    border: 1px dashed $color-mono-black;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 160px;
+    background-color: $color-white;
+    // animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
 }
 
 .scrollContainer {
@@ -40,17 +42,4 @@
     margin: 0;
     font-size: 14px;
     font-weight: 500;
-}
-
-// MOVING BORDER
-@keyframes movingBorderAnimationKeyFrame {
-
-    to {
-        stroke-dashoffset: 100;
-    }
-}
-
-.movingBorderAnimation {
-    stroke-dasharray: 1;
-    animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
-}
+} 

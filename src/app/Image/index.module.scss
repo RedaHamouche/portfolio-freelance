@@ -1,0 +1,104 @@
+.imageContainer {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  
+  &.clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  
+  &.loaded {
+    opacity: 1;
+  }
+}
+
+.placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Variantes de taille
+.small {
+  width: 200px;
+  height: 150px;
+}
+
+.medium {
+  width: 300px;
+  height: 225px;
+}
+
+.large {
+  width: 400px;
+  height: 300px;
+}
+
+.fullWidth {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+// Variantes de forme
+.rounded {
+  border-radius: 12px;
+}
+
+.circular {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+// Effets
+.withShadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.withBorder {
+  border: 2px solid #e0e0e0;
+} 

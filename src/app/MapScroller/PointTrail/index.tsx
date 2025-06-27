@@ -7,11 +7,11 @@ interface PathComponentData {
   id: string;
   type: string;
   displayName: string;
+  anchorId: string;
   position: {
     progress: number;
-    start: number;
-    end: number;
   };
+  autoScrollPauseTime?: number;
 }
 
 interface PointTrailProps {

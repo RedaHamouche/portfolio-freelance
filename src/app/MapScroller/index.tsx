@@ -27,7 +27,7 @@ const MapScroller: React.FC = () => {
   const [useNativeScroll, setUseNativeScroll] = useState<boolean>(true);
 
   const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
-  const isAutoScrolling = useSelector((state: RootState) => state.scroll.isAutoScrolling);
+  const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const dispatch = useDispatch();
 
@@ -69,18 +69,18 @@ const MapScroller: React.FC = () => {
   }, [setupDirectionalScroll]);
 
   useEffect(() => {
-    const cleanupAuto = setupAutoScroll(isAutoScrolling);
+    const cleanupAuto = setupAutoScroll(isAutoPlaying);
     return cleanupAuto;
-  }, [isAutoScrolling, setupAutoScroll]);
+  }, [isAutoPlaying, setupAutoScroll]);
 
   // Gérer la transition entre scroll automatique et manuel
   useEffect(() => {
-    if (!isAutoScrolling) {
+    if (!isAutoPlaying) {
       setUseNativeScroll(true);
     } else {
       setUseNativeScroll(false);
     }
-  }, [isAutoScrolling]);
+  }, [isAutoPlaying]);
 
   // Calculer la hauteur du scroll factice
   const fakeScrollHeight = Math.round(globalPathLength * 1.5);

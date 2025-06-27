@@ -6,7 +6,8 @@
     "anchorId": "projectsBanner",
     "position": {
       "progress": 0.8
-    }
+    },
+    "autoScrollPauseTime": 2000
   },
   {
     "id": "black-square",
@@ -14,8 +15,9 @@
     "displayName": "carré noir",
     "anchorId": "blackSquare",
     "position": {
-      "progress": 0.3
-    }
+      "progress": 0.1
+    },
+    "autoScrollPauseTime": 1000
   },
   {
     "id": "black-square-2",
@@ -24,6 +26,7 @@
     "anchorId": "blackSquare2",
     "position": {
       "progress": 0.35
-    }
+    },
+    "autoScrollPauseTime": 0
   }
 ] 

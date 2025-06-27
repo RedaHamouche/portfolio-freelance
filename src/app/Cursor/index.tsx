@@ -14,7 +14,7 @@ const Cursor = () => {
 
   // Utiliser l'état global Redux
   const { isClickable } = useSelector((state: RootState) => state.cursor);
-  const { isScrolling, isAutoScrolling } = useSelector((state: RootState) => state.scroll);
+  const { isScrolling } = useSelector((state: RootState) => state.scroll);
 
   const toggleClick = useCallback((boolean = false) => {
     // Toujours déclencher l'animation de clic, peu importe si l'élément est clickable
@@ -58,7 +58,7 @@ const Cursor = () => {
           styles.outerSvg,
           {
             [styles.ToClick]: toClick,
-            [styles.movingBorderAnimation]: isScrolling || isAutoScrolling,
+            [styles.movingBorderAnimation]: isScrolling,
             [styles.clickedAnimation]: clicked,
           }
         )}

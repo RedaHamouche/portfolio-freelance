@@ -33,7 +33,13 @@ const MapScroller: React.FC = () => {
 
   // Hooks personnalisés
   const { pathD, svgSize, isLoading, error } = usePathLoader();
-  const { setupManualScroll, setupDirectionalScroll, setupAutoScroll } = useScrollManager();
+  const {
+    startDirectionalScroll,
+    stopDirectionalScroll,
+    startAutoScroll,
+    stopAutoScroll,
+    handleScrollState
+  } = useScrollManager();
 
   // Mettre à jour la longueur du path dans le store
   useEffect(() => {
@@ -48,30 +54,25 @@ const MapScroller: React.FC = () => {
     dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
   }, [svgSize, dispatch]);
 
-  // Gérer le scroll manuel
+  // Gérer le scroll manuel : plus besoin de setupManualScroll, c'est automatique via le hook
+
+  // Gérer le scroll directionnel (clavier/boutons)
   useEffect(() => {
-    if (!direction) {
-      setUseNativeScroll(true);
-      return;
+    if (direction) {
+      startDirectionalScroll();
+      return stopDirectionalScroll;
     }
-    setUseNativeScroll(false);
-  }, [direction]);
+    return undefined;
+  }, [direction, startDirectionalScroll, stopDirectionalScroll]);
 
-  // Setup des différents types de scroll
+  // Gérer l'auto-scroll (play/pause)
   useEffect(() => {
-    const cleanupManual = setupManualScroll(useNativeScroll);
-    return cleanupManual;
-  }, [useNativeScroll, setupManualScroll]);
-
-  useEffect(() => {
-    const cleanupDirectional = setupDirectionalScroll();
-    return cleanupDirectional;
-  }, [setupDirectionalScroll]);
-
-  useEffect(() => {
-    const cleanupAuto = setupAutoScroll();
-    return cleanupAuto;
-  }, [isAutoPlaying, setupAutoScroll]);
+    if (isAutoPlaying) {
+      startAutoScroll();
+      return stopAutoScroll;
+    }
+    return undefined;
+  }, [isAutoPlaying, startAutoScroll, stopAutoScroll]);
 
   // Gérer la transition entre scroll automatique et manuel
   useEffect(() => {

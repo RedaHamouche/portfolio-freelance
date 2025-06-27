@@ -3,30 +3,27 @@
     "id": "projects-banner",
     "type": "ProjectsBanner",
     "displayName": "Projets ejbjbfjblejfb",
+    "anchorId": "projectsBanner",
     "position": {
-      "progress": 0.8,
-      "start": 0.120,
-      "end": 0.130
+      "progress": 0.8
     }
   },
   {
     "id": "black-square",
     "type": "BlackSquare",
     "displayName": "carré noir",
+    "anchorId": "blackSquare",
     "position": {
-      "progress": 0.3,
-      "start": 0.125,
-      "end": 0.135
+      "progress": 0.3
     }
   },
   {
     "id": "black-square-2",
     "type": "BlackSquare",
     "displayName": "carré noir 2 plus loins",
+    "anchorId": "blackSquare2",
     "position": {
-      "progress": 0.35,
-      "start": 0.125,
-      "end": 0.135
+      "progress": 0.35
     }
   }
 ] 

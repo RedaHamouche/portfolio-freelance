@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { MAP_SCALE } from '@/config/mapScale';
 import classnames from 'classnames';
+import { setProgress } from '../store/scrollSlice';
+import { ANCHOR_RANGE } from '@/config/anchorRange';
 
 interface DynamicPathComponentsProps {
   pathRef: React.RefObject<SVGPathElement | null>;
@@ -57,6 +59,24 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
 
 export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const dispatch = useDispatch();
+
+  // Gestion du deeplink (hash)
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (!hash) return;
+      const anchorComponent = pathComponents.find(c => c.anchorId === hash);
+      if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
+        dispatch(setProgress(anchorComponent.position.progress));
+      }
+    };
+    // On gère au chargement
+    handleHash();
+    // On gère si le hash change
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [dispatch]);
 
   const getPositionOnPath = (progressValue: number) => {
     const path = pathRef.current;
@@ -72,13 +92,32 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
     []
   );
 
-  // Calcule pour chaque composant s'il est proche du point
-  const isNears = pathComponents.map(
-    (component) => Math.abs(progress - component.position.progress) < DISTANCE_BEFORE_LOAD
+  // Hook pour savoir si chaque composant est "actif" selon la range
+  const activeAnchors = pathComponents.map(
+    (component) => {
+      const anchorProgress = component.position.progress;
+      return Math.abs(progress - anchorProgress) <= ANCHOR_RANGE / 2;
+    }
   );
 
-  // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser isNears comme critère)
-  const inViews = useMultipleInView(refs, isNears, 0.1);
+  // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser activeAnchors comme critère)
+  const inViews = useMultipleInView(refs, activeAnchors, 0.1);
+
+  // Mise à jour du hash dans l'URL quand un composant anchor devient actif
+  useEffect(() => {
+    const firstActiveIdx = activeAnchors.findIndex((v, idx) => v && pathComponents[idx].anchorId);
+    if (firstActiveIdx !== -1) {
+      const anchorId = pathComponents[firstActiveIdx].anchorId;
+      if (anchorId && window.location.hash.replace('#', '') !== anchorId) {
+        history.replaceState(null, '', `#${anchorId}`);
+      }
+    } else {
+      // Aucun composant actif, on retire le hash
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+  }, [activeAnchors]);
 
   if (!pathRef.current || !pathComponents) return null;
 

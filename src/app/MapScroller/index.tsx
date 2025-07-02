@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -13,6 +13,8 @@ import { setPathLength } from '@/store/scrollSlice';
 import { setMapSize } from '@/store/mapSlice';
 import { MapViewport } from './components';
 import { usePathLoader, useScrollManager } from './hooks';
+import pathComponents from '@/templating/pathComponents.json';
+import { SCROLL_CONFIG } from '@/config/scroll';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -28,6 +30,9 @@ const MapScroller: React.FC = () => {
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const dispatch = useDispatch();
+
+  // Nouvel état pour bloquer le rendu tant que la synchro n'est pas faite
+  const [isScrollSynced, setIsScrollSynced] = useState(false);
 
   // Hooks personnalisés
   const { pathD, svgSize, isLoading, error } = usePathLoader();
@@ -45,6 +50,26 @@ const MapScroller: React.FC = () => {
       dispatch(setPathLength(newPathLength));
     }
   }, [pathD, dispatch]);
+
+  // Synchroniser le scroll natif avec l'anchorId au tout début
+  useEffect(() => {
+    // On attend que la longueur du path soit connue
+    if (!globalPathLength) return;
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) {
+      setIsScrollSynced(true);
+      return;
+    }
+    const anchorComponent = pathComponents.find(c => c.anchorId === hash);
+    if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
+      const progress = anchorComponent.position.progress;
+      const fakeScrollHeight = Math.round(globalPathLength * SCROLL_CONFIG.SCROLL_PER_PX);
+      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
+      const targetScrollY = (1 - progress) * maxScroll;
+      window.scrollTo(0, targetScrollY);
+    }
+    setIsScrollSynced(true);
+  }, [globalPathLength]);
 
   // Mettre à jour la taille de la carte dans le store
   useEffect(() => {
@@ -85,7 +110,7 @@ const MapScroller: React.FC = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !isScrollSynced) {
     return (
       <div className={styles.main}>
         <div style={{ padding: '20px', textAlign: 'center' }}>

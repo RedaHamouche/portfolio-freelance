@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../index.module.scss';
+import styles from './index.module.scss';
 import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 
 interface SvgPathProps {

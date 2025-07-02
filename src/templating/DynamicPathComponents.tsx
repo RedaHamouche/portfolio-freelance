@@ -57,8 +57,15 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
   return inViews;
 }
 
-// Composant mémoïsé pour chaque élément du path
-const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView }: any) {
+interface MemoizedPathComponentProps {
+  Comp: React.ComponentType<Record<string, unknown>>;
+  component: Record<string, unknown> & { displayName: string };
+  position: { x: number; y: number };
+  refDiv: React.RefObject<HTMLDivElement | null>;
+  inView: boolean;
+}
+
+const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView }: MemoizedPathComponentProps) {
   return (
     <div
       data-name={`${component.displayName}-PATH-COMPONENT`}
@@ -106,7 +113,7 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
   const totalLength = useMemo(() => {
     const path = pathRef.current;
     return path ? path.getTotalLength() : 0;
-  }, [pathRef.current]);
+  }, [pathRef]);
 
   const getPositionOnPath = (progressValue: number) => {
     const path = pathRef.current;
@@ -151,7 +158,7 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
   // Mémoïser toutes les positions d'un coup
   const positions = useMemo(
     () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
-    [pathComponents, totalLength, pathRef.current, paddingX, paddingY]
+    [pathComponents, totalLength, pathRef, paddingX, paddingY, getPositionOnPath]
   );
 
   if (!pathRef.current || !pathComponents) return null;

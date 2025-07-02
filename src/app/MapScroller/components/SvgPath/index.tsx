@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import styles from './index.module.scss';
 import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 
@@ -10,13 +10,13 @@ interface SvgPathProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
 }
 
-export const SvgPath: React.FC<SvgPathProps> = ({
+export const SvgPath = memo(function SvgPath({
   pathD,
   svgSize,
   dashOffset,
   pathRef,
   svgRef
-}) => {
+}: SvgPathProps) {
   // Padding basé sur la config globale
   const paddingX = svgSize.width * MAP_PADDING_RATIO;
   const paddingY = svgSize.height * MAP_PADDING_RATIO;
@@ -46,4 +46,4 @@ export const SvgPath: React.FC<SvgPathProps> = ({
       )}
     </svg>
   );
-}; 
+}); 

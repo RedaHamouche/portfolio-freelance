@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import styles from './index.module.scss';
 import classnames from 'classnames';
 import { MAP_SCALE } from '@/config/mapScale';
@@ -23,7 +23,14 @@ interface PointTrailProps {
   arrowPosition: 'left' | 'right';
 }
 
-const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext, angle, arrowPosition }) => {
+const PointTrail = memo(function PointTrail({
+  x,
+  y,
+  nextComponent,
+  onGoToNext,
+  angle,
+  arrowPosition
+}: PointTrailProps) {
   return (
     <button
       type="button"
@@ -54,6 +61,6 @@ const PointTrail: React.FC<PointTrailProps> = ({ x, y, nextComponent, onGoToNext
       </div>
     </button>
   );
-};
+});
 
 export default PointTrail; 

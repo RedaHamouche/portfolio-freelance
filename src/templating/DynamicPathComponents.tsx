@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
 import { useSelector, useDispatch } from 'react-redux';
@@ -56,6 +56,30 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
 
   return inViews;
 }
+
+// Composant mémoïsé pour chaque élément du path
+const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView }: any) {
+  return (
+    <div
+      data-name={`${component.displayName}-PATH-COMPONENT`}
+      ref={refDiv}
+      className={classnames({ lazyLoadAnimation: inView })}
+      style={{
+        position: 'absolute',
+        top: position.y,
+        left: position.x,
+        pointerEvents: 'auto',
+        zIndex: 10,
+        opacity: inView ? 1 : 0,
+        transition: 'opacity 0.5s',
+        transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE})`,
+        transformOrigin: 'center',
+      }}
+    >
+      {Comp && <Comp {...component} />}
+    </div>
+  );
+});
 
 export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
@@ -119,33 +143,28 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
     }
   }, [activeAnchors]);
 
+  // Mémoïser toutes les positions d'un coup
+  const positions = useMemo(
+    () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
+    [pathComponents, pathRef.current, paddingX, paddingY]
+  );
+
   if (!pathRef.current || !pathComponents) return null;
 
   return (
     <>
       {pathComponents.map((component, idx) => {
         const Comp = mappingComponent[component.type];
-        const position = getPositionOnPath(component.position.progress);
+        const position = positions[idx];
         return (
-          <div
-            data-name={`${component.displayName}-PATH-COMPONENT`}
+          <MemoizedPathComponent
             key={component.id}
-            ref={refs[idx]}
-            className={classnames({ lazyLoadAnimation: inViews[idx] })}
-            style={{
-              position: 'absolute',
-              top: position.y,
-              left: position.x,
-              pointerEvents: 'auto',
-              zIndex: 10,
-              opacity: inViews[idx] ? 1 : 0,
-              transition: 'opacity 0.5s',
-              transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE})`,
-              transformOrigin: 'center',
-            }}
-          >
-            {Comp && <Comp {...component} />}
-          </div>
+            Comp={Comp}
+            component={component}
+            position={position}
+            refDiv={refs[idx]}
+            inView={inViews[idx]}
+          />
         );
       })}
     </>

@@ -102,10 +102,15 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
     return () => window.removeEventListener('hashchange', handleHash);
   }, [dispatch]);
 
+  // Mémoïser la longueur totale du path
+  const totalLength = useMemo(() => {
+    const path = pathRef.current;
+    return path ? path.getTotalLength() : 0;
+  }, [pathRef.current]);
+
   const getPositionOnPath = (progressValue: number) => {
     const path = pathRef.current;
     if (!path) return { x: 0, y: 0 };
-    const totalLength = path.getTotalLength();
     const position = path.getPointAtLength(progressValue * totalLength);
     return { x: position.x + paddingX, y: position.y + paddingY };
   };
@@ -146,7 +151,7 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
   // Mémoïser toutes les positions d'un coup
   const positions = useMemo(
     () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
-    [pathComponents, pathRef.current, paddingX, paddingY]
+    [pathComponents, totalLength, pathRef.current, paddingX, paddingY]
   );
 
   if (!pathRef.current || !pathComponents) return null;

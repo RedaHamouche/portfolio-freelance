@@ -122,4 +122,12 @@
   .githubLink {
     text-align: center;
   }
+}
+
+.projectCardBox {
+  background: pink; // mobile par défaut
+
+  @include media('>=desktop') {
+    background: lightblue;
+  }
 } 

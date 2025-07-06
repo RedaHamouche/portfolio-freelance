@@ -12,6 +12,26 @@ $breakpoint-small: 600px;
 $breakpoint-med-small: 960px;
 $breakpoint-med: 1175px;
 
+$breakpoints: (
+  mobile: 0,
+  tablet: 768px,
+  desktop: 1024px
+);
+
+@mixin media($query) {
+  @if $query == '>=desktop' {
+    @media (min-width: map-get($breakpoints, desktop)) {
+      @content;
+    }
+  }
+  @else if $query == '>=tablet' {
+    @media (min-width: map-get($breakpoints, tablet)) {
+      @content;
+    }
+  }
+  // Ajoute d'autres cas si besoin
+}
+
 @mixin screen($size, $type: max, $pixels: $breakpoint-small) {
   @if $size == "small" {
     @media screen and ($type + -width: $breakpoint-small) {

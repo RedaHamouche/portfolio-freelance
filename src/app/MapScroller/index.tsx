@@ -11,9 +11,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setMapSize } from '@/store/mapSlice';
 import { MapViewport } from './components';
-import { usePathLoader, useScrollManager } from './hooks';
+import { useScrollManager } from './hooks';
 import pathComponents from '@/templating/pathComponents.json';
 import { SCROLL_CONFIG } from '@/config/scroll';
+import { SVG_SIZE } from '@/config/path';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -33,7 +34,6 @@ const MapScroller: React.FC = () => {
   const [isScrollSynced, setIsScrollSynced] = useState(false);
 
   // Hooks personnalisés
-  const { pathD, svgSize, isLoading, error } = usePathLoader();
   const {
     startDirectionalScroll,
     stopDirectionalScroll,
@@ -63,10 +63,8 @@ const MapScroller: React.FC = () => {
 
   // Mettre à jour la taille de la carte dans le store
   useEffect(() => {
-    dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
-  }, [svgSize, dispatch]);
-
-  // Gérer le scroll manuel : plus besoin de setupManualScroll, c'est automatique via le hook
+    dispatch(setMapSize({ width: SVG_SIZE.width, height: SVG_SIZE.height }));
+  }, [dispatch]);
 
   // Gérer le scroll directionnel (clavier/boutons)
   useEffect(() => {
@@ -89,18 +87,8 @@ const MapScroller: React.FC = () => {
   // Calculer la hauteur du scroll factice
   const fakeScrollHeight = Math.round(globalPathLength * 1.5);
 
-  // Gestion des erreurs et loading
-  if (error) {
-    return (
-      <div className={styles.main}>
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          Erreur de chargement: {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading || !isScrollSynced) {
+  // Gestion du loading
+  if (!isScrollSynced) {
     return (
       <div className={styles.main}>
         <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -116,8 +104,6 @@ const MapScroller: React.FC = () => {
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
       <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, background: '#fff', margin: 0, padding: 0, zIndex: 1 }}>
         <MapViewport
-          svgSize={svgSize}
-          pathD={pathD}
           svgRef={svgRef}
           mapWrapperRef={mapWrapperRef}
           globalPathLength={globalPathLength}

@@ -1,27 +1,24 @@
 import React, { memo } from 'react';
 import styles from './index.module.scss';
 import { MAP_PADDING_RATIO } from '@/config/mapPadding';
+import { PATH_D, SVG_SIZE } from '@/config/path';
 
 interface SvgPathProps {
-  pathD: string | null;
-  svgSize: { width: number; height: number };
   dashOffset: number;
   setSvgPath: (el: SVGPathElement | null) => void;
   svgRef: React.RefObject<SVGSVGElement | null>;
 }
 
 export const SvgPath = memo(function SvgPath({
-  pathD,
-  svgSize,
   dashOffset,
   setSvgPath,
   svgRef
 }: SvgPathProps) {
   // Padding basé sur la config globale
-  const paddingX = svgSize.width * MAP_PADDING_RATIO;
-  const paddingY = svgSize.height * MAP_PADDING_RATIO;
-  const paddedWidth = svgSize.width + 2 * paddingX;
-  const paddedHeight = svgSize.height + 2 * paddingY;
+  const paddingX = SVG_SIZE.width * MAP_PADDING_RATIO;
+  const paddingY = SVG_SIZE.height * MAP_PADDING_RATIO;
+  const paddedWidth = SVG_SIZE.width + 2 * paddingX;
+  const paddedHeight = SVG_SIZE.height + 2 * paddingY;
 
   return (
     <svg
@@ -30,20 +27,18 @@ export const SvgPath = memo(function SvgPath({
       height={paddedHeight}
       className={styles.mainSvg}
     >
-      {pathD && (
-        <g transform={`translate(${paddingX}, ${paddingY})`}>
-          <path
-            ref={setSvgPath}
-            d={pathD}
-            fill="none"
-            stroke="#6ad7b3"
-            strokeWidth={6}
-            strokeDasharray="20 10"
-            className={styles.path}
-            style={{ strokeDashoffset: dashOffset }}
-          />
-        </g>
-      )}
+      <g transform={`translate(${paddingX}, ${paddingY})`}>
+        <path
+          ref={setSvgPath}
+          d={PATH_D}
+          fill="none"
+          stroke="#6ad7b3"
+          strokeWidth={6}
+          strokeDasharray="20 10"
+          className={styles.path}
+          style={{ strokeDashoffset: dashOffset }}
+        />
+      </g>
     </svg>
   );
 }); 

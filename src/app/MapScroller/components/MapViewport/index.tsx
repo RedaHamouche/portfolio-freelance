@@ -10,18 +10,15 @@ import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations
 import gsap from 'gsap';
 import { MAP_SCALE } from '@/config/mapScale';
 import { MAP_PADDING_RATIO } from '@/config/mapPadding';
+import { SVG_SIZE } from '@/config/path';
 
 interface MapViewportProps {
-  svgSize: { width: number; height: number };
-  pathD: string | null;
   svgRef: React.RefObject<SVGSVGElement | null>;
   mapWrapperRef: React.RefObject<HTMLDivElement | null>;
   globalPathLength: number;
 }
 
 export const MapViewport: React.FC<MapViewportProps> = ({
-  svgSize,
-  pathD,
   svgRef,
   mapWrapperRef,
   globalPathLength
@@ -53,10 +50,10 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     const totalLength = path.getTotalLength();
     const pos = path.getPointAtLength(progress * totalLength);
 
-    const paddingX = svgSize.width * MAP_PADDING_RATIO;
-    const paddingY = svgSize.height * MAP_PADDING_RATIO;
-    const paddedWidth = svgSize.width + 2 * paddingX;
-    const paddedHeight = svgSize.height + 2 * paddingY;
+    const paddingX = SVG_SIZE.width * MAP_PADDING_RATIO;
+    const paddingY = SVG_SIZE.height * MAP_PADDING_RATIO;
+    const paddedWidth = SVG_SIZE.width + 2 * paddingX;
+    const paddedHeight = SVG_SIZE.height + 2 * paddingY;
 
     const idealX = (pos.x + paddingX) * MAP_SCALE - window.innerWidth / 2;
     const idealY = (pos.y + paddingY) * MAP_SCALE - window.innerHeight / 2;
@@ -68,7 +65,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     const wrapper = mapWrapperRef.current;
     wrapper.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
     wrapper.style.transformOrigin = 'top left';
-  }, [progress, svgSize, svgRef, svgPath, mapWrapperRef]);
+  }, [progress, svgRef, svgPath, mapWrapperRef]);
 
   const handleGoToNext = () => {
     if (!nextComponent) return;
@@ -91,8 +88,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const pointAngle = getCurrentPointAngle();
   const arrowPosition = getArrowPosition();
 
-  const paddingX = svgSize.width * MAP_PADDING_RATIO;
-  const paddingY = svgSize.height * MAP_PADDING_RATIO;
+  const paddingX = SVG_SIZE.width * MAP_PADDING_RATIO;
+  const paddingY = SVG_SIZE.height * MAP_PADDING_RATIO;
 
   return (
     <div
@@ -101,8 +98,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: svgSize.width + 2 * paddingX,
-        height: svgSize.height + 2 * paddingY,
+        width: SVG_SIZE.width + 2 * paddingX,
+        height: SVG_SIZE.height + 2 * paddingY,
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',
@@ -116,8 +113,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         paddingY={paddingY}
       />
       <SvgPath
-        pathD={pathD}
-        svgSize={svgSize}
         dashOffset={dashOffset}
         setSvgPath={setSvgPath}
         svgRef={svgRef}

@@ -1,5 +1,4 @@
 .projectCard {
-  background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -8,6 +7,12 @@
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  background: pink; // mobile par défaut
+
+  @include media('>=desktop') {
+    background: lightblue;
   }
 }
 
@@ -95,39 +100,3 @@
     background: #555;
   }
 }
-
-// Responsive
-@media (max-width: 768px) {
-  .projectCard {
-    margin-bottom: 20px;
-  }
-  
-  .content {
-    padding: 16px;
-  }
-  
-  .title {
-    font-size: 1.3rem;
-  }
-  
-  .description {
-    font-size: 0.9rem;
-  }
-  
-  .links {
-    flex-direction: column;
-  }
-  
-  .link,
-  .githubLink {
-    text-align: center;
-  }
-}
-
-.projectCardBox {
-  background: pink; // mobile par défaut
-
-  @include media('>=desktop') {
-    background: lightblue;
-  }
-} 

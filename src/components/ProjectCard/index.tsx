@@ -14,7 +14,6 @@ interface ProjectCardProps extends Record<string, unknown> {
   onClick?: () => void;
 }
 
-const BREAKPOINTS = { mobile: 0, tablet: 768, desktop: 1024 };
 
 export default function ProjectCard({
   title,

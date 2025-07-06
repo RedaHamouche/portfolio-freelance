@@ -50,5 +50,25 @@
     "technologies": ["React", "Next.js", "TypeScript", "GSAP", "SCSS"],
     "link": "https://github.com/reda-dev/portfolio",
     "githubLink": "https://github.com/reda-dev/portfolio"
+  },
+  {
+    "id": "responsive-image-example",
+    "type": "ResponsiveImage",
+    "displayName": "Image responsive exemple",
+    "anchorId": "responsiveImageExample",
+    "position": {
+      "progress": 0.5
+    },
+    "autoScrollPauseTime": 1000,
+    "src": {
+      "mobile": "/images/projects/portfolio-mobile.jpg",
+      "desktop": "/images/projects/portfolio-desktop.jpg"
+    },
+    "alt": "Image responsive exemple",
+    "width": 800,
+    "height": 400,
+    "quality": 100,
+    "priority": false,
+    "sizes": "(max-width: 768px) 100vw, 50vw"
   }
 ] 

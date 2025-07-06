@@ -3,8 +3,23 @@ import { BREAKPOINTS } from '@/config/breakpoints';
 
 export function useBreakpoint(query: string, defaultValue: boolean = false): boolean {
   const { breakpoint } = useRawBreakpoint(BREAKPOINTS);
-  if (query === '>=desktop') return breakpoint === 'desktop';
-  if (query === '<tablet') return breakpoint === 'mobile';
-  // Ajoute d'autres cas si besoin
-  return defaultValue;
+  
+  switch (query) {
+    case '>=desktop':
+      return breakpoint === 'desktop';
+    case '>=tablet':
+      return breakpoint === 'tablet' || breakpoint === 'desktop';
+    case '<desktop':
+      return breakpoint === 'mobile' || breakpoint === 'tablet';
+    case '<tablet':
+      return breakpoint === 'mobile';
+    case 'mobile':
+      return breakpoint === 'mobile';
+    case 'tablet':
+      return breakpoint === 'tablet';
+    case 'desktop':
+      return breakpoint === 'desktop';
+    default:
+      return defaultValue;
+  }
 } 

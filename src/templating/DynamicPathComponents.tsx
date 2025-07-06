@@ -56,7 +56,6 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
 
   return inViews;
 }
-
 interface MemoizedPathComponentProps {
   Comp: React.ComponentType<Record<string, unknown>>;
   component: Record<string, unknown> & { displayName: string };
@@ -65,11 +64,13 @@ interface MemoizedPathComponentProps {
   inView: boolean;
 }
 
+// Composant mémoïsé pour chaque élément du path
 const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView }: MemoizedPathComponentProps) {
   return (
     <div
       data-name={`${component.displayName}-PATH-COMPONENT`}
       ref={refDiv}
+      data-in-view={inView}
       className={classnames({ lazyLoadAnimation: inView })}
       style={{
         position: 'absolute',
@@ -78,7 +79,7 @@ const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component,
         pointerEvents: 'auto',
         zIndex: 10,
         opacity: inView ? 1 : 0,
-        transition: 'opacity 0.5s',
+        transition: 'opacity 0.3s',
         transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE})`,
         transformOrigin: 'center',
       }}
@@ -91,6 +92,7 @@ const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component,
 export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const dispatch = useDispatch();
+  const [svgReady, setSvgReady] = useState(false);
 
   // Gestion du deeplink (hash)
   useEffect(() => {
@@ -109,11 +111,18 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
     return () => window.removeEventListener('hashchange', handleHash);
   }, [dispatch]);
 
+  // Détecter quand le SVG est prêt
+  useEffect(() => {
+    if (pathRef.current && pathRef.current.getTotalLength() > 0) {
+      setSvgReady(true);
+    }
+  }, [pathRef]);
+
   // Mémoïser la longueur totale du path
   const totalLength = useMemo(() => {
     const path = pathRef.current;
     return path ? path.getTotalLength() : 0;
-  }, [pathRef]);
+  }, [pathRef, svgReady]);
 
   const getPositionOnPath = (progressValue: number) => {
     const path = pathRef.current;
@@ -158,7 +167,7 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
   // Mémoïser toutes les positions d'un coup
   const positions = useMemo(
     () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
-    [pathComponents, totalLength, pathRef, paddingX, paddingY, getPositionOnPath]
+    [pathComponents, totalLength, paddingX, paddingY, svgReady]
   );
 
   if (!pathRef.current || !pathComponents) return null;

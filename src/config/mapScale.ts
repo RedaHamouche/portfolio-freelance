@@ -1,1 +1,1 @@
-export const MAP_SCALE = 1; 
+export const MAP_SCALE = 1;

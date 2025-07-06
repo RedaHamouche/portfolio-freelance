@@ -70,5 +70,16 @@
     "quality": 100,
     "priority": false,
     "sizes": "(max-width: 768px) 100vw, 50vw"
+  },
+  {
+    "id": "path-debugger",
+    "type": "PathDebugger",
+    "displayName": "Debug Path",
+    "anchorId": "pathDebugger",
+    "position": {
+      "progress": 0.05
+    },
+    "autoScrollPauseTime": 0
   }
+
 ] 

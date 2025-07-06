@@ -10,7 +10,7 @@ import { setProgress } from '../store/scrollSlice';
 import { ANCHOR_RANGE } from '@/config/anchorRange';
 
 interface DynamicPathComponentsProps {
-  pathRef: React.RefObject<SVGPathElement | null>;
+  svgPath: SVGPathElement | null;
   paddingX: number;
   paddingY: number;
 }
@@ -89,10 +89,9 @@ const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component,
   );
 });
 
-export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: DynamicPathComponentsProps) {
+export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const dispatch = useDispatch();
-  const [svgReady, setSvgReady] = useState(false);
 
   // Gestion du deeplink (hash)
   useEffect(() => {
@@ -111,25 +110,17 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
     return () => window.removeEventListener('hashchange', handleHash);
   }, [dispatch]);
 
-  // Détecter quand le SVG est prêt
-  useEffect(() => {
-    if (pathRef.current && pathRef.current.getTotalLength() > 0) {
-      setSvgReady(true);
-    }
-  }, [pathRef]);
-
   // Mémoïser la longueur totale du path
   const totalLength = useMemo(() => {
-    const path = pathRef.current;
-    return path ? path.getTotalLength() : 0;
-  }, [pathRef, svgReady]);
+    return svgPath ? svgPath.getTotalLength() : 0;
+  }, [svgPath]);
 
-  const getPositionOnPath = (progressValue: number) => {
-    const path = pathRef.current;
-    if (!path) return { x: 0, y: 0 };
-    const position = path.getPointAtLength(progressValue * totalLength);
+  // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
+  const getPositionOnPath = React.useCallback((progressValue: number) => {
+    if (!svgPath) return { x: 0, y: 0 };
+    const position = svgPath.getPointAtLength(progressValue * totalLength);
     return { x: position.x + paddingX, y: position.y + paddingY };
-  };
+  }, [svgPath, totalLength, paddingX, paddingY]);
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -167,10 +158,10 @@ export default function DynamicPathComponents({ pathRef, paddingX, paddingY }: D
   // Mémoïser toutes les positions d'un coup
   const positions = useMemo(
     () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
-    [pathComponents, totalLength, paddingX, paddingY, svgReady]
+    [getPositionOnPath]
   );
 
-  if (!pathRef.current || !pathComponents) return null;
+  if (!svgPath || !pathComponents) return null;
 
   return (
     <>

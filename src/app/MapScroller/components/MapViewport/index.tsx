@@ -1,6 +1,7 @@
-import React, { useLayoutEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useLayoutEffect, useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
+import { setPathLength } from '@/store/scrollSlice';
 import Dynamic from '@/templating/Dynamic';
 import DynamicPathComponents from '@/templating/DynamicPathComponents';
 import { SvgPath } from '@/app/MapScroller/components/SvgPath';
@@ -13,7 +14,6 @@ import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 interface MapViewportProps {
   svgSize: { width: number; height: number };
   pathD: string | null;
-  pathRef: React.RefObject<SVGPathElement | null>;
   svgRef: React.RefObject<SVGSVGElement | null>;
   mapWrapperRef: React.RefObject<HTMLDivElement | null>;
   globalPathLength: number;
@@ -22,12 +22,21 @@ interface MapViewportProps {
 export const MapViewport: React.FC<MapViewportProps> = ({
   svgSize,
   pathD,
-  pathRef,
   svgRef,
   mapWrapperRef,
   globalPathLength
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const dispatch = useDispatch();
+  const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
+  
+  // Mettre à jour la longueur du path dans le store
+  useEffect(() => {
+    if (svgPath) {
+      const newPathLength = svgPath.getTotalLength();
+      dispatch(setPathLength(newPathLength));
+    }
+  }, [svgPath, dispatch]);
   
   const {
     dashOffset,
@@ -35,13 +44,12 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getCurrentPointPosition,
     getCurrentPointAngle,
     getArrowPosition
-  } = usePathCalculations(pathRef);
+  } = usePathCalculations(svgPath);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
-    if (!svgRef.current || !pathRef.current || !mapWrapperRef.current) return;
-    
-    const path = pathRef.current;
+    if (!svgRef.current || !svgPath || !mapWrapperRef.current) return;
+    const path = svgPath;
     const totalLength = path.getTotalLength();
     const pos = path.getPointAtLength(progress * totalLength);
 
@@ -60,7 +68,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     const wrapper = mapWrapperRef.current;
     wrapper.style.transform = `translate(${-clampedX}px, ${-clampedY}px) scale(${MAP_SCALE})`;
     wrapper.style.transformOrigin = 'top left';
-  }, [progress, svgSize, svgRef, pathRef, mapWrapperRef]);
+  }, [progress, svgSize, svgRef, svgPath, mapWrapperRef]);
 
   const handleGoToNext = () => {
     if (!nextComponent) return;
@@ -103,7 +111,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     >
       <Dynamic />
       <DynamicPathComponents 
-        pathRef={pathRef}
+        svgPath={svgPath}
         paddingX={paddingX}
         paddingY={paddingY}
       />
@@ -111,7 +119,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         pathD={pathD}
         svgSize={svgSize}
         dashOffset={dashOffset}
-        pathRef={pathRef}
+        setSvgPath={setSvgPath}
         svgRef={svgRef}
       />
       <PointTrail 

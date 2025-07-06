@@ -9,7 +9,6 @@ import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { setPathLength } from '@/store/scrollSlice';
 import { setMapSize } from '@/store/mapSlice';
 import { MapViewport } from './components';
 import { usePathLoader, useScrollManager } from './hooks';
@@ -23,7 +22,6 @@ if (typeof window !== 'undefined') {
 
 const MapScroller: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const pathRef = useRef<SVGPathElement | null>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
 
   const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
@@ -42,14 +40,6 @@ const MapScroller: React.FC = () => {
     startAutoScroll,
     stopAutoScroll
   } = useScrollManager();
-
-  // Mettre à jour la longueur du path dans le store
-  useEffect(() => {
-    if (pathD && pathRef.current) {
-      const newPathLength = pathRef.current.getTotalLength();
-      dispatch(setPathLength(newPathLength));
-    }
-  }, [pathD, dispatch]);
 
   // Synchroniser le scroll natif avec l'anchorId au tout début
   useEffect(() => {
@@ -128,7 +118,6 @@ const MapScroller: React.FC = () => {
         <MapViewport
           svgSize={svgSize}
           pathD={pathD}
-          pathRef={pathRef}
           svgRef={svgRef}
           mapWrapperRef={mapWrapperRef}
           globalPathLength={globalPathLength}

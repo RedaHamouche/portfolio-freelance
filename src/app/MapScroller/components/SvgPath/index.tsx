@@ -6,7 +6,7 @@ interface SvgPathProps {
   pathD: string | null;
   svgSize: { width: number; height: number };
   dashOffset: number;
-  pathRef: React.RefObject<SVGPathElement | null>;
+  setSvgPath: (el: SVGPathElement | null) => void;
   svgRef: React.RefObject<SVGSVGElement | null>;
 }
 
@@ -14,7 +14,7 @@ export const SvgPath = memo(function SvgPath({
   pathD,
   svgSize,
   dashOffset,
-  pathRef,
+  setSvgPath,
   svgRef
 }: SvgPathProps) {
   // Padding basé sur la config globale
@@ -33,7 +33,7 @@ export const SvgPath = memo(function SvgPath({
       {pathD && (
         <g transform={`translate(${paddingX}, ${paddingY})`}>
           <path
-            ref={pathRef}
+            ref={setSvgPath}
             d={pathD}
             fill="none"
             stroke="#6ad7b3"

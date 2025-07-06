@@ -1,4 +1,4 @@
-.cursor {
+.main {
     @include square(64px);
     position: fixed;
     z-index: 10000;
@@ -6,6 +6,11 @@
     pointer-events: none;
     @include flex(center, center);
     border-radius: 50%;
+
+    
+    @include media("<desktop") {
+        display: none;
+    }
 }
 
 

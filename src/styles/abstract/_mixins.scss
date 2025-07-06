@@ -29,6 +29,11 @@ $breakpoints: (
       @content;
     }
   }
+  @else if $query == '<desktop' {
+    @media (max-width: map-get($breakpoints, desktop)) {
+      @content;
+    }
+  }
   // Ajoute d'autres cas si besoin
 }
 

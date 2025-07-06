@@ -3,13 +3,13 @@
     --header-width: 160px;
 }
 
-body {
-  cursor: none;
+
+body, a, button {
+  @include media(">=desktop") {
+    cursor: none;
+  }
 } 
 
-a, button {
-  cursor: none;
-}
 
 .lazyLoadAnimation {
   opacity: 1 !important;

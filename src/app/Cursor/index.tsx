@@ -49,7 +49,7 @@ const Cursor = () => {
   return (
     <div
       aria-hidden="true"
-      className={styles.cursor}
+      className={styles.main}
       ref={cursorRef}
       style={{ left: cursorPosition.x, top: cursorPosition.y }}
     >

@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress, setAutoScrollTemporarilyPaused } from '@/store/scrollSlice';
+import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling } from '@/store/scrollSlice';
 import pathComponents from '@/templating/pathComponents.json';
 import { AUTO_SCROLL_SPEED } from '@/config/autoScroll';
 import { useRafLoop } from '@/hooks/useRafLoop';
@@ -107,17 +107,19 @@ export function useAutoScrollController({
   }, [animate]);
 
   const startAutoScroll = useCallback(() => {
+    dispatch(setIsScrolling(true));
     stop();
     start(animate);
-  }, [start, stop, animate]);
+  }, [start, stop, animate, dispatch]);
 
   const stopAutoScroll = useCallback(() => {
+    dispatch(setIsScrolling(false));
     stop();
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  }, [stop]);
+  }, [stop, dispatch]);
 
   // Cleanup des timeouts au démontage
   useEffect(() => {

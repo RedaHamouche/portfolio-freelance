@@ -1,22 +1,11 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling } from '@/store/scrollSlice';
-import pathComponents from '@/templating/pathComponents.json';
 import { AUTO_SCROLL_SPEED } from '@/config/autoScroll';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config/scroll';
-
-const getNextAnchor = (from: number, to: number) => {
-  return pathComponents.find(c => {
-    if (!c.autoScrollPauseTime || c.autoScrollPauseTime <= 0) return false;
-    const tol = SCROLL_CONFIG.ANCHOR_TOLERANCE;
-    if (from < to) {
-      return from < c.position.progress && c.position.progress <= to + tol;
-    } else {
-      return to - tol <= c.position.progress && c.position.progress < from;
-    }
-  });
-};
+import { getNextAnchor } from '@/utils/pathCalculations';
+import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 
 export function useAutoScrollController({
   isAutoPlaying,
@@ -62,7 +51,7 @@ export function useAutoScrollController({
     dispatch(setProgress(newProgress));
     
     // Pause sur anchor
-    const anchor = getNextAnchor(prevProgressRef.current, newProgress);
+    const anchor = getNextAnchor(prevProgressRef.current, newProgress, SCROLL_CONFIG.ANCHOR_TOLERANCE);
     if (anchor && anchor.anchorId !== lastPausedAnchorIdRef.current) {
       isPausedRef.current = true;
       lastPausedAnchorIdRef.current = anchor.anchorId;
@@ -95,9 +84,9 @@ export function useAutoScrollController({
     prevProgressRef.current = newProgress;
     
     // Synchroniser la position de scroll
-    const fakeScrollHeight = Math.round(globalPathLengthRef.current * SCROLL_CONFIG.SCROLL_PER_PX);
-    const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
-    const targetScrollY = (1 - newProgress) * maxScroll;
+    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLengthRef.current);
+    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+    const targetScrollY = calculateScrollYFromProgress(newProgress, maxScroll);
     window.scrollTo(0, targetScrollY);
   }, [isAutoPlaying, autoScrollDirection, dispatch, start]);
 

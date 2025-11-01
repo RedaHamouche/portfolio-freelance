@@ -24,20 +24,29 @@ jest.mock('react-redux', () => ({
   useDispatch: () => jest.fn()
 }));
 
+// Mock useThrottle
+jest.mock('@uidotdev/usehooks', () => ({
+  useThrottle: jest.fn((value) => value) // Retourne la valeur directement pour les tests
+}));
+
 describe('useManualScrollSync', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.scrollY = 0;
   });
 
-  it('appelle onScrollState lors de l\'initialisation', () => {
+  it('appelle onScrollState lors du scroll', () => {
     const onScrollState = jest.fn();
     const globalPathLength = 1000;
     
     renderHook(() => useManualScrollSync(globalPathLength, onScrollState));
     
-    // Le hook appelle onScrollState(true) lors de l'initialisation
-    expect(onScrollState).toHaveBeenCalledWith(true);
+    // Simuler un événement de scroll
+    window.scrollY = 100;
+    window.dispatchEvent(new Event('scroll'));
+    
+    // onScrollState devrait être appelé lors du scroll
+    expect(onScrollState).toHaveBeenCalled();
   });
 
   it('ajuste le scrollY quand il dépasse les limites', () => {

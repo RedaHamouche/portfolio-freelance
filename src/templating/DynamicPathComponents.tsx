@@ -7,7 +7,7 @@ import { RootState } from '../store';
 import { MAP_SCALE } from '@/config/mapScale';
 import classnames from 'classnames';
 import { setProgress } from '../store/scrollSlice';
-import { ANCHOR_RANGE } from '@/config/anchorRange';
+import { isComponentActive, getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
 
 interface DynamicPathComponentsProps {
   svgPath: SVGPathElement | null;
@@ -110,17 +110,12 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     return () => window.removeEventListener('hashchange', handleHash);
   }, [dispatch]);
 
-  // Mémoïser la longueur totale du path
-  const totalLength = useMemo(() => {
-    return svgPath ? svgPath.getTotalLength() : 0;
-  }, [svgPath]);
-
   // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
   const getPositionOnPath = React.useCallback((progressValue: number) => {
     if (!svgPath) return { x: 0, y: 0 };
-    const position = svgPath.getPointAtLength(progressValue * totalLength);
-    return { x: position.x + paddingX, y: position.y + paddingY };
-  }, [svgPath, totalLength, paddingX, paddingY]);
+    const point = getPointOnPathUtil(svgPath, progressValue);
+    return { x: point.x + paddingX, y: point.y + paddingY };
+  }, [svgPath, paddingX, paddingY]);
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -128,12 +123,12 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     []
   );
 
-  // Hook pour savoir si chaque composant est "actif" selon la range
-  const activeAnchors = pathComponents.map(
-    (component) => {
-      const anchorProgress = component.position.progress;
-      return Math.abs(progress - anchorProgress) <= ANCHOR_RANGE / 2;
-    }
+  // Hook pour savoir si chaque composant est "actif" selon la range (mémoïsé)
+  const activeAnchors = React.useMemo(
+    () => pathComponents.map((component) => 
+      isComponentActive(component.position.progress, progress)
+    ),
+    [progress]
   );
 
   // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser activeAnchors comme critère)

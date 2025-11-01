@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import gsap from 'gsap';
 import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,10 +11,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setMapSize } from '@/store/mapSlice';
 import { MapViewport } from './components';
+import { LoadingScreen } from './components/LoadingScreen';
 import { useScrollManager } from './hooks';
-import pathComponents from '@/templating/pathComponents.json';
-import { SCROLL_CONFIG } from '@/config/scroll';
+import { useScrollInitialization } from './hooks/useScrollInitialization';
 import { SVG_SIZE } from '@/config/path';
+import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -30,8 +31,8 @@ const MapScroller: React.FC = () => {
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const dispatch = useDispatch();
 
-  // Nouvel état pour bloquer le rendu tant que la synchro n'est pas faite
-  const [isScrollSynced, setIsScrollSynced] = useState(false);
+  // Initialisation du scroll et synchronisation avec hash
+  const isScrollSynced = useScrollInitialization(globalPathLength);
 
   // Hooks personnalisés
   const {
@@ -40,26 +41,6 @@ const MapScroller: React.FC = () => {
     startAutoScroll,
     stopAutoScroll
   } = useScrollManager();
-
-  // Synchroniser le scroll natif avec l'anchorId au tout début
-  useEffect(() => {
-    // On attend que la longueur du path soit connue
-    if (!globalPathLength) return;
-    const hash = window.location.hash.replace('#', '');
-    if (!hash) {
-      setIsScrollSynced(true);
-      return;
-    }
-    const anchorComponent = pathComponents.find(c => c.anchorId === hash);
-    if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
-      const progress = anchorComponent.position.progress;
-      const fakeScrollHeight = Math.round(globalPathLength * SCROLL_CONFIG.SCROLL_PER_PX);
-      const maxScroll = Math.max(1, fakeScrollHeight - window.innerHeight);
-      const targetScrollY = (1 - progress) * maxScroll;
-      window.scrollTo(0, targetScrollY);
-    }
-    setIsScrollSynced(true);
-  }, [globalPathLength]);
 
   // Mettre à jour la taille de la carte dans le store
   useEffect(() => {
@@ -84,18 +65,15 @@ const MapScroller: React.FC = () => {
     return undefined;
   }, [isAutoPlaying, startAutoScroll, stopAutoScroll]);
 
-  // Calculer la hauteur du scroll factice
-  const fakeScrollHeight = Math.round(globalPathLength * 1.5);
+  // Calculer la hauteur du scroll factice (mémoïsé pour éviter recalculs)
+  const fakeScrollHeight = useMemo(
+    () => calculateFakeScrollHeight(globalPathLength),
+    [globalPathLength]
+  );
 
   // Gestion du loading
   if (!isScrollSynced) {
-    return (
-      <div className={styles.main}>
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          Chargement de la carte...
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

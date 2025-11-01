@@ -5,6 +5,7 @@
 .path {
 //   transition: stroke-dashoffset 0.05s ease-out;
   stroke-dasharray: 20 10; // Points plus visibles
+  stroke: $black;
 }
 
 // Animation optionnelle pour un effet de "dessin" du path

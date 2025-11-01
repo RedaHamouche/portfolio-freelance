@@ -3,10 +3,11 @@ import { SCROLL_CONFIG } from '@/config/scroll';
 /**
  * Calcule le progress (0-1) à partir de la position de scroll
  * Gère le scroll infini avec modulo
+ * Scroll vers le bas = progress augmente (sens inversé)
  */
 export const computeScrollProgress = (scrollY: number, maxScroll: number): number => {
   if (maxScroll <= 0) return 0;
-  return 1 - (((scrollY / maxScroll) % 1 + 1) % 1);
+  return ((scrollY / maxScroll) % 1 + 1) % 1;
 };
 
 /**
@@ -25,14 +26,19 @@ export const calculateMaxScroll = (fakeScrollHeight: number, windowHeight: numbe
 
 /**
  * Calcule la position de scroll Y cible à partir d'un progress
+ * Scroll vers le bas = progress augmente (sens inversé)
  */
 export const calculateScrollYFromProgress = (progress: number, maxScroll: number): number => {
-  return (1 - progress) * maxScroll;
+  return progress * maxScroll;
 };
 
 /**
  * Normalise le scrollY pour gérer le scroll infini
  * Retourne le scrollY normalisé et corrige si nécessaire
+ * 
+ * Boucle infinie avec marges (logique originale conservée) :
+ * - Au début (scrollY <= 0) : boucle vers la fin
+ * - À la fin (scrollY >= maxScroll - 1) : boucle vers le début
  */
 export const normalizeScrollY = (
   scrollY: number,

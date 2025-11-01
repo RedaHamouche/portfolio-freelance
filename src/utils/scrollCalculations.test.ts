@@ -9,17 +9,17 @@ import { SCROLL_CONFIG } from '@/config/scroll';
 
 describe('scrollCalculations', () => {
   describe('computeScrollProgress', () => {
-    it('devrait retourner 1 quand scrollY est 0', () => {
-      expect(computeScrollProgress(0, 1000)).toBe(1);
+    it('devrait retourner 0 quand scrollY est 0 (sens inversé)', () => {
+      expect(computeScrollProgress(0, 1000)).toBe(0);
     });
 
     it('devrait retourner 0.5 quand scrollY est au milieu', () => {
       expect(computeScrollProgress(500, 1000)).toBeCloseTo(0.5, 5);
     });
 
-    it('devrait retourner 1 quand scrollY est égal à maxScroll (boucle infini)', () => {
-      // Avec le scroll infini, quand scrollY = maxScroll, on revient au début (progress = 1)
-      expect(computeScrollProgress(1000, 1000)).toBeCloseTo(1, 5);
+    it('devrait retourner ~0 quand scrollY est égal à maxScroll (boucle infini, sens inversé)', () => {
+      // Avec le scroll infini, quand scrollY = maxScroll, on revient au début (progress = 0)
+      expect(computeScrollProgress(1000, 1000)).toBeCloseTo(0, 5);
     });
 
     it('devrait gérer le scroll infini avec modulo', () => {
@@ -62,13 +62,13 @@ describe('scrollCalculations', () => {
   });
 
   describe('calculateScrollYFromProgress', () => {
-    it('devrait calculer scrollY à 0 quand progress est 1', () => {
-      expect(calculateScrollYFromProgress(1, 1000)).toBe(0);
+    it('devrait calculer scrollY à maxScroll quand progress est 1 (sens inversé)', () => {
+      const maxScroll = 1000;
+      expect(calculateScrollYFromProgress(1, maxScroll)).toBe(maxScroll);
     });
 
-    it('devrait calculer scrollY à maxScroll quand progress est 0', () => {
-      const maxScroll = 1000;
-      expect(calculateScrollYFromProgress(0, maxScroll)).toBe(maxScroll);
+    it('devrait calculer scrollY à 0 quand progress est 0 (sens inversé)', () => {
+      expect(calculateScrollYFromProgress(0, 1000)).toBe(0);
     });
 
     it('devrait calculer scrollY au milieu quand progress est 0.5', () => {
@@ -78,19 +78,36 @@ describe('scrollCalculations', () => {
   });
 
   describe('normalizeScrollY', () => {
-    it('devrait corriger scrollY si négatif', () => {
+    it('devrait boucler vers la fin quand scrollY est négatif', () => {
+      // Si on dépasse vers le haut (négatif), on boucle vers la fin
       const result = normalizeScrollY(-10, 1000);
       expect(result.shouldCorrect).toBe(true);
       expect(result.correctionY).toBe(1000 - SCROLL_CONFIG.SCROLL_MARGINS.TOP);
       expect(result.normalizedY).toBe(1000 - SCROLL_CONFIG.SCROLL_MARGINS.TOP);
     });
 
-    it('devrait corriger scrollY si >= maxScroll - 1', () => {
+    it('devrait boucler vers le début quand scrollY dépasse maxScroll', () => {
+      // Si on dépasse vers le bas, on boucle vers le début
       const maxScroll = 1000;
-      const result = normalizeScrollY(maxScroll, maxScroll);
+      const result = normalizeScrollY(maxScroll + 10, maxScroll);
       expect(result.shouldCorrect).toBe(true);
       expect(result.correctionY).toBe(SCROLL_CONFIG.SCROLL_MARGINS.BOTTOM);
       expect(result.normalizedY).toBe(SCROLL_CONFIG.SCROLL_MARGINS.BOTTOM);
+    });
+
+    it('devrait boucler quand scrollY est à 0 (au début)', () => {
+      // À scrollY = 0, on boucle vers la fin
+      const result = normalizeScrollY(0, 1000);
+      expect(result.shouldCorrect).toBe(true);
+      expect(result.correctionY).toBe(1000 - SCROLL_CONFIG.SCROLL_MARGINS.TOP);
+    });
+
+    it('devrait boucler quand scrollY est à maxScroll - 1 (à la fin)', () => {
+      // À scrollY = maxScroll - 1, on boucle vers le début
+      const maxScroll = 1000;
+      const result = normalizeScrollY(maxScroll - 1, maxScroll);
+      expect(result.shouldCorrect).toBe(true);
+      expect(result.correctionY).toBe(SCROLL_CONFIG.SCROLL_MARGINS.BOTTOM);
     });
 
     it('ne devrait pas corriger scrollY si dans les limites', () => {

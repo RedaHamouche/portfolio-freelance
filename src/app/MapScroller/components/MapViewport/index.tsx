@@ -7,13 +7,14 @@ import DynamicPathComponents from '@/templating/DynamicPathComponents';
 import { SvgPath } from '@/app/MapScroller/components/SvgPath';
 import PointTrail from '@/app/MapScroller/PointTrail';
 import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 import gsap from 'gsap';
-import { SVG_SIZE } from '@/config/path';
 import {
   calculateViewportTransform,
   applyViewportTransform,
   calculateMapPadding,
 } from '@/utils/viewportCalculations';
+import { MAP_SCALE } from '@/config';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 
 interface MapViewportProps {
@@ -30,6 +31,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
+  const { svgSize } = useResponsivePath();
   
   // Mettre à jour la longueur du path dans le store
   useEffect(() => {
@@ -50,16 +52,19 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   // Fonction pour mettre à jour la vue
   const updateViewport = useCallback(() => {
     if (!svgRef.current || !svgPath || !mapWrapperRef.current) return;
+    if (typeof window === 'undefined') return;
     
     const pointPosition = getCurrentPointPosition();
     const transform = calculateViewportTransform(
       pointPosition,
       window.innerWidth,
-      window.innerHeight
+      window.innerHeight,
+      svgSize,
+      MAP_SCALE
     );
     
     applyViewportTransform(mapWrapperRef.current, transform);
-  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition]);
+  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize]);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
@@ -99,7 +104,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const pointAngle = getCurrentPointAngle();
   const arrowPosition = getArrowPosition();
 
-  const { paddingX, paddingY } = calculateMapPadding();
+  const { paddingX, paddingY } = calculateMapPadding(svgSize);
 
   return (
     <div
@@ -108,8 +113,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: SVG_SIZE.width + 2 * paddingX,
-        height: SVG_SIZE.height + 2 * paddingY,
+        width: svgSize.width + 2 * paddingX,
+        height: svgSize.height + 2 * paddingY,
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',

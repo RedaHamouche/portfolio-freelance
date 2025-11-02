@@ -5,7 +5,7 @@ import {
   calculateScrollYFromProgress,
   normalizeScrollY,
 } from './scrollCalculations';
-import { SCROLL_CONFIG } from '@/config/scroll';
+import { SCROLL_CONFIG } from '@/config';
 
 describe('scrollCalculations', () => {
   describe('computeScrollProgress', () => {

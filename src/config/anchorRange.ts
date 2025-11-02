@@ -1,1 +1,0 @@
-export const ANCHOR_RANGE = 0.01; // 1% autour du progress 

@@ -14,7 +14,7 @@ import { MapViewport } from './components';
 import { LoadingScreen } from './components/LoadingScreen';
 import { useScrollManager } from './hooks';
 import { useScrollInitialization } from './hooks/useScrollInitialization';
-import { SVG_SIZE } from '@/config/path';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 
 // Register GSAP plugins
@@ -30,6 +30,7 @@ const MapScroller: React.FC = () => {
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const dispatch = useDispatch();
+  const { svgSize } = useResponsivePath();
 
   // Initialisation du scroll et synchronisation avec hash
   const isScrollSynced = useScrollInitialization(globalPathLength);
@@ -42,10 +43,10 @@ const MapScroller: React.FC = () => {
     stopAutoScroll
   } = useScrollManager();
 
-  // Mettre à jour la taille de la carte dans le store
+  // Mettre à jour la taille de la carte dans le store (responsive)
   useEffect(() => {
-    dispatch(setMapSize({ width: SVG_SIZE.width, height: SVG_SIZE.height }));
-  }, [dispatch]);
+    dispatch(setMapSize({ width: svgSize.width, height: svgSize.height }));
+  }, [dispatch, svgSize]);
 
   // Gérer le scroll directionnel (clavier/boutons)
   useEffect(() => {

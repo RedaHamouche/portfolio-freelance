@@ -5,26 +5,26 @@ import {
   calculateViewportTransform,
   applyViewportTransform,
 } from './viewportCalculations';
-import { SVG_SIZE } from '@/config/path';
-import { MAP_SCALE } from '@/config/mapScale';
-import { MAP_PADDING_RATIO } from '@/config/mapPadding';
+import { SVG_SIZE_DESKTOP, MAP_SCALE, MAP_PADDING_RATIO } from '@/config';
 
 describe('viewportCalculations', () => {
+  const testSvgSize = SVG_SIZE_DESKTOP;
+
   describe('calculateMapPadding', () => {
     it('devrait calculer le padding correctement', () => {
-      const { paddingX, paddingY } = calculateMapPadding();
-      expect(paddingX).toBe(SVG_SIZE.width * MAP_PADDING_RATIO);
-      expect(paddingY).toBe(SVG_SIZE.height * MAP_PADDING_RATIO);
+      const { paddingX, paddingY } = calculateMapPadding(testSvgSize);
+      expect(paddingX).toBe(testSvgSize.width * MAP_PADDING_RATIO);
+      expect(paddingY).toBe(testSvgSize.height * MAP_PADDING_RATIO);
     });
   });
 
   describe('calculatePaddedDimensions', () => {
     it('devrait calculer les dimensions avec padding', () => {
-      const { paddedWidth, paddedHeight } = calculatePaddedDimensions();
-      const { paddingX, paddingY } = calculateMapPadding();
+      const { paddedWidth, paddedHeight } = calculatePaddedDimensions(testSvgSize);
+      const { paddingX, paddingY } = calculateMapPadding(testSvgSize);
       
-      expect(paddedWidth).toBe(SVG_SIZE.width + 2 * paddingX);
-      expect(paddedHeight).toBe(SVG_SIZE.height + 2 * paddingY);
+      expect(paddedWidth).toBe(testSvgSize.width + 2 * paddingX);
+      expect(paddedHeight).toBe(testSvgSize.height + 2 * paddingY);
     });
   });
 
@@ -32,16 +32,16 @@ describe('viewportCalculations', () => {
     it('devrait calculer les limites correctement', () => {
       const windowWidth = 1920;
       const windowHeight = 1080;
-      const bounds = calculateViewportBounds(windowWidth, windowHeight);
+      const bounds = calculateViewportBounds(windowWidth, windowHeight, testSvgSize);
       
-      expect(bounds.width).toBe(SVG_SIZE.width);
-      expect(bounds.height).toBe(SVG_SIZE.height);
+      expect(bounds.width).toBe(testSvgSize.width);
+      expect(bounds.height).toBe(testSvgSize.height);
       expect(bounds.maxX).toBeGreaterThanOrEqual(0);
       expect(bounds.maxY).toBeGreaterThanOrEqual(0);
     });
 
     it('devrait retourner maxX/maxY à 0 si la fenêtre est plus grande que la carte', () => {
-      const bounds = calculateViewportBounds(10000, 10000);
+      const bounds = calculateViewportBounds(10000, 10000, testSvgSize);
       expect(bounds.maxX).toBeGreaterThanOrEqual(0);
       expect(bounds.maxY).toBeGreaterThanOrEqual(0);
     });
@@ -49,8 +49,8 @@ describe('viewportCalculations', () => {
 
   describe('calculateViewportTransform', () => {
     it('devrait calculer la transformation pour centrer un point', () => {
-      const point = { x: SVG_SIZE.width / 2, y: SVG_SIZE.height / 2 };
-      const transform = calculateViewportTransform(point, 1920, 1080);
+      const point = { x: testSvgSize.width / 2, y: testSvgSize.height / 2 };
+      const transform = calculateViewportTransform(point, 1920, 1080, testSvgSize);
       
       expect(transform).toHaveProperty('translateX');
       expect(transform).toHaveProperty('translateY');
@@ -61,7 +61,7 @@ describe('viewportCalculations', () => {
 
     it('devrait clamp les valeurs dans les limites', () => {
       const point = { x: -100, y: -100 }; // Point hors limites
-      const transform = calculateViewportTransform(point, 1920, 1080);
+      const transform = calculateViewportTransform(point, 1920, 1080, testSvgSize);
       
       expect(transform.translateX).toBeGreaterThanOrEqual(0);
       expect(transform.translateY).toBeGreaterThanOrEqual(0);

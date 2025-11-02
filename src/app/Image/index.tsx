@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import NextImage from 'next/image';
 import classnames from 'classnames';
-import { imageConfig } from '@/config/image';
+import { imageConfig } from '@/config';
 import styles from './index.module.scss';
 
 interface ImageProps {

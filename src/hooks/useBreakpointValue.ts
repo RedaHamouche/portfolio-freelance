@@ -1,5 +1,5 @@
 import { useBreakpoint as useRawBreakpoint } from 'use-breakpoint';
-import { BREAKPOINTS } from '@/config/breakpoints';
+import { BREAKPOINTS } from '@/config';
 
 export function useBreakpoint(query: string, defaultValue: boolean = false): boolean {
   const { breakpoint } = useRawBreakpoint(BREAKPOINTS);

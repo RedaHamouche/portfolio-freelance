@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import mappingComponent from './mappingComponent';
 import config from './page.json';
-import { MAP_SCALE } from '@/config/mapScale';
+import { MAP_SCALE } from '@/config';
 import classnames from 'classnames';
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs

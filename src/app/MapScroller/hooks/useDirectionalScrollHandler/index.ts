@@ -2,7 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
-import { SCROLL_CONFIG, type ScrollDirection } from '@/config/scroll';
+import { SCROLL_CONFIG, type ScrollDirection } from '@/config';
 
 export function useDirectionalScrollHandler({
   direction,

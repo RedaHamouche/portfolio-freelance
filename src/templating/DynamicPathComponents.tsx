@@ -4,7 +4,7 @@ import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { MAP_SCALE } from '@/config/mapScale';
+import { MAP_SCALE } from '@/config';
 import classnames from 'classnames';
 import { setProgress } from '../store/scrollSlice';
 import { isComponentActive, getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';

@@ -5,7 +5,7 @@ import { setIsScrolling } from '@/store/scrollSlice';
 import { useManualScrollSync } from '../useManualScrollSync';
 import { useDirectionalScrollHandler } from '../useDirectionalScrollHandler';
 import { useAutoScrollController } from '../useAutoScrollController';
-import { type ScrollDirection, type AutoScrollDirection } from '@/config/scroll';
+import { type ScrollDirection, type AutoScrollDirection } from '@/config';
 
 export const useScrollManager = () => {
   const dispatch = useDispatch();

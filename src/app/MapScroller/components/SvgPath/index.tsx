@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import styles from './index.module.scss';
-import { MAP_PADDING_RATIO } from '@/config/mapPadding';
-import { PATH_D, SVG_SIZE } from '@/config/path';
+import { MAP_PADDING_RATIO } from '@/config';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 
 interface SvgPathProps {
   // dashOffset: number;
@@ -14,11 +14,13 @@ export const SvgPath = memo(function SvgPath({
   setSvgPath,
   svgRef
 }: SvgPathProps) {
-  // Padding basé sur la config globale
-  const paddingX = SVG_SIZE.width * MAP_PADDING_RATIO;
-  const paddingY = SVG_SIZE.height * MAP_PADDING_RATIO;
-  const paddedWidth = SVG_SIZE.width + 2 * paddingX;
-  const paddedHeight = SVG_SIZE.height + 2 * paddingY;
+  const { pathD, svgSize } = useResponsivePath();
+  
+  // Padding basé sur la config responsive
+  const paddingX = svgSize.width * MAP_PADDING_RATIO;
+  const paddingY = svgSize.height * MAP_PADDING_RATIO;
+  const paddedWidth = svgSize.width + 2 * paddingX;
+  const paddedHeight = svgSize.height + 2 * paddingY;
 
   return (
     <svg
@@ -30,7 +32,7 @@ export const SvgPath = memo(function SvgPath({
       <g transform={`translate(${paddingX}, ${paddingY})`}>
         <path
           ref={setSvgPath}
-          d={PATH_D}
+          d={pathD}
           fill="none"
           stroke="#6ad7b3"
           strokeWidth={6}

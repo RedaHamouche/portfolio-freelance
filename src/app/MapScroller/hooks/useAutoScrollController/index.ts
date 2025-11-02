@@ -1,9 +1,8 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
-import { AUTO_SCROLL_SPEED } from '@/config/autoScroll';
 import { useRafLoop } from '@/hooks/useRafLoop';
-import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config/scroll';
+import { AUTO_SCROLL_SPEED, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { getNextAnchor } from '@/utils/pathCalculations';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 

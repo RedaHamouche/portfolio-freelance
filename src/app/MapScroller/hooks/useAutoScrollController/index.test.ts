@@ -30,8 +30,13 @@ jest.mock('@/templating/pathComponents.json', () => [
 ]);
 
 // Mock AUTO_SCROLL_SPEED
-jest.mock('@/config/autoScroll', () => ({
-  AUTO_SCROLL_SPEED: 0.001
+jest.mock('@/config', () => ({
+  AUTO_SCROLL_SPEED: 0.001,
+  SCROLL_CONFIG: {
+    FRAME_DELAY: 16,
+    ANCHOR_TOLERANCE: 0.002,
+    ANCHOR_BUMP: 0.002,
+  }
 }));
 
 describe('useAutoScrollController', () => {

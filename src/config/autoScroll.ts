@@ -1,1 +1,0 @@
-export const AUTO_SCROLL_SPEED = 0.04; // valeur par défaut, modifiable 

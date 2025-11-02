@@ -1,4 +1,4 @@
-import { SCROLL_CONFIG } from '@/config/scroll';
+import { SCROLL_CONFIG } from '@/config';
 
 /**
  * Calcule le progress (0-1) à partir de la position de scroll

@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { MAP_SCALE } from '@/config/mapScale';
+import { MAP_SCALE } from '@/config';
 
 interface PathComponentData {
   id: string;

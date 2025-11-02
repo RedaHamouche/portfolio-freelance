@@ -47,8 +47,6 @@ const PlayPauseButton: React.FC = () => {
     buttonColor = 'green';
   }
 
-  console.log('this is isSystemReady::', isSystemReady);
-
   return (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
       <button 

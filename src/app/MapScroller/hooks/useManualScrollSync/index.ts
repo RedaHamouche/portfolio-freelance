@@ -37,10 +37,12 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
   }, [onScrollState]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     // Éviter l'appel initial si déjà initialisé
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
-      setScrollY(typeof window !== 'undefined' ? window.scrollY : 0);
+      setScrollY(window.scrollY);
     }
     window.addEventListener('scroll', handleScroll);
     return () => {

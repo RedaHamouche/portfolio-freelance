@@ -1,5 +1,6 @@
 import {
   findNextComponentInDirection,
+  calculateArrowPosition,
 } from './pathCalculations';
 
 jest.mock('@/templating/pathComponents.json', () => [
@@ -105,6 +106,23 @@ describe('findNextComponentInDirection', () => {
         expect(result.position.progress).toBeGreaterThan(0.5);
       }
     });
+  });
+});
+
+describe('calculateArrowPosition', () => {
+  it('devrait retourner "right" pour direction forward', () => {
+    const result = calculateArrowPosition('forward');
+    expect(result).toBe('right');
+  });
+
+  it('devrait retourner "left" pour direction backward', () => {
+    const result = calculateArrowPosition('backward');
+    expect(result).toBe('left');
+  });
+
+  it('devrait retourner "right" par défaut pour direction null', () => {
+    const result = calculateArrowPosition(null);
+    expect(result).toBe('right');
   });
 });
 

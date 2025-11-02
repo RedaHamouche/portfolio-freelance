@@ -42,8 +42,8 @@ export const usePathCalculations = (svgPath: SVGPathElement | null) => {
 
   // Calculer la position de la flèche (gauche ou droite)
   const getArrowPosition = useCallback((): 'left' | 'right' => {
-    return calculateArrowPosition(nextComponent, progress);
-  }, [nextComponent, progress]);
+    return calculateArrowPosition(lastScrollDirection);
+  }, [lastScrollDirection]);
 
   return {
     dashOffset,

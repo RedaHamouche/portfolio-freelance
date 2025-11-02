@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useEffect } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setPathLength } from '@/store/scrollSlice';
@@ -47,8 +47,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getArrowPosition
   } = usePathCalculations(svgPath);
 
-  // Gérer le positionnement de la vue
-  useLayoutEffect(() => {
+  // Fonction pour mettre à jour la vue
+  const updateViewport = useCallback(() => {
     if (!svgRef.current || !svgPath || !mapWrapperRef.current) return;
     
     const pointPosition = getCurrentPointPosition();
@@ -59,7 +59,24 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     );
     
     applyViewportTransform(mapWrapperRef.current, transform);
-  }, [progress, svgRef, svgPath, mapWrapperRef, getCurrentPointPosition]);
+  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition]);
+
+  // Gérer le positionnement de la vue
+  useLayoutEffect(() => {
+    updateViewport();
+  }, [updateViewport, progress]);
+
+  // Gérer le resize de la fenêtre
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      updateViewport();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateViewport]);
 
   const handleGoToNext = () => {
     if (!nextComponent) return;
@@ -110,14 +127,16 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         setSvgPath={setSvgPath}
         svgRef={svgRef}
       />
-      <PointTrail 
-        x={pointPosition.x + paddingX}
-        y={pointPosition.y + paddingY}
-        nextComponent={nextComponent}
-        onGoToNext={handleGoToNext}
-        angle={pointAngle}
-        arrowPosition={arrowPosition}
-      />
+      {nextComponent && (
+        <PointTrail 
+          x={pointPosition.x + paddingX}
+          y={pointPosition.y + paddingY}
+          nextComponent={nextComponent}
+          onGoToNext={handleGoToNext}
+          angle={pointAngle}
+          arrowPosition={arrowPosition}
+        />
+      )}
     </div>
   );
 }; 

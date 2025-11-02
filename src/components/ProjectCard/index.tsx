@@ -2,7 +2,6 @@ import React from 'react';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import { ResponsiveImage as ResponsiveImageType } from '@/types/image';
 import styles from './index.module.scss';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
 interface ProjectCardProps extends Record<string, unknown> {
   title: string;
@@ -24,12 +23,6 @@ export default function ProjectCard({
   githubLink,
   onClick,
 }: ProjectCardProps) {
-  const isDesktop = useBreakpoint('>=desktop', false);
-
-  React.useEffect(() => {
-    console.log('ProjectCard isDesktop:', isDesktop);
-  }, [isDesktop]);
-
   const handleImageClick = () => {
     if (onClick) {
       onClick();

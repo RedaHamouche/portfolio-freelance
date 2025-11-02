@@ -142,13 +142,14 @@ export const getNextAnchor = (
 };
 
 /**
- * Calcule la position de la flèche (gauche ou droite) basée sur le prochain composant
+ * Calcule la position de la flèche (gauche ou droite) basée sur la direction du scroll
  */
 export const calculateArrowPosition = (
-  nextComponent: PathComponentData | null,
-  currentProgress: number
+  direction: 'forward' | 'backward' | null
 ): 'left' | 'right' => {
-  if (!nextComponent) return 'right';
-  return nextComponent.position.progress < currentProgress ? 'left' : 'right';
+  if (direction === 'forward') return 'right';
+  if (direction === 'backward') return 'left';
+  // Par défaut, flèche à droite si pas de direction
+  return 'right';
 };
 

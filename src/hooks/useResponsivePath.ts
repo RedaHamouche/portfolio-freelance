@@ -1,46 +1,37 @@
 import { useState, useEffect } from 'react';
-import { 
-  BREAKPOINTS, 
-  PATH_D_MOBILE, 
-  SVG_SIZE_MOBILE, 
-  PATH_D_DESKTOP, 
-  SVG_SIZE_DESKTOP 
-} from '@/config';
+import { getConfig } from '@/config';
 
 export interface PathConfig {
   pathD: string;
   svgSize: { width: number; height: number };
+  mapScale: number;
+  mapPaddingRatio: number;
 }
 
 /**
- * Hook pour obtenir le path et la taille SVG selon le breakpoint
+ * Hook pour obtenir la configuration responsive (path, taille SVG, scale, etc.)
  * Mobile: 0-1023px
  * Desktop: 1024px+
  */
 export function useResponsivePath(): PathConfig {
   const [pathConfig, setPathConfig] = useState<PathConfig>(() => {
-    // Initialisation côté serveur ou si window n'existe pas
-    if (typeof window === 'undefined') {
-      return {
-        pathD: PATH_D_DESKTOP,
-        svgSize: SVG_SIZE_DESKTOP,
-      };
-    }
-    
-    // Côté client, déterminer selon la largeur
-    const isMobile = window.innerWidth < BREAKPOINTS.desktop;
+    const config = getConfig();
     return {
-      pathD: isMobile ? PATH_D_MOBILE : PATH_D_DESKTOP,
-      svgSize: isMobile ? SVG_SIZE_MOBILE : SVG_SIZE_DESKTOP,
+      pathD: config.PATH_D,
+      svgSize: config.SVG_SIZE,
+      mapScale: config.MAP_SCALE,
+      mapPaddingRatio: config.MAP_PADDING_RATIO,
     };
   });
 
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth < BREAKPOINTS.desktop;
+      const config = getConfig();
       setPathConfig({
-        pathD: isMobile ? PATH_D_MOBILE : PATH_D_DESKTOP,
-        svgSize: isMobile ? SVG_SIZE_MOBILE : SVG_SIZE_DESKTOP,
+        pathD: config.PATH_D,
+        svgSize: config.SVG_SIZE,
+        mapScale: config.MAP_SCALE,
+        mapPaddingRatio: config.MAP_PADDING_RATIO,
       });
     };
 

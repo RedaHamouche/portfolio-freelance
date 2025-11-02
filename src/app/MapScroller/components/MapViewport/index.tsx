@@ -14,7 +14,6 @@ import {
   applyViewportTransform,
   calculateMapPadding,
 } from '@/utils/viewportCalculations';
-import { MAP_SCALE } from '@/config';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 
 interface MapViewportProps {
@@ -31,7 +30,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
-  const { svgSize } = useResponsivePath();
+  const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
   
   // Mettre à jour la longueur du path dans le store
   useEffect(() => {
@@ -60,11 +59,12 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       window.innerWidth,
       window.innerHeight,
       svgSize,
-      MAP_SCALE
+      mapScale,
+      mapPaddingRatio
     );
     
     applyViewportTransform(mapWrapperRef.current, transform);
-  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize]);
+  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize, mapScale, mapPaddingRatio]);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
@@ -104,7 +104,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const pointAngle = getCurrentPointAngle();
   const arrowPosition = getArrowPosition();
 
-  const { paddingX, paddingY } = calculateMapPadding(svgSize);
+  const { paddingX, paddingY } = calculateMapPadding(svgSize, mapPaddingRatio);
 
   return (
     <div

@@ -4,7 +4,7 @@ import mappingComponent from './mappingComponent';
 import pathComponents from './pathComponents.json';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { MAP_SCALE } from '@/config';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 import classnames from 'classnames';
 import { setProgress } from '../store/scrollSlice';
 import { isComponentActive, getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
@@ -65,7 +65,7 @@ interface MemoizedPathComponentProps {
 }
 
 // Composant mémoïsé pour chaque élément du path
-const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView }: MemoizedPathComponentProps) {
+const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView, mapScale }: MemoizedPathComponentProps & { mapScale: number }) {
   return (
     <div
       data-name={`${component.displayName}-PATH-COMPONENT`}
@@ -80,7 +80,7 @@ const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component,
         zIndex: 10,
         opacity: inView ? 1 : 0,
         transition: 'opacity 0.3s',
-        transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE})`,
+        transform: `translate(-50%, -50%) scale(${1 / mapScale})`,
         transformOrigin: 'center',
       }}
     >
@@ -91,6 +91,7 @@ const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component,
 
 export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const { mapScale } = useResponsivePath();
   const dispatch = useDispatch();
 
   // Gestion du deeplink (hash)
@@ -171,6 +172,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
             position={position}
             refDiv={refs[idx]}
             inView={inViews[idx]}
+            mapScale={mapScale}
           />
         );
       })}

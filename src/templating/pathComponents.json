@@ -5,71 +5,9 @@
     "displayName": "Projets ejbjbfjblejfb",
     "anchorId": "projectsBanner",
     "position": {
-      "progress": 0.8
+      "progress": 0.2
     },
     "autoScrollPauseTime": 2000
-  },
-  {
-    "id": "black-square",
-    "type": "BlackSquare",
-    "displayName": "carré noir",
-    "anchorId": "blackSquare",
-    "position": {
-      "progress": 0.1
-    },
-    "autoScrollPauseTime": 1000
-  },
-  {
-    "id": "black-square-2",
-    "type": "BlackSquare",
-    "displayName": "carré noir 2 plus loins",
-    "anchorId": "blackSquare2",
-    "position": {
-      "progress": 0.35
-    },
-    "autoScrollPauseTime": 0
-  },
-  {
-    "id": "project-card-example",
-    "type": "ProjectCard",
-    "displayName": "Exemple de projet",
-    "anchorId": "projectExample",
-    "position": {
-      "progress": 0.90
-    },
-    "autoScrollPauseTime": 1500,
-    "title": "Portfolio Interactif",
-    "description": "Un portfolio moderne avec scroll interactif et animations fluides, développé avec React, Next.js et GSAP.",
-    "image": {
-      "src": {
-        "mobile": "/images/projects/portfolio-mobile.jpg",
-        "desktop": "/images/projects/portfolio-desktop.jpg"
-      },
-      "alt": "Screenshot du portfolio interactif"
-    },
-    "technologies": ["React", "Next.js", "TypeScript", "GSAP", "SCSS"],
-    "link": "https://github.com/reda-dev/portfolio",
-    "githubLink": "https://github.com/reda-dev/portfolio"
-  },
-  {
-    "id": "responsive-image-example",
-    "type": "ResponsiveImage",
-    "displayName": "Image responsive exemple",
-    "anchorId": "responsiveImageExample",
-    "position": {
-      "progress": 0.5
-    },
-    "autoScrollPauseTime": 1000,
-    "src": {
-      "mobile": "/images/projects/portfolio-mobile.jpg",
-      "desktop": "/images/projects/portfolio-desktop.jpg"
-    },
-    "alt": "Image responsive exemple",
-    "width": 800,
-    "height": 400,
-    "quality": 100,
-    "priority": false,
-    "sizes": "(max-width: 768px) 100vw, 50vw"
   },
   {
     "id": "path-debugger",

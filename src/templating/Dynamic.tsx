@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 import mappingComponent from './mappingComponent';
 import config from './page.json';
-import { MAP_SCALE } from '@/config';
 import classnames from 'classnames';
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs
@@ -35,7 +35,7 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], thres
 type DynamicProps = Record<string, never>;
 
 export default function Dynamic({}: DynamicProps) {
-
+  const { mapScale } = useResponsivePath();
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -66,7 +66,7 @@ export default function Dynamic({}: DynamicProps) {
               pointerEvents: 'auto',
               opacity: inViews[idx] ? 1 : 0,
               transition: 'opacity 0.5s',
-              transform: `scale(${1 / MAP_SCALE})`,
+              transform: `scale(${1 / mapScale})`,
               transformOrigin: 'top left',
             }}
           >

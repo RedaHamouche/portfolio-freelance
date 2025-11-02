@@ -4,6 +4,10 @@
 // Toutes les constantes de configuration de l'application sont centralisées ici
 // pour faciliter la maintenance et éviter la dispersion dans plusieurs fichiers.
 
+// Import des configs responsive
+import * as desktopConfig from './desktop';
+import * as mobileConfig from './mobile';
+
 // ============================================================================
 // BREAKPOINTS
 // ============================================================================
@@ -28,26 +32,24 @@ export const isBelowBreakpoint = (breakpoint: BreakpointKey): boolean => {
 };
 
 // ============================================================================
-// SVG PATH - Desktop & Mobile
+// CONFIGURATION RESPONSIVE
 // ============================================================================
-// Données du path (facilement modifiables depuis Figma)
-// Desktop (1024px et au-dessus)
-export const PATH_D_DESKTOP = "M2193.5 559L5823.5 2515.5L4755.5 4009L5181 95.5L1541.5 5143.5L85.5 1L0.5 5200.5L2193.5 559Z";
-export const SVG_SIZE_DESKTOP = { width: 5825, height: 5201 } as const;
+// Fonction pour obtenir la configuration selon le breakpoint
+export const getConfig = () => {
+  if (typeof window === 'undefined') {
+    return desktopConfig; // Par défaut côté serveur
+  }
+  return window.innerWidth < BREAKPOINTS.desktop ? mobileConfig : desktopConfig;
+};
 
-// Mobile (0-1023px) - Par défaut, utilise le même que desktop, à remplacer avec ton path mobile
-export const PATH_D_MOBILE = "M2193.5 559L5823.5 2515.5L4755.5 4009L5181 95.5L1541.5 5143.5L85.5 1L0.5 5200.5L2193.5 559Z";
-export const SVG_SIZE_MOBILE = { width: 5825, height: 5201 } as const;
-
-// ============================================================================
-// MAP CONFIGURATION
-// ============================================================================
-export const MAP_SCALE = 1;
-export const MAP_PADDING_RATIO = 0.02; // 2% de padding autour du SVG
+// Export des configs pour utilisation directe si besoin
+export { desktopConfig, mobileConfig };
 
 // ============================================================================
-// SCROLL CONFIGURATION
+// CONFIGURATIONS PARTAGÉES (Communes à desktop et mobile)
 // ============================================================================
+
+// Scroll Configuration
 export const SCROLL_CONFIG = {
   // Multiplicateur pour convertir la longueur du path en pixels de scroll
   SCROLL_PER_PX: 1.5,
@@ -74,19 +76,13 @@ export const SCROLL_CONFIG = {
 export type ScrollDirection = 'haut' | 'bas' | null;
 export type AutoScrollDirection = 1 | -1;
 
-// ============================================================================
-// AUTO SCROLL
-// ============================================================================
+// Auto Scroll
 export const AUTO_SCROLL_SPEED = 0.04; // valeur par défaut, modifiable
 
-// ============================================================================
-// ANCHOR CONFIGURATION
-// ============================================================================
+// Anchor Configuration
 export const ANCHOR_RANGE = 0.01; // 1% autour du progress
 
-// ============================================================================
-// IMAGE CONFIGURATION
-// ============================================================================
+// Image Configuration
 export const imageConfig = {
   lazyLoading: {
     rootMargin: '50px', // Distance avant le viewport pour déclencher le chargement
@@ -101,4 +97,3 @@ export const imageConfig = {
     default: 85, // Qualité par défaut des images
   },
 } as const;
-

@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
+import { useResponsivePath } from '@/hooks/useResponsivePath';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { MAP_SCALE } from '@/config';
 
 interface PathComponentData {
   id: string;
@@ -31,6 +31,8 @@ const PointTrail = memo(function PointTrail({
   angle,
   arrowPosition
 }: PointTrailProps) {
+  const { mapScale } = useResponsivePath();
+  
   return (
     <button
       type="button"
@@ -38,7 +40,7 @@ const PointTrail = memo(function PointTrail({
       style={{
         top: `${y}px`,
         left: `${x}px`,
-        transform: `translate(-50%, -50%) scale(${1 / MAP_SCALE}) rotate(${angle}deg)`,
+        transform: `translate(-50%, -50%) scale(${1 / mapScale}) rotate(${angle}deg)`,
         transformOrigin: 'center',
       }}
       onClick={onGoToNext}

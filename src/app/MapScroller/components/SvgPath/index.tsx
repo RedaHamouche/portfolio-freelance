@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import styles from './index.module.scss';
-import { MAP_PADDING_RATIO } from '@/config';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 
 interface SvgPathProps {
@@ -14,11 +13,11 @@ export const SvgPath = memo(function SvgPath({
   setSvgPath,
   svgRef
 }: SvgPathProps) {
-  const { pathD, svgSize } = useResponsivePath();
+  const { pathD, svgSize, mapPaddingRatio } = useResponsivePath();
   
   // Padding basé sur la config responsive
-  const paddingX = svgSize.width * MAP_PADDING_RATIO;
-  const paddingY = svgSize.height * MAP_PADDING_RATIO;
+  const paddingX = svgSize.width * mapPaddingRatio;
+  const paddingY = svgSize.height * mapPaddingRatio;
   const paddedWidth = svgSize.width + 2 * paddingX;
   const paddedHeight = svgSize.height + 2 * paddingY;
 

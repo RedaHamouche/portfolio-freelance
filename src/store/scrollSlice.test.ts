@@ -8,6 +8,7 @@ import scrollReducer, {
   setPathLength,
   setAutoScrollDirection,
   setAutoScrollTemporarilyPaused,
+  setLastScrollDirection,
 } from './scrollSlice';
 
 describe('scrollSlice', () => {
@@ -20,6 +21,7 @@ describe('scrollSlice', () => {
     pathLength: 2000,
     autoScrollDirection: 1,
     isAutoScrollTemporarilyPaused: false,
+    lastScrollDirection: null as 'forward' | 'backward' | null,
   };
 
   it('devrait retourner l\'état initial', () => {
@@ -143,6 +145,29 @@ describe('scrollSlice', () => {
       const action = setAutoScrollTemporarilyPaused(false);
       const state = scrollReducer(initialState, action);
       expect(state.isAutoScrollTemporarilyPaused).toBe(false);
+    });
+  });
+
+  describe('setLastScrollDirection', () => {
+    it('devrait mettre à jour lastScrollDirection à forward', () => {
+      const action = setLastScrollDirection('forward');
+      const state = scrollReducer(initialState, action);
+      expect(state.lastScrollDirection).toBe('forward');
+    });
+
+    it('devrait mettre à jour lastScrollDirection à backward', () => {
+      const action = setLastScrollDirection('backward');
+      const state = scrollReducer(initialState, action);
+      expect(state.lastScrollDirection).toBe('backward');
+    });
+
+    it('devrait mettre à jour lastScrollDirection à null', () => {
+      const stateWithDirection = scrollReducer(initialState, setLastScrollDirection('forward'));
+      expect(stateWithDirection.lastScrollDirection).toBe('forward');
+      
+      const action = setLastScrollDirection(null);
+      const state = scrollReducer(stateWithDirection, action);
+      expect(state.lastScrollDirection).toBe(null);
     });
   });
 });

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress, setIsScrolling } from '@/store/scrollSlice';
+import { setProgress, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type ScrollDirection } from '@/config/scroll';
 
@@ -32,7 +32,13 @@ export function useDirectionalScrollHandler({
   const animate = useCallback(() => {
     if (!direction) return;
     const pxPerMs = speed / 1000;
-    const newProgress = (progressRef.current + (direction === 'bas' ? 1 : -1) * (pxPerMs * SCROLL_CONFIG.FRAME_DELAY / globalPathLengthRef.current) + 1) % 1;
+    const scrollDelta = direction === 'bas' ? 1 : -1;
+    const newProgress = (progressRef.current + scrollDelta * (pxPerMs * SCROLL_CONFIG.FRAME_DELAY / globalPathLengthRef.current) + 1) % 1;
+    
+    // Tracker la direction du scroll (bas = forward, haut = backward avec le sens inversé)
+    const scrollDirection = direction === 'bas' ? 'forward' : 'backward';
+    dispatch(setLastScrollDirection(scrollDirection));
+    
     dispatch(setProgress(newProgress));
   }, [direction, speed, dispatch]);
 

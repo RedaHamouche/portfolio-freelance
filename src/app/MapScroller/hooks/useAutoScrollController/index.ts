@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling } from '@/store/scrollSlice';
+import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { AUTO_SCROLL_SPEED } from '@/config/autoScroll';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config/scroll';
@@ -48,6 +48,11 @@ export function useAutoScrollController({
     const dt = SCROLL_CONFIG.FRAME_DELAY / 1000; // approx 60fps
     const currentProgress = progressRef.current;
     const newProgress = (currentProgress + autoScrollDirection * AUTO_SCROLL_SPEED * dt + 1) % 1;
+    
+    // Tracker la direction du scroll
+    const direction = autoScrollDirection > 0 ? 'forward' : 'backward';
+    dispatch(setLastScrollDirection(direction));
+    
     dispatch(setProgress(newProgress));
     
     // Pause sur anchor

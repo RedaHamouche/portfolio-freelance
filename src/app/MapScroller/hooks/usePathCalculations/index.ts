@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
-  findNextComponent,
+  findNextComponentInDirection,
   getPointOnPath,
   getPathAngleAtProgress,
   calculateDashOffset,
@@ -12,12 +12,13 @@ import {
 
 export const usePathCalculations = (svgPath: SVGPathElement | null) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
   const [dashOffset, setDashOffset] = useState<number>(0);
 
-  // Calculer le nextComponent via useMemo
+  // Calculer le nextComponent via useMemo en fonction de la direction
   const nextComponent = useMemo(() => {
-    return findNextComponent(progress);
-  }, [progress]);
+    return findNextComponentInDirection(progress, lastScrollDirection);
+  }, [progress, lastScrollDirection]);
 
   // Calculer le dashOffset en fonction du progress
   useEffect(() => {

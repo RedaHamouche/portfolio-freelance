@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress } from '@/store/scrollSlice';
+import { setProgress, setLastScrollDirection } from '@/store/scrollSlice';
 import { useThrottle } from '@uidotdev/usehooks';
 import {
   computeScrollProgress,
@@ -15,6 +15,7 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
   const [scrollY, setScrollY] = useState(0);
   const throttledScrollY = useThrottle(scrollY, 32);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevProgressRef = useRef<number | null>(null);
 
   // Handler natif qui met à jour le state scrollY
   const handleScroll = useCallback(() => {
@@ -63,6 +64,17 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
     }
     
     const newProgress = computeScrollProgress(normalizedY, maxScroll);
+    
+    // Tracker la direction du scroll
+    if (prevProgressRef.current !== null) {
+      const direction = newProgress > prevProgressRef.current ? 'forward' : 
+                       newProgress < prevProgressRef.current ? 'backward' : null;
+      if (direction) {
+        dispatch(setLastScrollDirection(direction));
+      }
+    }
+    prevProgressRef.current = newProgress;
+    
     dispatch(setProgress(newProgress));
   }, [throttledScrollY, globalPathLength, dispatch]);
 } 

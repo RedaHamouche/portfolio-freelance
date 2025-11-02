@@ -40,7 +40,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   }, [svgPath, dispatch]);
   
   const {
-    dashOffset,
+    // dashOffset,
     nextComponent,
     getCurrentPointPosition,
     getCurrentPointAngle,
@@ -106,7 +106,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         paddingY={paddingY}
       />
       <SvgPath
-        dashOffset={dashOffset}
+        // dashOffset={dashOffset}
         setSvgPath={setSvgPath}
         svgRef={svgRef}
       />

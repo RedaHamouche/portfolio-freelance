@@ -8,6 +8,7 @@ jest.mock('react-redux', () => ({
     const mockState = {
       scroll: {
         progress: mockProgress,
+        lastScrollDirection: null,
       },
     };
     return selector(mockState);
@@ -17,6 +18,11 @@ jest.mock('react-redux', () => ({
 // Mock pathCalculations
 jest.mock('@/utils/pathCalculations', () => ({
   findNextComponent: jest.fn(() => ({
+    id: 'test',
+    position: { progress: 0.3 },
+    displayName: 'Test Component',
+  })),
+  findNextComponentInDirection: jest.fn(() => ({
     id: 'test',
     position: { progress: 0.3 },
     displayName: 'Test Component',

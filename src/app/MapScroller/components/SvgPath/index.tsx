@@ -4,13 +4,13 @@ import { MAP_PADDING_RATIO } from '@/config/mapPadding';
 import { PATH_D, SVG_SIZE } from '@/config/path';
 
 interface SvgPathProps {
-  dashOffset: number;
+  // dashOffset: number;
   setSvgPath: (el: SVGPathElement | null) => void;
   svgRef: React.RefObject<SVGSVGElement | null>;
 }
 
 export const SvgPath = memo(function SvgPath({
-  dashOffset,
+  // dashOffset,
   setSvgPath,
   svgRef
 }: SvgPathProps) {
@@ -36,7 +36,7 @@ export const SvgPath = memo(function SvgPath({
           strokeWidth={6}
           strokeDasharray="20 10"
           className={styles.path}
-          style={{ strokeDashoffset: dashOffset }}
+          // style={{ strokeDashoffset: dashOffset }}
         />
       </g>
     </svg>

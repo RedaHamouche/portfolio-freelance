@@ -13,6 +13,7 @@ export type HeaderType = {
 }
 
 function Header({announcements = []}: HeaderType) {
+  return null;
   return (
     <header className={styles.header}>   
       <Announce announcements={announcements} />

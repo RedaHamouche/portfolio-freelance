@@ -19,6 +19,7 @@ export interface PathComponentData {
 
 /**
  * Trouve le prochain composant sur le path basé sur le progress actuel
+ * @deprecated Utiliser findNextComponentInDirection à la place
  */
 export const findNextComponent = (currentProgress: number): PathComponentData | null => {
   const sortedComponents = [...pathComponents] as PathComponentData[];
@@ -30,6 +31,53 @@ export const findNextComponent = (currentProgress: number): PathComponentData | 
   }
   
   return findNext || null;
+};
+
+/**
+ * Trouve le prochain composant dans la direction du scroll
+ * @param currentProgress Progress actuel (0-1)
+ * @param direction Direction du scroll : 'forward' (progress augmente), 'backward' (progress diminue), ou null
+ * @returns Le composant le plus proche dans la direction spécifiée, ou le plus proche globalement si direction est null
+ */
+export const findNextComponentInDirection = (
+  currentProgress: number,
+  direction: 'forward' | 'backward' | null
+): PathComponentData | null => {
+  const allComponents = [...pathComponents] as PathComponentData[];
+  
+  // Si pas de direction, on utilise la logique originale
+  if (!direction) {
+    return findNextComponent(currentProgress);
+  }
+  
+  if (direction === 'forward') {
+    // On cherche le composant le plus proche avec progress > currentProgress
+    const forwardComponents = allComponents
+      .filter(c => c.position.progress > currentProgress)
+      .sort((a, b) => a.position.progress - b.position.progress); // Tri croissant pour avoir le plus proche
+    
+    if (forwardComponents.length > 0) {
+      return forwardComponents[0];
+    }
+    
+    // Si aucun composant en avant, on boucle au début (le premier avec le plus petit progress)
+    const sorted = allComponents.sort((a, b) => a.position.progress - b.position.progress);
+    return sorted[0] || null;
+  } else {
+    // direction === 'backward'
+    // On cherche le composant le plus proche avec progress < currentProgress
+    const backwardComponents = allComponents
+      .filter(c => c.position.progress < currentProgress)
+      .sort((a, b) => b.position.progress - a.position.progress); // Tri décroissant pour avoir le plus proche
+    
+    if (backwardComponents.length > 0) {
+      return backwardComponents[0];
+    }
+    
+    // Si aucun composant en arrière, on boucle à la fin (le composant avec le plus grand progress)
+    const sorted = allComponents.sort((a, b) => b.position.progress - a.position.progress);
+    return sorted[0] || null;
+  }
 };
 
 /**

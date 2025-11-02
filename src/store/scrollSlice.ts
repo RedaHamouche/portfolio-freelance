@@ -9,6 +9,7 @@ const initialState = {
   pathLength: 2000,
   autoScrollDirection: 1, // 1 pour aller vers la droite, -1 pour aller vers la gauche
   isAutoScrollTemporarilyPaused: false,
+  lastScrollDirection: null as 'forward' | 'backward' | null, // forward = progress augmente, backward = progress diminue
 };
 
 const scrollSlice = createSlice({
@@ -44,6 +45,9 @@ const scrollSlice = createSlice({
     setAutoScrollTemporarilyPaused(state, action: PayloadAction<boolean>) {
       state.isAutoScrollTemporarilyPaused = action.payload;
     },
+    setLastScrollDirection(state, action: PayloadAction<'forward' | 'backward' | null>) {
+      state.lastScrollDirection = action.payload;
+    },
   },
 });
 
@@ -56,6 +60,7 @@ export const {
   setProgress,
   setPathLength,
   setAutoScrollDirection,
-  setAutoScrollTemporarilyPaused
+  setAutoScrollTemporarilyPaused,
+  setLastScrollDirection
 } = scrollSlice.actions;
 export default scrollSlice.reducer; 

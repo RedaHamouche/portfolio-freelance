@@ -1,23 +1,15 @@
 "use client"
 import styles from './index.module.scss';
-// import PlayPauseButton from './PlayPauseButton';
-import Announce from './Announce';
+import HourDisplay from '@/components/HourDisplay';
+import DisplayName from '@/components/DisplayName';
+import LanguageManager from '@/components/LanguageManager';
 
-type announcementsType = {
-  color: string
-  text: string
-}
-
-export type HeaderType = {
-  announcements?: announcementsType[]
-}
-
-function Header({announcements = []}: HeaderType) {
-  // return null;
+function Header() {
   return (
     <header className={styles.header}>   
-      <Announce announcements={announcements} />
-      {/* <PlayPauseButton /> */}
+      <HourDisplay />
+      <DisplayName />
+      <LanguageManager />
     </header>
   );
 }

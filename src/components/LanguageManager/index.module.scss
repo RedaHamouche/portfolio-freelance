@@ -1,2 +1,17 @@
 // Styles à ajouter
 
+
+.languageManager {
+    @include montreal(14px);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    width: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    @include cornerBorder('top-left', 80%, 80%, 2px, $color-primary);
+}

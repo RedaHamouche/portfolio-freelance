@@ -1,2 +1,6 @@
 // Styles à ajouter
 
+.hourDisplay {
+    @include montreal(14px);
+    letter-spacing: 0.12em;
+}

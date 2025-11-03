@@ -127,3 +127,71 @@ $breakpoints: (
   top: 50%;
   transform: translate(-50%, -50%);
 }
+
+/**
+ * Mixin pour ajouter des bordures avec des pseudo-éléments
+ * Crée une bordure en haut et/ou à gauche avec ::before et ::after
+ * 
+ * @param {string} $position - 'top-left' | 'top' | 'left' | 'top-bottom' | 'left-right'
+ * @param {number} $width - Largeur du pseudo-élément horizontal (ex: 80%)
+ * @param {number} $height - Hauteur du pseudo-élément vertical (ex: 80%)
+ * @param {number} $thickness - Épaisseur de la bordure (ex: 2px)
+ * @param {color} $color - Couleur de la bordure (défaut: $color-primary)
+ */
+@mixin cornerBorder(
+  $position: 'top-left',
+  $width: 80%,
+  $height: 80%,
+  $thickness: 2px,
+  $color: $color-primary
+) {
+  position: relative;
+
+  @if $position == 'top-left' or $position == 'top' or $position == 'top-bottom' {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: $width;
+      height: $thickness;
+      background-color: $color;
+    }
+  }
+
+  @if $position == 'top-left' or $position == 'left' or $position == 'left-right' {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: $thickness;
+      height: $height;
+      background-color: $color;
+    }
+  }
+
+  @if $position == 'top-bottom' {
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: $width;
+      height: $thickness;
+      background-color: $color;
+    }
+  }
+
+  @if $position == 'left-right' {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: $thickness;
+      height: $height;
+      background-color: $color;
+    }
+  }
+}

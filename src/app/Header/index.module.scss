@@ -3,11 +3,12 @@
     top: 0;
     left: 0;
     z-index: 9000;
-    height: 56px;
-    width: 100vw;
-    background: rgba(255, 254, 254, 0.4);
-    backdrop-filter: blur(4px);
-    border-bottom: 1px dashed $black;
+    padding: $spacing-s;
+    width: calc(100% - $spacing-s * 2);
+    background-color: $white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .scrollContainer {

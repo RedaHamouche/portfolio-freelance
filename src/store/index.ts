@@ -3,6 +3,7 @@ import cadreReducer from './cadreSlice';
 import scrollReducer from './scrollSlice';
 import mapReducer from './mapSlice';
 import cursorReducer from './cursorSlice';
+import modalReducer from './modalSlice';
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     scroll: scrollReducer,
     map: mapReducer,
     cursor: cursorReducer,
+    modal: modalReducer,
   },
 });
 

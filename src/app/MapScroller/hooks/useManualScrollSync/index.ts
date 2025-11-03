@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { setProgress, setLastScrollDirection } from '@/store/scrollSlice';
 import { useThrottle } from '@uidotdev/usehooks';
 import {
@@ -11,6 +12,7 @@ import {
 
 export function useManualScrollSync(globalPathLength: number, onScrollState?: (isScrolling: boolean) => void) {
   const dispatch = useDispatch();
+  const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const isInitializedRef = useRef(false);
   const [scrollY, setScrollY] = useState(0);
   const throttledScrollY = useThrottle(scrollY, 32);
@@ -20,6 +22,12 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
   // Handler natif qui met à jour le state scrollY
   const handleScroll = useCallback(() => {
     if (typeof window === "undefined") return;
+    
+    // Ignorer les événements de scroll si une modal est ouverte
+    if (isModalOpen) {
+      return;
+    }
+    
     setScrollY(window.scrollY);
     
     // Indiquer que le scroll est en cours
@@ -34,7 +42,7 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
     scrollTimeoutRef.current = setTimeout(() => {
       if (onScrollState) onScrollState(false);
     }, 150); // 150ms après le dernier événement de scroll
-  }, [onScrollState]);
+  }, [onScrollState, isModalOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -56,6 +64,12 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
   // Effet qui dispatch quand la valeur throttlée change
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Ne pas mettre à jour le progress si une modal est ouverte
+    if (isModalOpen) {
+      return;
+    }
+    
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
     const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
     
@@ -78,5 +92,5 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
     prevProgressRef.current = newProgress;
     
     dispatch(setProgress(newProgress));
-  }, [throttledScrollY, globalPathLength, dispatch]);
+  }, [throttledScrollY, globalPathLength, dispatch, isModalOpen]);
 } 

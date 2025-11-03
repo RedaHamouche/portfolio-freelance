@@ -4,6 +4,7 @@ const BlackSquare = dynamic(() => import('@/components/BlackSquare'), { ssr: tru
 const ProjectsBanner = dynamic(() => import('@/components/ProjectsBanner'), { ssr: true });
 const ProjectCard = dynamic(() => import('@/components/ProjectCard'), { ssr: true });
 const ResponsiveImage = dynamic(() => import('@/components/ResponsiveImage'), { ssr: true });
+const OpenModalButton = dynamic(() => import('@/components/OpenModalButton'), { ssr: true });
 import PathDebugger from '@/components/PathDebugger'; 
 // HYGEN_IMPORT_COMPONENT DO_NOT_REMOVE
 
@@ -13,6 +14,7 @@ const mappingComponent: Record<string, React.ComponentType<any>> = {
   ProjectsBanner,
   ProjectCard,
   ResponsiveImage,
+  OpenModalButton,
   PathDebugger, 
   // HYGEN_MAP_COMPONENT DO_NOT_REMOVE
 };

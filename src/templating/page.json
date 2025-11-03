@@ -7,6 +7,14 @@
         "top": 1000,
         "left": 2590
       }
+    },
+    {
+      "type": "OpenModalButton",
+      "displayName": "Bouton Open Modal",
+      "position": {
+        "top": 500,
+        "left": 500
+      }
     }
   ]
 } 

@@ -1,35 +1,32 @@
-$black: #000;
-$white: #FFF;
+$black: oklch(0 0 0);
+$white: oklch(1 0 0);
 
-$color-primary: #E7BCE9;
-$color-secondary: #C7E7D7;
-$color-tercary: rgba(255,246,234,1);
+$color-primary: oklch(0.85 0.08 320);
+$color-secondary: oklch(0.89 0.06 150);
+$color-tercary: oklch(0.97 0.01 85);
 
-$color-error: rgba(233,81,82,1);
-$color-success: rgba(110,204,102,1);
+$color-error: oklch(0.6 0.2 25);
+$color-success: oklch(0.75 0.15 145);
 
-$color-mono-white: rgba(255,255,255,1);
-$color-mono-black: rgba(37,37,37,1);
+$color-mono-white: oklch(1 0 0);
+$color-mono-black: oklch(0.18 0 0);
 
+$color-mono-gray-4: oklch(0.35 0 0);
+$color-mono-gray-3: oklch(0.65 0 0);
+$color-mono-gray-2: oklch(0.85 0 0);
+$color-mono-gray-1: oklch(0.96 0 0);
 
-$color-mono-gray-4: rgba(80,80,80,1);
-$color-mono-gray-3: rgba(181,181,181,1);
-$color-mono-gray-2: rgba(225,225,225,1);
-$color-mono-gray-1: rgba(249,249,249,1);
-
-
-$transparent-color : rgba(255, 255, 255, 0);
-
+$transparent-color: oklch(1 0 0 / 0);
 
 // COLORS
-$color-mono-white: rgba(255,254,254,1);
-$color-mono-black: rgba(23,23,23,1);
+$color-mono-white: oklch(1 0 0);
+$color-mono-black: oklch(0.12 0 0);
 
-$color-mono-white-soft: rgba(245,243,243,1);
-$color-mono-black-soft: rgba(0,0,0,0.910);
+$color-mono-white-soft: oklch(0.95 0 0);
+$color-mono-black-soft: oklch(0 0 0 / 0.91);
 
-$color-mono-white-bg: #F6F6F6;
-$color-mono-opacity-white: rgba(255,255,255,0.200);
+$color-mono-white-bg: oklch(0.96 0 0);
+$color-mono-opacity-white: oklch(1 0 0 / 0.2);
 
-$color-primary-violet: rgba(230,199,231,1);
-$color-primary-green: rgba(199,231,215,1);
+$color-primary-violet: oklch(0.83 0.07 315);
+$color-primary-green: oklch(0.88 0.06 155);

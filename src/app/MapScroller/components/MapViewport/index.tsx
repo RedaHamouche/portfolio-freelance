@@ -12,8 +12,8 @@ import { useResponsivePath } from '@/hooks/useResponsivePath';
 import gsap from 'gsap';
 import {
   calculateViewportTransform,
-  applyViewportTransform,
   calculateMapPadding,
+  calculateViewportBounds,
 } from '@/utils/viewportCalculations';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 
@@ -49,39 +49,99 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getArrowPosition
   } = usePathCalculations(svgPath);
 
-  // Fonction pour mettre à jour la vue
+  // Mémoïser le calcul du padding
+  const { paddingX, paddingY } = useMemo(
+    () => calculateMapPadding(svgSize, mapPaddingRatio),
+    [svgSize, mapPaddingRatio]
+  );
+
+  // State pour les dimensions de la fenêtre (pour forcer le recalcul des bounds au resize)
+  const [windowSize, setWindowSize] = useState(() => {
+    if (typeof window === 'undefined') return { width: 0, height: 0 };
+    return { width: window.innerWidth, height: window.innerHeight };
+  });
+
+  // Mémoïser les bounds du viewport - recalculées lors du resize ou changement de config
+  const viewportBounds = useMemo(() => {
+    if (typeof window === 'undefined' || windowSize.width === 0 || windowSize.height === 0) return null;
+    return calculateViewportBounds(
+      windowSize.width,
+      windowSize.height,
+      svgSize,
+      mapScale,
+      mapPaddingRatio
+    );
+  }, [svgSize, mapScale, mapPaddingRatio, windowSize]);
+
+  // Fonction pour mettre à jour la vue avec GSAP (optimisé GPU)
   const updateViewport = useCallback(() => {
-    if (!svgRef.current || !svgPath || !mapWrapperRef.current) return;
+    if (!svgRef.current || !svgPath || !mapWrapperRef.current || !viewportBounds) return;
     if (typeof window === 'undefined') return;
     
     const pointPosition = getCurrentPointPosition();
     const transform = calculateViewportTransform(
       pointPosition,
-      window.innerWidth,
-      window.innerHeight,
+      windowSize.width || window.innerWidth,
+      windowSize.height || window.innerHeight,
       svgSize,
       mapScale,
-      mapPaddingRatio
+      mapPaddingRatio,
+      viewportBounds
     );
     
-    applyViewportTransform(mapWrapperRef.current, transform);
-  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize, mapScale, mapPaddingRatio]);
+    // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
+    // GSAP gère automatiquement will-change et l'accélération GPU
+    gsap.set(mapWrapperRef.current, {
+      x: transform.translateX,
+      y: transform.translateY,
+      scale: transform.scale,
+      transformOrigin: 'top left',
+    });
+  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize, mapScale, mapPaddingRatio, viewportBounds, windowSize]);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
     updateViewport();
   }, [updateViewport, progress]);
 
-  // Gérer le resize de la fenêtre
+  // Gérer le resize de la fenêtre avec RAF pour optimiser les performances
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    let rafId: number | null = null;
+    let resizeTimeout: NodeJS.Timeout | null = null;
+    
     const handleResize = () => {
-      updateViewport();
+      // Mettre à jour la taille de la fenêtre (ce qui déclenchera le recalcul des bounds)
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      
+      // Annuler les mises à jour en attente
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+      
+      // Debounce avec timeout + RAF pour regrouper les mises à jour
+      resizeTimeout = setTimeout(() => {
+        rafId = requestAnimationFrame(() => {
+          updateViewport();
+          rafId = null;
+        });
+      }, 150); // 150ms debounce pour éviter trop de calculs
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+    };
   }, [updateViewport]);
 
   const handleGoToNext = useCallback(() => {
@@ -113,12 +173,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       arrowPosition: getArrowPosition(),
     };
   }, [nextComponent, getCurrentPointPosition, getCurrentPointAngle, getArrowPosition]);
-
-  // Mémoïser le calcul du padding
-  const { paddingX, paddingY } = useMemo(
-    () => calculateMapPadding(svgSize, mapPaddingRatio),
-    [svgSize, mapPaddingRatio]
-  );
 
   return (
     <div

@@ -68,6 +68,7 @@ export const calculateViewportBounds = (
 
 /**
  * Calcule la transformation du viewport pour centrer un point
+ * @param viewportBounds Bounds pré-calculées (optionnel, calculées si non fourni)
  */
 export const calculateViewportTransform = (
   point: PointPosition,
@@ -75,10 +76,12 @@ export const calculateViewportTransform = (
   windowHeight: number,
   svgSize: { width: number; height: number },
   scale: number,
-  paddingRatio: number
+  paddingRatio: number,
+  viewportBounds?: ViewportBounds | null
 ): ViewportTransform => {
   const { paddingX, paddingY } = calculateMapPadding(svgSize, paddingRatio);
-  const bounds = calculateViewportBounds(windowWidth, windowHeight, svgSize, scale, paddingRatio);
+  // Utiliser les bounds pré-calculées si fournies, sinon les calculer
+  const bounds = viewportBounds ?? calculateViewportBounds(windowWidth, windowHeight, svgSize, scale, paddingRatio);
   
   const idealX = (point.x + paddingX) * scale - windowWidth / 2;
   const idealY = (point.y + paddingY) * scale - windowHeight / 2;

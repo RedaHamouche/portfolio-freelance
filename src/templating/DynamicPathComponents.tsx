@@ -111,12 +111,16 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     return () => window.removeEventListener('hashchange', handleHash);
   }, [dispatch]);
 
+  // Récupérer pathLength du store pour optimiser getPointOnPath
+  const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
+
   // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
   const getPositionOnPath = React.useCallback((progressValue: number) => {
     if (!svgPath) return { x: 0, y: 0 };
-    const point = getPointOnPathUtil(svgPath, progressValue);
+    // Passer pathLength pour éviter les recalculs de getTotalLength()
+    const point = getPointOnPathUtil(svgPath, progressValue, pathLength > 0 ? pathLength : undefined);
     return { x: point.x + paddingX, y: point.y + paddingY };
-  }, [svgPath, paddingX, paddingY]);
+  }, [svgPath, paddingX, paddingY, pathLength]);
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(

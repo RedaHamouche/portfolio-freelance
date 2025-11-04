@@ -48,20 +48,22 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
   
   const currentPoint = useMemo(() => {
     if (!svgPath) return { x: 0, y: 0 };
-    return getPointOnPath(svgPath, progress);
-  }, [svgPath, progress]);
+    // Passer pathLength pour éviter les recalculs de getTotalLength()
+    return getPointOnPath(svgPath, progress, pathLength);
+  }, [svgPath, progress, pathLength]);
 
   // Mémoïser les points de contrôle - ils ne changent que si svgPath change
   const controlPoints = useMemo(() => {
     if (!svgPath) return [];
     const points: Array<{ x: number; y: number; progress: number }> = [];
+    // Passer pathLength pour éviter les recalculs de getTotalLength()
     for (let i = 0; i <= 20; i++) {
       const prog = i / 20;
-      const point = getPointOnPath(svgPath, prog);
+      const point = getPointOnPath(svgPath, prog, pathLength);
       points.push({ x: point.x, y: point.y, progress: prog });
     }
     return points;
-  }, [svgPath]);
+  }, [svgPath, pathLength]);
 
   // Early return après tous les hooks
   if (!showDebug || !svgPath || !mounted) return null;
@@ -163,11 +165,12 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
       {/* Ancres (composants) */}
       {showAnchors && (
         <g className={styles.anchors}>
-          {pathComponents.map((component) => {
-            const anchorPoint = getPointOnPath(
-              svgPath,
-              component.position.progress
-            );
+                 {pathComponents.map((component) => {
+                   const anchorPoint = getPointOnPath(
+                     svgPath,
+                     component.position.progress,
+                     pathLength
+                   );
             return (
               <g key={component.id}>
                 <circle

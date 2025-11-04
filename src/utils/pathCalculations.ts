@@ -78,25 +78,34 @@ export const findNextComponentInDirection = (
 
 /**
  * Calcule la position d'un point sur le path SVG à partir d'un progress
+ * @param svgPath L'élément SVG path
+ * @param progress Progress (0-1)
+ * @param pathLength Longueur totale du path (optionnel, calculé si non fourni)
  */
 export const getPointOnPath = (
   svgPath: SVGPathElement,
-  progress: number
+  progress: number,
+  pathLength?: number
 ): PointPosition => {
-  const totalLength = svgPath.getTotalLength();
+  const totalLength = pathLength ?? svgPath.getTotalLength();
   const pos = svgPath.getPointAtLength(progress * totalLength);
   return { x: pos.x, y: pos.y };
 };
 
 /**
  * Calcule l'angle de la tangente du path à un point donné
+ * @param svgPath L'élément SVG path
+ * @param progress Progress (0-1)
+ * @param delta Delta pour calculer la tangente (défaut: 1)
+ * @param pathLength Longueur totale du path (optionnel, calculé si non fourni)
  */
 export const getPathAngleAtProgress = (
   svgPath: SVGPathElement,
   progress: number,
-  delta: number = 1
+  delta: number = 1,
+  pathLength?: number
 ): number => {
-  const totalLength = svgPath.getTotalLength();
+  const totalLength = pathLength ?? svgPath.getTotalLength();
   const currentLength = progress * totalLength;
   const p1 = svgPath.getPointAtLength(Math.max(0, currentLength - delta));
   const p2 = svgPath.getPointAtLength(Math.min(totalLength, currentLength + delta));

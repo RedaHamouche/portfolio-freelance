@@ -12,6 +12,7 @@ import {
 export const usePathCalculations = (svgPath: SVGPathElement | null) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
+  const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
 
   // Calculer le nextComponent via useMemo en fonction de la direction
   const nextComponent = useMemo(() => {
@@ -19,16 +20,18 @@ export const usePathCalculations = (svgPath: SVGPathElement | null) => {
   }, [progress, lastScrollDirection]);
 
   // Calculer la position actuelle du point
+  // Utiliser pathLength du store pour éviter les recalculs de getTotalLength()
   const getCurrentPointPosition = useCallback((): PointPosition => {
     if (!svgPath) return { x: 200, y: 300 };
-    return getPointOnPath(svgPath, progress);
-  }, [progress, svgPath]);
+    return getPointOnPath(svgPath, progress, pathLength > 0 ? pathLength : undefined);
+  }, [progress, svgPath, pathLength]);
 
   // Calculer l'angle de tangente du path pour la rotation du point
+  // Utiliser pathLength du store pour éviter les recalculs de getTotalLength()
   const getCurrentPointAngle = useCallback((): number => {
     if (!svgPath) return 0;
-    return getPathAngleAtProgress(svgPath, progress);
-  }, [progress, svgPath]);
+    return getPathAngleAtProgress(svgPath, progress, 1, pathLength > 0 ? pathLength : undefined);
+  }, [progress, svgPath, pathLength]);
 
   // Calculer la position de la flèche (gauche ou droite)
   const getArrowPosition = useCallback((): 'left' | 'right' => {

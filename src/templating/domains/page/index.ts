@@ -5,7 +5,7 @@
 
 import { PageDomain, PageDomainAPI } from './api';
 import { PageRepository } from './repository';
-import type { PageComponent, PageConfig, ComponentPosition } from './types';
+import type { PageComponent, PageConfig } from './types';
 
 // Factory pour créer une instance du domaine
 export function createPageDomain(): PageDomainAPI {
@@ -14,7 +14,7 @@ export function createPageDomain(): PageDomainAPI {
 }
 
 // Export des types
-export type { PageComponent, PageConfig, ComponentPosition };
+export type { PageComponent, PageConfig };
 
 // Export de l'API et des implémentations
 export { PageDomain, PageRepository };

@@ -1,4 +1,3 @@
-import pathComponents from '@/templating/config/pathComponents.json';
 import { ANCHOR_RANGE } from '@/config';
 
 export interface PointPosition {
@@ -17,17 +16,25 @@ export interface PathComponentData {
   autoScrollPauseTime?: number;
 }
 
-// Pré-trier les composants une seule fois au chargement du module pour améliorer les performances
-const allComponents = [...pathComponents] as PathComponentData[];
-const sortedByProgressDesc = [...allComponents].sort((a, b) => b.position.progress - a.position.progress);
-const sortedByProgressAsc = [...allComponents].sort((a, b) => a.position.progress - b.position.progress);
+/**
+ * Pré-trie les composants pour optimiser les recherches
+ */
+function sortComponents(components: PathComponentData[]) {
+  return {
+    sortedByProgressDesc: [...components].sort((a, b) => b.position.progress - a.position.progress),
+    sortedByProgressAsc: [...components].sort((a, b) => a.position.progress - b.position.progress),
+  };
+}
 
 /**
  * Trouve le prochain composant sur le path basé sur le progress actuel
  * @deprecated Utiliser findNextComponentInDirection à la place
  */
-export const findNextComponent = (currentProgress: number): PathComponentData | null => {
-  // Utiliser la version pré-triée au lieu de trier à chaque appel
+export const findNextComponent = (
+  currentProgress: number,
+  components: PathComponentData[]
+): PathComponentData | null => {
+  const { sortedByProgressDesc } = sortComponents(components);
   const findNext = sortedByProgressDesc.find(c => c.position.progress < currentProgress);
   if (!findNext) {
     return sortedByProgressDesc[0] || null; // boucle au "dernier" (le plus à droite)
@@ -39,20 +46,23 @@ export const findNextComponent = (currentProgress: number): PathComponentData | 
  * Trouve le prochain composant dans la direction du scroll
  * @param currentProgress Progress actuel (0-1)
  * @param direction Direction du scroll : 'forward' (progress augmente), 'backward' (progress diminue), ou null
+ * @param components Liste des composants à chercher
  * @returns Le composant le plus proche dans la direction spécifiée, ou le plus proche globalement si direction est null
  */
 export const findNextComponentInDirection = (
   currentProgress: number,
-  direction: 'forward' | 'backward' | null
+  direction: 'forward' | 'backward' | null,
+  components: PathComponentData[]
 ): PathComponentData | null => {
+  const { sortedByProgressDesc, sortedByProgressAsc } = sortComponents(components);
+  
   // Si pas de direction, on utilise la logique originale
   if (!direction) {
-    return findNextComponent(currentProgress);
+    return findNextComponent(currentProgress, components);
   }
   
   if (direction === 'forward') {
     // On cherche le composant le plus proche avec progress > currentProgress
-    // Utiliser la version pré-triée par ordre croissant pour avoir le plus proche directement
     const forwardComponent = sortedByProgressAsc.find(c => c.position.progress > currentProgress);
     
     if (forwardComponent) {
@@ -64,7 +74,6 @@ export const findNextComponentInDirection = (
   } else {
     // direction === 'backward'
     // On cherche le composant le plus proche avec progress < currentProgress
-    // Utiliser la version pré-triée par ordre décroissant pour avoir le plus proche directement
     const backwardComponent = sortedByProgressDesc.find(c => c.position.progress < currentProgress);
     
     if (backwardComponent) {
@@ -123,13 +132,18 @@ export const isComponentActive = (componentProgress: number, currentProgress: nu
 
 /**
  * Trouve le prochain anchor pour l'auto-scroll basé sur la direction
+ * @param fromProgress Progress de départ
+ * @param toProgress Progress d'arrivée
+ * @param components Liste des composants à chercher
+ * @param tolerance Tolérance pour la recherche (défaut: 0.002)
  */
 export const getNextAnchor = (
   fromProgress: number,
   toProgress: number,
+  components: PathComponentData[],
   tolerance: number = 0.002
 ): PathComponentData | null => {
-  return (pathComponents as PathComponentData[]).find(c => {
+  return components.find(c => {
     if (!c.autoScrollPauseTime || c.autoScrollPauseTime <= 0) return false;
     
     if (fromProgress < toProgress) {

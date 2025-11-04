@@ -41,6 +41,26 @@ jest.mock('../mappingComponent', () => {
   };
 });
 
+// Mock useResponsivePath
+jest.mock('@/hooks/useResponsivePath', () => ({
+  useResponsivePath: () => ({
+    mapScale: 1,
+    svgSize: { width: 2000, height: 1000 },
+    mapPaddingRatio: 0.1,
+  }),
+}));
+
+// Mock useBreakpoint
+jest.mock('@/hooks/useBreakpointValue', () => ({
+  useBreakpoint: () => true, // Simule desktop par défaut
+}));
+
+// Mock pathCalculations
+jest.mock('@/utils/pathCalculations', () => ({
+  getPointOnPath: jest.fn(() => ({ x: 100, y: 200 })),
+  getPathAngleAtProgress: jest.fn(() => 0),
+}));
+
 // Mock createTangenteDomain
 const mockTangenteComponents = [
   {
@@ -69,8 +89,12 @@ const mockTangenteComponents = [
 
 jest.mock('../domains/tangente', () => ({
   createTangenteDomain: () => ({
-    getAllComponents: () => mockTangenteComponents,
-    getComponentById: (id: string) => mockTangenteComponents.find(c => c.id === id),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getAllComponents: (_isDesktop: boolean = true) => mockTangenteComponents,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getComponentById: (id: string, _isDesktop: boolean = true) => mockTangenteComponents.find(c => c.id === id),
+    getComponentPosition: (component: typeof mockTangenteComponents[0]) => component.position.startProgress || 0.5,
+    getComponentOffset: (component: typeof mockTangenteComponents[0]) => component.offset || 40,
     getTextOnPathProps: (component: typeof mockTangenteComponents[0]) => ({
       text: component.text || '',
       startProgress: component.position.startProgress || 0.5,

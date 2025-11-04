@@ -5,7 +5,7 @@
 
 // Page Domain
 export { createPageDomain } from './page';
-export type { PageComponent, PageConfig, ComponentPosition } from './page';
+export type { PageComponent, PageConfig } from './page';
 
 // Path Domain
 export { createPathDomain } from './path';

@@ -80,8 +80,8 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
     }
   }, [svgPath, pathLength, calculatedPadding.paddingX, calculatedPadding.paddingY]);
 
-  // Récupérer les composants via l'API du domaine
-  const components = useMemo(() => pageDomain.getComponents(), [pageDomain]);
+  // Récupérer les composants via l'API du domaine selon le breakpoint
+  const components = useMemo(() => pageDomain.getComponents(isDesktop), [pageDomain, isDesktop]);
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
@@ -111,7 +111,7 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
         const componentProps = { ...rest };
         
         // Utiliser l'API du domaine pour calculer la position
-        const { top, left } = pageDomain.calculatePosition(item, originPoint, isDesktop);
+        const { top, left } = pageDomain.calculatePosition(item, originPoint);
         
         // Calculer les styles de position CSS
         const positionStyles: React.CSSProperties = {};

@@ -3,24 +3,27 @@
  * Interface pour interagir avec le domaine des composants de page
  */
 
-import { PageConfig, PageComponent, ComponentPosition } from './types';
+import { PageConfig, PageComponent } from './types';
 import { PageRepository } from './repository';
 
 export interface PageDomainAPI {
   /**
-   * Charge la configuration des composants de page
+   * Charge la configuration des composants de page selon le breakpoint
+   * @param isDesktop Si true, charge les composants desktop, sinon mobile
    */
-  loadConfig(): PageConfig;
+  loadConfig(isDesktop?: boolean): PageConfig;
 
   /**
-   * Récupère tous les composants de page
+   * Récupère tous les composants de page selon le breakpoint
+   * @param isDesktop Si true, charge les composants desktop, sinon mobile
    */
-  getComponents(): PageComponent[];
+  getComponents(isDesktop?: boolean): PageComponent[];
 
   /**
-   * Récupère un composant par son index
+   * Récupère un composant par son index selon le breakpoint
+   * @param isDesktop Si true, charge les composants desktop, sinon mobile
    */
-  getComponent(index: number): PageComponent | undefined;
+  getComponent(index: number, isDesktop?: boolean): PageComponent | undefined;
 
   /**
    * Calcule la position finale d'un composant en fonction de sa position relative
@@ -28,8 +31,7 @@ export interface PageDomainAPI {
    */
   calculatePosition(
     component: PageComponent,
-    originPoint: { x: number; y: number },
-    isDesktop: boolean
+    originPoint: { x: number; y: number }
   ): { top?: number; left?: number };
 }
 
@@ -43,51 +45,33 @@ export class PageDomain implements PageDomainAPI {
     this.repository = repository;
   }
 
-  loadConfig(): PageConfig {
-    return this.repository.load();
+  loadConfig(isDesktop: boolean = true): PageConfig {
+    return this.repository.load(isDesktop);
   }
 
-  getComponents(): PageComponent[] {
-    const config = this.loadConfig();
+  getComponents(isDesktop: boolean = true): PageComponent[] {
+    const config = this.loadConfig(isDesktop);
     return config.components || [];
   }
 
-  getComponent(index: number): PageComponent | undefined {
-    const components = this.getComponents();
+  getComponent(index: number, isDesktop: boolean = true): PageComponent | undefined {
+    const components = this.getComponents(isDesktop);
     return components[index];
   }
 
   calculatePosition(
     component: PageComponent,
-    originPoint: { x: number; y: number },
-    isDesktop: boolean
+    originPoint: { x: number; y: number }
   ): { top?: number; left?: number } {
     const position = component.position;
     let top: number | undefined;
     let left: number | undefined;
 
-    // Type guard pour la structure responsive
-    const isResponsivePosition = (pos: ComponentPosition): pos is import('./types').ResponsivePosition => {
-      return 'desktop' in pos || 'mobile' in pos;
-    };
-
-    if (isResponsivePosition(position)) {
-      const responsivePosition = isDesktop ? position.desktop : position.mobile;
-      if (responsivePosition?.top !== undefined) {
-        top = originPoint.y + responsivePosition.top;
-      }
-      if (responsivePosition?.left !== undefined) {
-        left = originPoint.x + responsivePosition.left;
-      }
-    } else {
-      // Legacy position
-      const legacyPosition = position as import('./types').LegacyPosition;
-      if (legacyPosition.top !== undefined) {
-        top = originPoint.y + legacyPosition.top;
-      }
-      if (legacyPosition.left !== undefined) {
-        left = originPoint.x + legacyPosition.left;
-      }
+    if (position.top !== undefined) {
+      top = originPoint.y + position.top;
+    }
+    if (position.left !== undefined) {
+      left = originPoint.x + position.left;
     }
 
     return { top, left };

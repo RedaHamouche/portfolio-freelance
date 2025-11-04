@@ -1,10 +1,11 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { AUTO_SCROLL_SPEED, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
-import { getNextAnchor } from '@/utils/pathCalculations';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
+import { createPathDomain } from '@/templating/domains/path';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
 export function useAutoScrollController({
   isAutoPlaying,
@@ -19,6 +20,8 @@ export function useAutoScrollController({
 }) {
   const dispatch = useDispatch();
   const { start, stop } = useRafLoop();
+  const isDesktop = useBreakpoint('>=desktop');
+  const pathDomain = useMemo(() => createPathDomain(), []);
   const isPausedRef = useRef(false);
   const lastPausedAnchorIdRef = useRef<string | null>(null);
   const prevProgressRef = useRef(progress);
@@ -55,8 +58,8 @@ export function useAutoScrollController({
     dispatch(setProgress(newProgress));
     
     // Pause sur anchor
-    const anchor = getNextAnchor(prevProgressRef.current, newProgress, SCROLL_CONFIG.ANCHOR_TOLERANCE);
-    if (anchor && anchor.anchorId !== lastPausedAnchorIdRef.current) {
+    const anchor = pathDomain.getNextAnchor(prevProgressRef.current, newProgress, SCROLL_CONFIG.ANCHOR_TOLERANCE, isDesktop);
+    if (anchor && anchor.anchorId && anchor.anchorId !== lastPausedAnchorIdRef.current) {
       isPausedRef.current = true;
       lastPausedAnchorIdRef.current = anchor.anchorId;
       dispatch(setAutoScrollTemporarilyPaused(true));
@@ -92,7 +95,7 @@ export function useAutoScrollController({
     const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
     const targetScrollY = calculateScrollYFromProgress(newProgress, maxScroll);
     window.scrollTo(0, targetScrollY);
-  }, [isAutoPlaying, autoScrollDirection, dispatch, start]);
+  }, [isAutoPlaying, autoScrollDirection, dispatch, start, pathDomain, isDesktop]);
 
   // Stocker la référence de animate
   useEffect(() => {

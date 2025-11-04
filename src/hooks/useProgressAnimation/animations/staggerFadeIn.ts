@@ -43,15 +43,38 @@ function setup(
     const text = element.textContent || '';
     if (!text || element.querySelector('.letter')) return; // Déjà initialisé
 
-    // Diviser le texte en lettres (en préservant les espaces)
-    const letters = text.split('').map((char) => {
-      if (char === ' ') return ' ';
-      return `<span class="letter" style="display: inline-block; opacity: 0;">${char}</span>`;
-    });
-
-    // Créer un wrapper pour les lettres
+    // Diviser le texte en mots (en préservant les espaces)
+    // Chaque mot sera dans un span pour préserver l'intégrité des mots lors des retours à la ligne
+    const words = text.split(/(\s+)/); // Split en gardant les espaces
+    
+    // Créer un wrapper pour les mots
     const wrapper = document.createElement('span');
-    wrapper.innerHTML = letters.join('');
+    wrapper.className = 'text-wrapper';
+    
+    words.forEach((word) => {
+      if (!word.trim()) {
+        // C'est un espace, on le garde tel quel
+        wrapper.appendChild(document.createTextNode(word));
+      } else {
+        // C'est un mot, on le wrapper dans un span avec les lettres
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'word';
+        wordSpan.style.display = 'inline-block';
+        wordSpan.style.whiteSpace = 'nowrap'; // Empêche la coupure du mot
+        
+        // Diviser le mot en lettres
+        word.split('').forEach((char) => {
+          const letterSpan = document.createElement('span');
+          letterSpan.className = 'letter';
+          letterSpan.style.display = 'inline-block';
+          letterSpan.style.opacity = '0';
+          letterSpan.textContent = char;
+          wordSpan.appendChild(letterSpan);
+        });
+        
+        wrapper.appendChild(wordSpan);
+      }
+    });
     
     // Remplacer le contenu
     element.innerHTML = '';

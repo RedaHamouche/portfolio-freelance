@@ -2,22 +2,27 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
-  findNextComponentInDirection,
   getPointOnPath,
   getPathAngleAtProgress,
   calculateArrowPosition,
   type PointPosition,
 } from '@/utils/pathCalculations';
+import { createPathDomain } from '@/templating/domains/path';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
 export const usePathCalculations = (svgPath: SVGPathElement | null) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
+  const isDesktop = useBreakpoint('>=desktop');
+
+  // Créer une instance du domaine Path
+  const pathDomain = useMemo(() => createPathDomain(), []);
 
   // Calculer le nextComponent via useMemo en fonction de la direction
   const nextComponent = useMemo(() => {
-    return findNextComponentInDirection(progress, lastScrollDirection);
-  }, [progress, lastScrollDirection]);
+    return pathDomain.findNextComponentInDirection(progress, lastScrollDirection, isDesktop);
+  }, [progress, lastScrollDirection, pathDomain, isDesktop]);
 
   // Calculer la position actuelle du point
   // Utiliser pathLength du store pour éviter les recalculs de getTotalLength()

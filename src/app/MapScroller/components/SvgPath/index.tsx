@@ -133,7 +133,7 @@ export const SvgPath = memo(function SvgPath({
           fill="none"
           stroke="#6ad7b3"
           strokeWidth={6}
-          strokeDasharray="20 10"
+          strokeDasharray="8 4"
           className={styles.path}
         />
         {children}

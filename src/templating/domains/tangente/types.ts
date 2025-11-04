@@ -4,9 +4,9 @@
  */
 
 export interface PathTangenteComponentPosition {
-  startProgress: number;
-  length: number;
+  startProgress?: number;
   progress?: number; // Alias pour startProgress si length n'est pas défini
+  length?: number;
 }
 
 export interface PathTangenteComponent {

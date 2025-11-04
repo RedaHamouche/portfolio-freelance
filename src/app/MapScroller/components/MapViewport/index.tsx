@@ -227,11 +227,14 @@ export const MapViewport: React.FC<MapViewportProps> = ({
           paddingY={paddingY}
         />
       </SvgPath>
-      {nextComponent && pointPosition && (
+      {nextComponent && nextComponent.anchorId && pointPosition && (
         <PointTrail 
           x={pointPosition.x + paddingX}
           y={pointPosition.y + paddingY}
-          nextComponent={nextComponent}
+          nextComponent={{
+            ...nextComponent,
+            anchorId: nextComponent.anchorId, // TypeScript sait maintenant que anchorId existe
+          }}
           onGoToNext={handleGoToNext}
           angle={pointAngle}
           arrowPosition={arrowPosition}

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "projects-banner",
+    "type": "ProjectsBanner",
+    "displayName": "Projets ejbjbfjblejfb",
+    "anchorId": "projectsBanner",
+    "position": {
+      "progress": 0.2
+    },
+    "autoScrollPauseTime": 2000
+  },
+  {
+    "id": "open-modal-button",
+    "type": "OpenModalButton",
+    "displayName": "Open Modal",
+    "anchorId": "openModal",
+    "position": {
+      "progress": 0.4
+    },
+    "autoScrollPauseTime": 1000
+  },
+  {
+    "id": "path-debugger",
+    "type": "PathDebugger",
+    "displayName": "Debug Path",
+    "anchorId": "pathDebugger",
+    "position": {
+      "progress": 0.05
+    },
+    "autoScrollPauseTime": 0
+  }
+]
+

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { getPointOnPath } from '@/utils/pathCalculations';
 import { createPathDomain } from '@/templating/domains/path';
 import styles from './index.module.scss';
@@ -22,6 +23,7 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { svgSize } = useResponsivePath();
+  const isDesktop = useBreakpoint('>=desktop');
   const [showDebug, setShowDebug] = useState(false);
   const [showPoints, setShowPoints] = useState(true);
   const [showAnchors, setShowAnchors] = useState(true);
@@ -170,7 +172,7 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
       {/* Ancres (composants) */}
       {showAnchors && svgPath && (
         <g className={styles.anchors}>
-          {pathDomain.getAllComponents().map((component) => {
+          {pathDomain.getAllComponents(isDesktop).map((component) => {
             if (!svgPath) return null;
             const anchorPoint = getPointOnPath(
               svgPath,

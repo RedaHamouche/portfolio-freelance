@@ -3,5 +3,24 @@
   // On s'assure juste que le transform-origin est centré pour un meilleur effet
   transform-origin: center center;
   will-change: transform;
+  max-width: 400px; // Largeur maximale
+  
+  // Le wrapper de texte permet les retours à la ligne entre les mots
+  .text-wrapper {
+    display: inline;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  
+  // Chaque mot est dans un span avec white-space: nowrap pour éviter la coupure
+  .word {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  
+  // Les lettres sont dans des spans inline-block pour l'animation
+  .letter {
+    display: inline-block;
+  }
 }
 

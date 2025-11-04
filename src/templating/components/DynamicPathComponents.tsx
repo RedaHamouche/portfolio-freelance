@@ -9,6 +9,7 @@ import mappingComponent from '../mappingComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import classnames from 'classnames';
 import { setProgress } from '../../store/scrollSlice';
 import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
@@ -112,6 +113,7 @@ const MemoizedPathComponent = memo(function PathComponentMemo({
 export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { mapScale } = useResponsivePath();
+  const isDesktop = useBreakpoint('>=desktop');
   const dispatch = useDispatch();
 
   // Créer une instance du domaine Path
@@ -122,7 +124,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
       if (!hash) return;
-      const anchorComponent = pathDomain.getComponentByAnchorId(hash);
+      const anchorComponent = pathDomain.getComponentByAnchorId(hash, isDesktop);
       if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
         dispatch(setProgress(anchorComponent.position.progress));
       }
@@ -132,13 +134,13 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     // On gère si le hash change
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, [dispatch, pathDomain]);
+  }, [dispatch, pathDomain, isDesktop]);
 
   // Récupérer pathLength du store pour optimiser getPointOnPath
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
 
-  // Récupérer tous les composants via l'API du domaine
-  const pathComponents = useMemo(() => pathDomain.getAllComponents(), [pathDomain]);
+  // Récupérer tous les composants via l'API du domaine selon le breakpoint
+  const pathComponents = useMemo(() => pathDomain.getAllComponents(isDesktop), [pathDomain, isDesktop]);
 
   // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
   const getPointOnPath = React.useCallback((progressValue: number) => {
@@ -156,10 +158,10 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   // Hook pour savoir si chaque composant est "actif" selon la range (mémoïsé)
   const activeAnchors = React.useMemo(
     () => pathComponents.map((component) => {
-      const activeComponents = pathDomain.getActiveComponents(progress);
+      const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
       return activeComponents.some(ac => ac.id === component.id);
     }),
-    [progress, pathComponents, pathDomain]
+    [progress, pathComponents, pathDomain, isDesktop]
   );
 
   // Hook pour savoir si chaque ref est dans le viewport
@@ -167,7 +169,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
 
   // Mise à jour du hash dans l'URL quand un composant anchor devient actif
   useEffect(() => {
-    const activeComponents = pathDomain.getActiveComponents(progress);
+    const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
     const firstActiveWithAnchor = activeComponents.find(c => c.anchorId);
     if (firstActiveWithAnchor?.anchorId) {
       const anchorId = firstActiveWithAnchor.anchorId;
@@ -180,7 +182,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     }
-  }, [progress, pathDomain]);
+  }, [progress, pathDomain, isDesktop]);
 
   // Mémoïser toutes les positions d'un coup en utilisant l'API du domaine
   const positions = useMemo(

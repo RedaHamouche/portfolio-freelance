@@ -8,14 +8,16 @@ import { TangenteRepository } from './repository';
 
 export interface TangenteDomainAPI {
   /**
-   * Charge tous les composants tangente
+   * Charge tous les composants tangente selon le breakpoint
+   * @param isDesktop Si true, charge les composants desktop, sinon mobile
    */
-  getAllComponents(): PathTangenteComponent[];
+  getAllComponents(isDesktop?: boolean): PathTangenteComponent[];
 
   /**
-   * Récupère un composant par son ID
+   * Récupère un composant par son ID selon le breakpoint
+   * @param isDesktop Si true, cherche dans les composants desktop, sinon mobile
    */
-  getComponentById(id: string): PathTangenteComponent | undefined;
+  getComponentById(id: string, isDesktop?: boolean): PathTangenteComponent | undefined;
 
   /**
    * Récupère les props nécessaires pour un composant TextOnPath
@@ -26,6 +28,16 @@ export interface TangenteDomainAPI {
     length: number;
     offset: number;
   } | null;
+
+  /**
+   * Récupère la position (startProgress) d'un composant
+   */
+  getComponentPosition(component: PathTangenteComponent): number;
+
+  /**
+   * Récupère l'offset d'un composant
+   */
+  getComponentOffset(component: PathTangenteComponent): number;
 }
 
 /**
@@ -38,13 +50,21 @@ export class TangenteDomain implements TangenteDomainAPI {
     this.repository = repository;
   }
 
-  getAllComponents(): PathTangenteComponent[] {
-    return this.repository.load();
+  getAllComponents(isDesktop: boolean = true): PathTangenteComponent[] {
+    return this.repository.load(isDesktop);
   }
 
-  getComponentById(id: string): PathTangenteComponent | undefined {
-    const components = this.getAllComponents();
+  getComponentById(id: string, isDesktop: boolean = true): PathTangenteComponent | undefined {
+    const components = this.getAllComponents(isDesktop);
     return components.find(c => c.id === id);
+  }
+
+  getComponentPosition(component: PathTangenteComponent): number {
+    return component.position.startProgress ?? component.position.progress ?? 0.5;
+  }
+
+  getComponentOffset(component: PathTangenteComponent): number {
+    return component.offset ?? 40;
   }
 
   getTextOnPathProps(component: PathTangenteComponent): {

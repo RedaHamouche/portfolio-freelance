@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress } from '@/store/scrollSlice';
 import { createPathDomain } from '@/templating/domains/path';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import {
   calculateFakeScrollHeight,
   calculateMaxScroll,
@@ -14,6 +15,7 @@ import {
 export const useScrollInitialization = (globalPathLength: number) => {
   const [isScrollSynced, setIsScrollSynced] = useState(false);
   const dispatch = useDispatch();
+  const isDesktop = useBreakpoint('>=desktop');
   
   // Créer une instance du domaine Path
   const pathDomain = useMemo(() => createPathDomain(), []);
@@ -40,7 +42,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
     }
 
     // Trouver le composant correspondant au hash via l'API du domaine
-    const anchorComponent = pathDomain.getComponentByAnchorId(hash);
+    const anchorComponent = pathDomain.getComponentByAnchorId(hash, isDesktop);
     
     if (anchorComponent?.position?.progress !== undefined) {
       const progress = anchorComponent.position.progress;
@@ -54,7 +56,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
     }
     
     setIsScrollSynced(true);
-  }, [globalPathLength, dispatch, pathDomain]);
+  }, [globalPathLength, dispatch, pathDomain, isDesktop]);
 
   return isScrollSynced;
 };

@@ -3,17 +3,10 @@
  * Composants positionnés avec top/left (position absolue)
  */
 
-export type LegacyPosition = {
+export type ComponentPosition = {
   top?: number;
   left?: number;
 };
-
-export type ResponsivePosition = {
-  desktop?: { top?: number; left?: number };
-  mobile?: { top?: number; left?: number };
-};
-
-export type ComponentPosition = LegacyPosition | ResponsivePosition;
 
 export interface PageComponent {
   type: string;

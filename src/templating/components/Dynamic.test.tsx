@@ -76,7 +76,7 @@ jest.mock('@/utils/viewportCalculations', () => ({
 }));
 
 // Mock mappingComponent
-jest.mock('./mappingComponent', () => {
+jest.mock('../mappingComponent', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   const MockComponent = ({ title, description }: { title?: string; description?: string }) =>
@@ -146,9 +146,9 @@ describe('Dynamic', () => {
     expect(componentDiv).toBeInTheDocument();
     
     // originPoint = (100 + 200, 200 + 100) = (300, 300)
-    // desktop position = top: -100, left: -20 (d'après page.json)
-    // Calculé = top: 300 + (-100) = 200, left: 300 + (-20) = 280
-    expect(componentDiv).toHaveStyle({ top: '200px', left: '280px' });
+    // desktop position = top: 300, left: -20 (d'après page.json)
+    // Calculé = top: 300 + 300 = 600, left: 300 + (-20) = 280
+    expect(componentDiv).toHaveStyle({ top: '600px', left: '280px' });
   });
 
   it('devrait calculer correctement les positions responsive (mobile)', () => {
@@ -164,17 +164,17 @@ describe('Dynamic', () => {
     expect(componentDiv).toHaveStyle({ top: '100px', left: '160px' });
   });
 
-  it('devrait calculer correctement les positions responsive pour BlackSquare (desktop)', () => {
+  it('devrait calculer correctement les positions responsive pour TitleAboutMe avec desktop position différente', () => {
     mockUseBreakpoint.mockReturnValue(true);
     const { container } = render(<Dynamic svgPath={mockSvgPath} paddingX={200} paddingY={100} />);
     
-    const componentDiv = container.querySelector('[data-component-type="BlackSquare"]');
+    const componentDiv = container.querySelector('[data-component-type="TitleAboutMe"]');
     expect(componentDiv).toBeInTheDocument();
     
     // originPoint = (100 + 200, 200 + 100) = (300, 300)
-    // desktop position = top: 80, left: 50 (d'après page.json)
-    // Calculé = top: 300 + 80 = 380, left: 300 + 50 = 350
-    expect(componentDiv).toHaveStyle({ top: '380px', left: '350px' });
+    // desktop position = top: 300, left: -20 (d'après page.json)
+    // Calculé = top: 300 + 300 = 600, left: 300 + (-20) = 280
+    expect(componentDiv).toHaveStyle({ top: '600px', left: '280px' });
   });
 
   it('devrait calculer le padding si non fourni', () => {

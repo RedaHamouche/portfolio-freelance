@@ -1,25 +1,17 @@
+/**
+ * Composant React pour le domaine Page
+ * Utilise l'API du domaine Page pour rendre les composants
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { getPointOnPath } from '@/utils/pathCalculations';
-import mappingComponent from './mappingComponent';
-import config from './page.json';
+import mappingComponent from '../mappingComponent';
 import { calculateMapPadding } from '@/utils/viewportCalculations';
-
-// Types pour les positions
-type LegacyPosition = {
-  top?: number;
-  left?: number;
-};
-
-type ResponsivePosition = {
-  desktop?: { top?: number; left?: number };
-  mobile?: { top?: number; left?: number };
-};
-
-type ComponentPosition = LegacyPosition | ResponsivePosition;
+import { createPageDomain } from '../domains/page';
 
 // Hook utilitaire pour IntersectionObserver sur un tableau de refs
 function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], threshold = 0.1) {
@@ -60,6 +52,9 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
   const isDesktop = useBreakpoint('>=desktop');
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   
+  // Créer une instance du domaine Page
+  const pageDomain = useMemo(() => createPageDomain(), []);
+  
   // Calculer le padding si non fourni
   const calculatedPadding = useMemo(() => {
     if (paddingX !== undefined && paddingY !== undefined) {
@@ -85,22 +80,25 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
     }
   }, [svgPath, pathLength, calculatedPadding.paddingX, calculatedPadding.paddingY]);
 
+  // Récupérer les composants via l'API du domaine
+  const components = useMemo(() => pageDomain.getComponents(), [pageDomain]);
+
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
-    () => config.components.map(() => React.createRef<HTMLDivElement>()),
-    []
+    () => components.map(() => React.createRef<HTMLDivElement>()),
+    [components]
   );
 
   // Hook pour savoir si chaque ref est dans le viewport
   const inViews = useMultipleInView(refs, 0.1);
 
-  if (!config || !config.components || config.components.length === 0) {
+  if (!components || components.length === 0) {
     return null;
   }
 
   return (
     <>
-      {config.components.map((item, idx) => {
+      {components.map((item, idx) => {
         const Comp = mappingComponent[item.type];
         
         if (!Comp) {
@@ -108,44 +106,12 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
           return null;
         }
         
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { position, ...rest } = item;
         const componentProps = { ...rest };
         
-        // Gérer les positions responsive (nouvelle structure) ou legacy (ancienne structure)
-        let top: number | undefined;
-        let left: number | undefined;
-        
-        if (position) {
-          const positionTyped = position as ComponentPosition;
-          
-          // Type guard pour la nouvelle structure responsive
-          const isResponsivePosition = (pos: ComponentPosition): pos is ResponsivePosition => {
-            return 'desktop' in pos || 'mobile' in pos;
-          };
-          
-          // Nouvelle structure: position.desktop ou position.mobile
-          if (isResponsivePosition(positionTyped)) {
-            const responsivePosition = isDesktop ? positionTyped.desktop : positionTyped.mobile;
-            // Les positions sont relatives au point 0/100 du SVG
-            if (responsivePosition?.top !== undefined) {
-              top = originPoint.y + responsivePosition.top;
-            }
-            if (responsivePosition?.left !== undefined) {
-              left = originPoint.x + responsivePosition.left;
-            }
-          } 
-          // Ancienne structure: position.top et position.left (compatibilité)
-          else {
-            const legacyPosition = positionTyped as LegacyPosition;
-            // Les positions sont relatives au point 0/100 du SVG
-            if (legacyPosition.top !== undefined) {
-              top = originPoint.y + legacyPosition.top;
-            }
-            if (legacyPosition.left !== undefined) {
-              left = originPoint.x + legacyPosition.left;
-            }
-          }
-        }
+        // Utiliser l'API du domaine pour calculer la position
+        const { top, left } = pageDomain.calculatePosition(item, originPoint, isDesktop);
         
         // Calculer les styles de position CSS
         const positionStyles: React.CSSProperties = {};
@@ -178,4 +144,5 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
       })}
     </>
   );
-} 
+}
+

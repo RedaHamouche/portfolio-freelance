@@ -3,7 +3,7 @@ import {
   calculateArrowPosition,
 } from './pathCalculations';
 
-jest.mock('@/templating/pathComponents.json', () => [
+jest.mock('@/templating/config/pathComponents.json', () => [
   {
     id: '1',
     type: 'ProjectCard',

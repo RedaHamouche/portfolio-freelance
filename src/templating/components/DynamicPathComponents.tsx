@@ -1,31 +1,25 @@
+/**
+ * Composant React pour le domaine Path
+ * Utilise l'API du domaine Path pour rendre les composants
+ */
+
 "use client"
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import mappingComponent from './mappingComponent';
-import pathComponents from './pathComponents.json';
+import mappingComponent from '../mappingComponent';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
+import { RootState } from '../../store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import classnames from 'classnames';
-import { setProgress } from '../store/scrollSlice';
-import { isComponentActive, getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
+import { setProgress } from '../../store/scrollSlice';
+import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
 import gsap from 'gsap';
+import { createPathDomain } from '../domains/path';
 
 interface DynamicPathComponentsProps {
   svgPath: SVGPathElement | null;
   paddingX: number;
   paddingY: number;
 }
-
-// interface PathComponent {
-//   id: string;
-//   type: string;
-//   displayName: string;
-//   position: {
-//     progress: number;
-//     start: number;
-//     end: number;
-//   };
-// }
 
 const DISTANCE_BEFORE_LOAD = 0.01;
 
@@ -57,16 +51,26 @@ function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], isNea
 
   return inViews;
 }
+
 interface MemoizedPathComponentProps {
   Comp: React.ComponentType<Record<string, unknown>>;
-  component: Record<string, unknown> & { displayName: string };
+  component: Record<string, unknown> & { displayName: string; type: string };
   position: { x: number; y: number };
   refDiv: React.RefObject<HTMLDivElement | null>;
   inView: boolean;
 }
 
 // Composant mémoïsé pour chaque élément du path
-const MemoizedPathComponent = memo(function PathComponentMemo({ Comp, component, position, refDiv, inView, mapScale }: MemoizedPathComponentProps & { mapScale: number }) {
+const MemoizedPathComponent = memo(function PathComponentMemo({ 
+  Comp, 
+  component, 
+  position, 
+  refDiv, 
+  inView, 
+  mapScale,
+}: MemoizedPathComponentProps & { 
+  mapScale: number;
+}) {
   const { useEffect } = React;
   
   // Animer l'opacity avec GSAP pour de meilleures performances
@@ -110,12 +114,15 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   const { mapScale } = useResponsivePath();
   const dispatch = useDispatch();
 
+  // Créer une instance du domaine Path
+  const pathDomain = useMemo(() => createPathDomain(), []);
+
   // Gestion du deeplink (hash)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
       if (!hash) return;
-      const anchorComponent = pathComponents.find(c => c.anchorId === hash);
+      const anchorComponent = pathDomain.getComponentByAnchorId(hash);
       if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
         dispatch(setProgress(anchorComponent.position.progress));
       }
@@ -125,42 +132,46 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     // On gère si le hash change
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, [dispatch]);
+  }, [dispatch, pathDomain]);
 
   // Récupérer pathLength du store pour optimiser getPointOnPath
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
 
+  // Récupérer tous les composants via l'API du domaine
+  const pathComponents = useMemo(() => pathDomain.getAllComponents(), [pathDomain]);
+
   // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
-  const getPositionOnPath = React.useCallback((progressValue: number) => {
+  const getPointOnPath = React.useCallback((progressValue: number) => {
     if (!svgPath) return { x: 0, y: 0 };
-    // Passer pathLength pour éviter les recalculs de getTotalLength()
     const point = getPointOnPathUtil(svgPath, progressValue, pathLength > 0 ? pathLength : undefined);
-    return { x: point.x + paddingX, y: point.y + paddingY };
-  }, [svgPath, paddingX, paddingY, pathLength]);
+    return { x: point.x, y: point.y };
+  }, [svgPath, pathLength]);
 
   // Utilise useMemo pour initialiser les refs une seule fois
   const refs = useMemo(
     () => pathComponents.map(() => React.createRef<HTMLDivElement>()),
-    []
+    [pathComponents]
   );
 
   // Hook pour savoir si chaque composant est "actif" selon la range (mémoïsé)
   const activeAnchors = React.useMemo(
-    () => pathComponents.map((component) => 
-      isComponentActive(component.position.progress, progress)
-    ),
-    [progress]
+    () => pathComponents.map((component) => {
+      const activeComponents = pathDomain.getActiveComponents(progress);
+      return activeComponents.some(ac => ac.id === component.id);
+    }),
+    [progress, pathComponents, pathDomain]
   );
 
-  // Hook pour savoir si chaque ref est dans le viewport (ici, on peut aussi utiliser activeAnchors comme critère)
+  // Hook pour savoir si chaque ref est dans le viewport
   const inViews = useMultipleInView(refs, activeAnchors, 0.1);
 
   // Mise à jour du hash dans l'URL quand un composant anchor devient actif
   useEffect(() => {
-    const firstActiveIdx = activeAnchors.findIndex((v, idx) => v && pathComponents[idx].anchorId);
-    if (firstActiveIdx !== -1) {
-      const anchorId = pathComponents[firstActiveIdx].anchorId;
-      if (anchorId && window.location.hash.replace('#', '') !== anchorId) {
+    const activeComponents = pathDomain.getActiveComponents(progress);
+    const firstActiveWithAnchor = activeComponents.find(c => c.anchorId);
+    if (firstActiveWithAnchor?.anchorId) {
+      const anchorId = firstActiveWithAnchor.anchorId;
+      if (window.location.hash.replace('#', '') !== anchorId) {
         history.replaceState(null, '', `#${anchorId}`);
       }
     } else {
@@ -169,15 +180,17 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     }
-  }, [activeAnchors]);
+  }, [progress, pathDomain]);
 
-  // Mémoïser toutes les positions d'un coup
+  // Mémoïser toutes les positions d'un coup en utilisant l'API du domaine
   const positions = useMemo(
-    () => pathComponents.map((component) => getPositionOnPath(component.position.progress)),
-    [getPositionOnPath]
+    () => pathComponents.map((component) => 
+      pathDomain.calculateComponentPosition(component, getPointOnPath, paddingX, paddingY)
+    ),
+    [pathComponents, getPointOnPath, paddingX, paddingY, pathDomain]
   );
 
-  if (!svgPath || !pathComponents) return null;
+  if (!svgPath || pathComponents.length === 0) return null;
 
   return (
     <>
@@ -198,4 +211,5 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
       })}
     </>
   );
-} 
+}
+

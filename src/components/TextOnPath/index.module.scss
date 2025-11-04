@@ -1,0 +1,7 @@
+.letter {
+  display: inline-block;
+  color: $black;
+  @include montreal(14px);
+  white-space: pre;
+}
+

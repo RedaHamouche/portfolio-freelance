@@ -21,7 +21,7 @@ jest.mock('@/hooks/useRafLoop', () => ({
 }));
 
 // Mock pathComponents
-jest.mock('@/templating/pathComponents.json', () => [
+jest.mock('@/templating/config/pathComponents.json', () => [
   {
     anchorId: 'test-anchor',
     position: { progress: 0.5 },

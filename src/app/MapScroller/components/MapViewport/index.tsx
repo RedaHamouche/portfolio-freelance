@@ -2,8 +2,9 @@ import React, { useLayoutEffect, useState, useEffect, useCallback, useMemo } fro
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setPathLength } from '@/store/scrollSlice';
-import Dynamic from '@/templating/Dynamic';
-import DynamicPathComponents from '@/templating/DynamicPathComponents';
+import Dynamic from '@/templating/components/Dynamic';
+import DynamicPathComponents from '@/templating/components/DynamicPathComponents';
+import DynamicPathTangenteComponents from '@/templating/components/DynamicPathTangenteComponents';
 import { SvgPath } from '@/app/MapScroller/components/SvgPath';
 import PointTrail from '@/app/MapScroller/PointTrail';
 import { SvgPathDebugger } from '@/components/SvgPathDebugger';
@@ -206,6 +207,11 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         paddingY={paddingY}
       />
       <DynamicPathComponents 
+        svgPath={svgPath}
+        paddingX={paddingX}
+        paddingY={paddingY}
+      />
+      <DynamicPathTangenteComponents
         svgPath={svgPath}
         paddingX={paddingX}
         paddingY={paddingY}

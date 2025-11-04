@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress } from '@/store/scrollSlice';
-import pathComponents from '@/templating/pathComponents.json';
+import { createPathDomain } from '@/templating/domains/path';
 import {
   calculateFakeScrollHeight,
   calculateMaxScroll,
@@ -14,6 +14,9 @@ import {
 export const useScrollInitialization = (globalPathLength: number) => {
   const [isScrollSynced, setIsScrollSynced] = useState(false);
   const dispatch = useDispatch();
+  
+  // Créer une instance du domaine Path
+  const pathDomain = useMemo(() => createPathDomain(), []);
 
   useEffect(() => {
     // On attend que la longueur du path soit connue
@@ -36,8 +39,8 @@ export const useScrollInitialization = (globalPathLength: number) => {
       return;
     }
 
-    // Trouver le composant correspondant au hash
-    const anchorComponent = pathComponents.find(c => c.anchorId === hash);
+    // Trouver le composant correspondant au hash via l'API du domaine
+    const anchorComponent = pathDomain.getComponentByAnchorId(hash);
     
     if (anchorComponent?.position?.progress !== undefined) {
       const progress = anchorComponent.position.progress;
@@ -51,7 +54,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
     }
     
     setIsScrollSynced(true);
-  }, [globalPathLength, dispatch]);
+  }, [globalPathLength, dispatch, pathDomain]);
 
   return isScrollSynced;
 };

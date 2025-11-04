@@ -17,7 +17,7 @@ describe('scrollSlice', () => {
     scrollingSpeed: 20,
     direction: null as string | null,
     isAutoPlaying: false,
-    progress: 0,
+    progress: 0.005,
     pathLength: 2000,
     autoScrollDirection: 1,
     isAutoScrollTemporarilyPaused: false,

@@ -20,8 +20,18 @@ Object.defineProperty(window, 'innerHeight', {
 });
 
 // Mock Redux
+const mockDispatch = jest.fn();
+
 jest.mock('react-redux', () => ({
-  useDispatch: () => jest.fn()
+  useDispatch: () => mockDispatch,
+  useSelector: (selector: (state: unknown) => unknown) => {
+    // Simuler le state Redux pour les tests
+    const mockState = {
+      modal: { isOpen: false },
+      scroll: { progress: 0.5, pathLength: 1000 }
+    };
+    return selector(mockState);
+  }
 }));
 
 // Mock useThrottle

@@ -1,4 +1,4 @@
-import pathComponents from '@/templating/pathComponents.json';
+import pathComponents from '@/templating/config/pathComponents.json';
 import { ANCHOR_RANGE } from '@/config';
 
 export interface PointPosition {

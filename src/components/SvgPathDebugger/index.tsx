@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath } from '@/utils/pathCalculations';
-import pathComponents from '@/templating/pathComponents.json';
+import { createPathDomain } from '@/templating/domains/path';
 import styles from './index.module.scss';
 
 interface SvgPathDebuggerProps {
@@ -27,6 +27,9 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
   const [showAnchors, setShowAnchors] = useState(true);
   const [showInfo, setShowInfo] = useState(true);
   const [mounted, setMounted] = useState(false);
+  
+  // Créer une instance du domaine Path
+  const pathDomain = useMemo(() => createPathDomain(), []);
 
   // Vérifier si le mode debug est activé
   useEffect(() => {
@@ -167,13 +170,13 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
       {/* Ancres (composants) */}
       {showAnchors && svgPath && (
         <g className={styles.anchors}>
-                 {pathComponents.map((component) => {
-                   if (!svgPath) return null;
-                   const anchorPoint = getPointOnPath(
-                     svgPath,
-                     component.position.progress,
-                     pathLength
-                   );
+          {pathDomain.getAllComponents().map((component) => {
+            if (!svgPath) return null;
+            const anchorPoint = getPointOnPath(
+              svgPath,
+              component.position.progress,
+              pathLength
+            );
             return (
               <g key={component.id}>
                 <circle

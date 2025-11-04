@@ -1,0 +1,161 @@
+/**
+ * Hook pour animer des composants basé sur le progress du scroll
+ */
+
+import { useEffect, useRef, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import gsap from 'gsap';
+import { UseProgressAnimationConfig, AnimationState, AnimationConfig } from './types';
+import { createInitialAnimationState } from './utils';
+import { getAnimation } from './animations';
+import { AnimationContext } from './animations/base';
+
+/**
+ * Hook principal pour les animations basées sur le progress
+ */
+export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
+  config: UseProgressAnimationConfig
+) {
+  const elementRef = useRef<T>(null);
+  const animationStateRef = useRef<AnimationState>(createInitialAnimationState());
+  const quickSettersRef = useRef<{
+    x?: (value: number) => void;
+    y?: (value: number) => void;
+    opacity?: (value: number) => void;
+    scale?: (value: number) => void;
+    rotation?: (value: number) => void;
+  }>({});
+
+  // Référence pour tracker les animations complexes initialisées
+  const complexAnimationsSetupRef = useRef<Set<string>>(new Set());
+
+  // Récupérer le progress et la direction depuis Redux
+  const progress = useSelector((state: RootState) => state.scroll.progress);
+  const direction = useSelector((state: RootState) => state.scroll.lastScrollDirection);
+
+  // Créer le contexte d'animation
+  const animationContext: AnimationContext = useMemo(() => ({
+    progress,
+    direction,
+    elementRef: elementRef as React.RefObject<HTMLElement>,
+  }), [progress, direction]);
+
+  // Initialiser les quickSetters GSAP une seule fois
+  useEffect(() => {
+    if (!elementRef.current) return;
+
+    // Créer les quickSetters pour des performances optimales
+    quickSettersRef.current = {
+      x: gsap.quickTo(elementRef.current, 'x', {
+        duration: 0.3,
+        ease: 'power2.out',
+      }),
+      y: gsap.quickTo(elementRef.current, 'y', {
+        duration: 0.3,
+        ease: 'power2.out',
+      }),
+      opacity: gsap.quickTo(elementRef.current, 'opacity', {
+        duration: 0.2,
+        ease: 'power2.out',
+      }),
+      scale: gsap.quickTo(elementRef.current, 'scale', {
+        duration: 0.3,
+        ease: 'power2.out',
+      }),
+      rotation: gsap.quickTo(elementRef.current, 'rotation', {
+        duration: 0.3,
+        ease: 'power2.out',
+      }),
+    };
+
+    // Initialiser les valeurs par défaut
+    gsap.set(elementRef.current, {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      rotation: 0,
+    });
+  }, []);
+
+  // Calculer les valeurs d'animation basées sur le progress
+  const animationValues = useMemo(() => {
+    if (!elementRef.current) return animationStateRef.current;
+
+    let newState: AnimationState = { ...animationStateRef.current };
+
+    // Appliquer chaque animation configurée via le registre
+    config.animations.forEach((animationConfig) => {
+      if (animationConfig.enabled === false) return;
+
+      const animation = getAnimation(animationConfig.type);
+      if (!animation) {
+        console.warn(`Animation type "${animationConfig.type}" not found in registry`);
+        return;
+      }
+
+      // Si l'animation a une fonction calculate, l'utiliser
+      if ('calculate' in animation && animation.calculate) {
+        const result = animation.calculate(
+          newState,
+          animationContext,
+          animationConfig as AnimationConfig
+        );
+        newState = { ...newState, ...result };
+      }
+    });
+
+    animationStateRef.current = newState;
+    return newState;
+  }, [config, animationContext]);
+
+  // Setup des animations complexes (une seule fois)
+  useEffect(() => {
+    if (!elementRef.current) return;
+
+    config.animations.forEach((animationConfig) => {
+      if (animationConfig.enabled === false) return;
+      if (complexAnimationsSetupRef.current.has(animationConfig.type)) return;
+
+      const animation = getAnimation(animationConfig.type);
+      if (!animation || !('setup' in animation) || !animation.setup) return;
+
+      animation.setup(elementRef as React.RefObject<HTMLElement>);
+      complexAnimationsSetupRef.current.add(animationConfig.type);
+    });
+  }, [config]);
+
+  // Update des animations complexes (à chaque changement de progress)
+  useEffect(() => {
+    if (!elementRef.current) return;
+
+    config.animations.forEach((animationConfig) => {
+      if (animationConfig.enabled === false) return;
+
+      const animation = getAnimation(animationConfig.type);
+      if (!animation || !('update' in animation) || !animation.update) return;
+
+      if (!complexAnimationsSetupRef.current.has(animationConfig.type)) return;
+
+      animation.update(elementRef as React.RefObject<HTMLElement>, animationContext, animationConfig as AnimationConfig);
+    });
+  }, [progress, config, animationContext]);
+
+  // Appliquer les animations avec GSAP
+  useEffect(() => {
+    if (!elementRef.current) return;
+
+    const { x, y, opacity, scale, rotation } = animationValues;
+    const { x: setX, y: setY, opacity: setOpacity, scale: setScale, rotation: setRotation } = quickSettersRef.current;
+
+    // Appliquer les valeurs avec les quickSetters (haute performance)
+    if (setX && x !== undefined) setX(x);
+    if (setY && y !== undefined) setY(y);
+    if (setOpacity && opacity !== undefined) setOpacity(opacity);
+    if (setScale && scale !== undefined) setScale(scale);
+    if (setRotation && rotation !== undefined) setRotation(rotation);
+  }, [animationValues]);
+
+  return elementRef;
+}

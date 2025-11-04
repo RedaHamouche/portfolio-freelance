@@ -1,0 +1,7 @@
+.titleAboutMe {
+  // Le hook gère les transformations via GSAP (x, y, scale, etc.)
+  // On s'assure juste que le transform-origin est centré pour un meilleur effet
+  transform-origin: center center;
+  will-change: transform;
+}
+

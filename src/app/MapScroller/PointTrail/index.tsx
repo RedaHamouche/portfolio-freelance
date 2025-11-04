@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import styles from './index.module.scss';
 import classnames from 'classnames';
@@ -23,6 +23,49 @@ interface PointTrailProps {
   arrowPosition: 'left' | 'right';
 }
 
+/**
+ * Normalise un angle pour que le texte soit toujours lisible (jamais à l'envers)
+ * Si l'angle est entre 90° et 270° (ou -90° et -270°), on ajoute 180° pour le retourner
+ * @returns Un objet avec l'angle normalisé et un booléen indiquant si l'angle a été retourné
+ */
+function normalizeAngleForReadability(angle: number): { normalizedAngle: number; wasFlipped: boolean } {
+  // Normaliser l'angle entre -180° et 180°
+  let normalizedAngle = ((angle % 360) + 360) % 360;
+  if (normalizedAngle > 180) {
+    normalizedAngle -= 360;
+  }
+  
+  // Si l'angle est entre 90° et -90° (ou -90° et 90°), le texte est lisible
+  // Sinon, on ajoute 180° pour le retourner
+  const wasFlipped = normalizedAngle > 90 || normalizedAngle < -90;
+  
+  if (wasFlipped) {
+    normalizedAngle += 180;
+    // Re-normaliser après l'ajout
+    normalizedAngle = ((normalizedAngle % 360) + 360) % 360;
+    if (normalizedAngle > 180) {
+      normalizedAngle -= 360;
+    }
+  }
+  
+  return { normalizedAngle, wasFlipped };
+}
+
+/**
+ * Calcule la position de la flèche en tenant compte de la normalisation de l'angle
+ * Si l'angle a été retourné, on inverse la position de la flèche
+ */
+function calculateNormalizedArrowPosition(
+  originalArrowPosition: 'left' | 'right',
+  wasFlipped: boolean
+): 'left' | 'right' {
+  if (wasFlipped) {
+    // Si l'angle a été retourné, on inverse la position de la flèche
+    return originalArrowPosition === 'left' ? 'right' : 'left';
+  }
+  return originalArrowPosition;
+}
+
 const PointTrail = memo(function PointTrail({
   x,
   y,
@@ -33,14 +76,26 @@ const PointTrail = memo(function PointTrail({
 }: PointTrailProps) {
   const { mapScale } = useResponsivePath();
   
+  // Normaliser l'angle pour que le texte soit toujours lisible
+  const { normalizedAngle, wasFlipped } = useMemo(
+    () => normalizeAngleForReadability(angle),
+    [angle]
+  );
+  
+  // Calculer la position normalisée de la flèche
+  const normalizedArrowPosition = useMemo(
+    () => calculateNormalizedArrowPosition(arrowPosition, wasFlipped),
+    [arrowPosition, wasFlipped]
+  );
+  
   return (
     <button
       type="button"
-      className={classnames(styles.pointContainer, styles[`position-${arrowPosition}`])}
+      className={classnames(styles.pointContainer, styles[`position-${normalizedArrowPosition}`])}
       style={{
         top: `${y}px`,
         left: `${x}px`,
-        transform: `translate(-50%, -50%) scale(${1 / mapScale}) rotate(${angle}deg)`,
+        transform: `translate(-50%, -50%) scale(${1 / mapScale}) rotate(${normalizedAngle}deg)`,
         transformOrigin: 'center',
       }}
       onClick={onGoToNext}

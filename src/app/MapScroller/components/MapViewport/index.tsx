@@ -200,7 +200,11 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         zIndex: 2,
       }}
     >
-      <Dynamic />
+      <Dynamic 
+        svgPath={svgPath}
+        paddingX={paddingX}
+        paddingY={paddingY}
+      />
       <DynamicPathComponents 
         svgPath={svgPath}
         paddingX={paddingX}

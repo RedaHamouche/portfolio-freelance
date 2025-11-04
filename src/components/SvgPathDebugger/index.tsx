@@ -165,9 +165,10 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
       </g>
 
       {/* Ancres (composants) */}
-      {showAnchors && (
+      {showAnchors && svgPath && (
         <g className={styles.anchors}>
                  {pathComponents.map((component) => {
+                   if (!svgPath) return null;
                    const anchorPoint = getPointOnPath(
                      svgPath,
                      component.position.progress,

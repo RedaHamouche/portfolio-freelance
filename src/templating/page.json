@@ -1,19 +1,48 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "components": [
+    {
+      "type": "TitleAboutMe",
+      "displayName": "Titre About Me",
+      "title": "À propos",
+      "description": "Développeur freelance passionné par la création d'expériences web innovantes et performantes.",
+      "position": {
+        "desktop": {
+          "top": -100,
+          "left": -20
+        },
+        "mobile": {
+          "top": -200,
+          "left": -140
+        }
+      }
+    },
     {
       "type": "BlackSquare",
       "displayName": "Noir carré",
       "position": {
-        "top": 1000,
-        "left": 2590
+       "desktop": {
+          "top": 80,
+          "left": 50
+        },
+        "mobile": {
+          "top": 144,
+          "left": 24
+        }
       }
     },
     {
       "type": "OpenModalButton",
       "displayName": "Bouton Open Modal",
       "position": {
-        "top": 500,
-        "left": 500
+       "desktop": {
+          "top": 100,
+          "left": 50
+        },
+        "mobile": {
+          "top": 104,
+          "left": 24
+        }
       }
     }
   ]

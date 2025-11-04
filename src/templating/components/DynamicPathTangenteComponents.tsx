@@ -12,7 +12,8 @@ import { RootState } from '../../store';
 import { createTangenteDomain } from '../domains/tangente';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
-import { getPointOnPath, getPathAngleAtProgress } from '@/utils/pathCalculations';
+import { getPointOnPath, getPathAngleAtProgress, calculateAdaptiveDelta } from '@/utils/pathCalculations';
+import { normalizeAngleForReadability, getPerpendicularOffset } from '@/utils/tangentUtils';
 
 interface DynamicPathTangenteComponentsProps {
   svgPath: SVGPathElement | null;
@@ -20,45 +21,6 @@ interface DynamicPathTangenteComponentsProps {
   paddingY: number;
 }
 
-/**
- * Normalise un angle pour que le texte soit toujours lisible (jamais à l'envers)
- */
-function normalizeAngleForReadability(angle: number): number {
-  let normalizedAngle = ((angle % 360) + 360) % 360;
-  if (normalizedAngle > 180) {
-    normalizedAngle -= 360;
-  }
-  
-  const wasFlipped = normalizedAngle > 90 || normalizedAngle < -90;
-  
-  if (wasFlipped) {
-    normalizedAngle += 180;
-    normalizedAngle = ((normalizedAngle % 360) + 360) % 360;
-    if (normalizedAngle > 180) {
-      normalizedAngle -= 360;
-    }
-  }
-  
-  return normalizedAngle;
-}
-
-/**
- * Calcule la position perpendiculaire à un point sur le path
- */
-function getPerpendicularOffset(
-  point: { x: number; y: number },
-  angle: number,
-  offset: number
-): { x: number; y: number } {
-  const angleRad = (angle * Math.PI) / 180;
-  const perpX = -Math.sin(angleRad);
-  const perpY = Math.cos(angleRad);
-  
-  return {
-    x: point.x + perpX * offset,
-    y: point.y + perpY * offset,
-  };
-}
 
 export default function DynamicPathTangenteComponents({ 
   svgPath, 
@@ -75,11 +37,19 @@ export default function DynamicPathTangenteComponents({
   // Récupérer tous les composants via l'API du domaine selon le breakpoint
   const tangenteComponents = useMemo(() => tangenteDomain.getAllComponents(isDesktop), [tangenteDomain, isDesktop]);
 
+  // Pré-calculer le delta adaptatif une seule fois (optimisation)
+  const adaptiveDelta = useMemo(() => calculateAdaptiveDelta(pathLength), [pathLength]);
+  
   // Calculer les positions et angles pour chaque composant
   const componentPositions = useMemo(() => {
     if (!svgPath || pathLength <= 0) return [];
 
-    return tangenteComponents.map((component) => {
+    // Pré-allouer le tableau pour de meilleures performances
+    const positions = new Array(tangenteComponents.length);
+    
+    for (let i = 0; i < tangenteComponents.length; i++) {
+      const component = tangenteComponents[i];
+      
       // Utiliser l'API du domaine pour récupérer les valeurs
       const startProgress = tangenteDomain.getComponentPosition(component);
       const offset = tangenteDomain.getComponentOffset(component);
@@ -87,23 +57,28 @@ export default function DynamicPathTangenteComponents({
       // Clamper le progress entre 0 et 1
       const clampedProgress = Math.max(0, Math.min(1, startProgress));
       
-      // Obtenir la position et l'angle sur le path
+      // Obtenir la position sur le path
       const point = getPointOnPath(svgPath, clampedProgress, pathLength);
-      const angle = getPathAngleAtProgress(svgPath, clampedProgress, 1, pathLength);
+      
+      // Calculer l'angle (delta pré-calculé)
+      const angle = getPathAngleAtProgress(svgPath, clampedProgress, adaptiveDelta, pathLength);
       
       // Normaliser l'angle pour la lisibilité
       const normalizedAngle = normalizeAngleForReadability(angle);
       
       // Calculer la position perpendiculaire (en dessous du path)
+      // Utiliser l'angle original (non normalisé) pour le calcul de l'offset
       const offsetPoint = getPerpendicularOffset(point, angle, offset);
       
-      return {
+      positions[i] = {
         x: offsetPoint.x + paddingX,
         y: offsetPoint.y + paddingY,
         angle: normalizedAngle,
       };
-    });
-  }, [svgPath, pathLength, tangenteComponents, paddingX, paddingY, tangenteDomain]);
+    }
+    
+    return positions;
+  }, [svgPath, pathLength, tangenteComponents, paddingX, paddingY, tangenteDomain, adaptiveDelta]);
 
   if (!svgPath || tangenteComponents.length === 0 || pathLength <= 0) return null;
 

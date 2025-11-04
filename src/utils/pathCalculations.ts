@@ -102,23 +102,70 @@ export const getPointOnPath = (
 };
 
 /**
+ * Calcule un delta adaptatif pour le calcul de tangente
+ * Utilise un pourcentage de la longueur du path pour garantir une tangente précise
+ * même sur les paths très longs ou très courts
+ * @param pathLength Longueur totale du path
+ * @param minDelta Minimum absolu en pixels (défaut: 2)
+ * @param percentage Pourcentage de la longueur (défaut: 0.001 = 0.1%)
+ * @returns Delta adaptatif en pixels
+ */
+export const calculateAdaptiveDelta = (
+  pathLength: number,
+  minDelta: number = 2,
+  percentage: number = 0.001
+): number => {
+  return Math.max(minDelta, pathLength * percentage);
+};
+
+/**
  * Calcule l'angle de la tangente du path à un point donné
+ * Optimisé pour être précis sur mobile et desktop avec des longueurs de path différentes
  * @param svgPath L'élément SVG path
  * @param progress Progress (0-1)
- * @param delta Delta pour calculer la tangente (défaut: 1)
+ * @param delta Delta pour calculer la tangente (défaut: calculé automatiquement)
  * @param pathLength Longueur totale du path (optionnel, calculé si non fourni)
+ * @returns Angle en degrés (0-360, où 0° = droite, 90° = bas, 180° = gauche, 270° = haut)
  */
 export const getPathAngleAtProgress = (
   svgPath: SVGPathElement,
   progress: number,
-  delta: number = 1,
+  delta?: number,
   pathLength?: number
 ): number => {
   const totalLength = pathLength ?? svgPath.getTotalLength();
+  
+  // Si delta n'est pas fourni, calculer un delta adaptatif
+  const effectiveDelta = delta ?? calculateAdaptiveDelta(totalLength);
+  
   const currentLength = progress * totalLength;
-  const p1 = svgPath.getPointAtLength(Math.max(0, currentLength - delta));
-  const p2 = svgPath.getPointAtLength(Math.min(totalLength, currentLength + delta));
+  
+  // Calculer les deux points pour la tangente
+  // Utiliser Math.max/Math.min pour éviter les valeurs négatives ou supérieures à totalLength
+  const length1 = Math.max(0, currentLength - effectiveDelta);
+  const length2 = Math.min(totalLength, currentLength + effectiveDelta);
+  
+  // Si les deux points sont identiques (cas limite), utiliser un delta plus petit
+  if (length1 === length2) {
+    const fallbackDelta = Math.min(effectiveDelta, totalLength * 0.0001);
+    const p1 = svgPath.getPointAtLength(Math.max(0, currentLength - fallbackDelta));
+    const p2 = svgPath.getPointAtLength(Math.min(totalLength, currentLength + fallbackDelta));
+    
+    if (p1.x === p2.x && p1.y === p2.y) {
+      // Si toujours identique, retourner 0 (angle horizontal par défaut)
+      return 0;
+    }
+    
+    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+    return angle;
+  }
+  
+  const p1 = svgPath.getPointAtLength(length1);
+  const p2 = svgPath.getPointAtLength(length2);
+  
+  // Calculer l'angle entre les deux points
   const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+  
   return angle;
 };
 

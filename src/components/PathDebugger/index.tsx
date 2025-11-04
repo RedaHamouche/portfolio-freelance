@@ -7,7 +7,7 @@ export default function PathDebugger() {
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const isScrolling = useSelector((state: RootState) => state.scroll.isScrolling);
-
+  return null;
   return (
     <div className={styles.debugger}>
       <h3>Path Debugger</h3>

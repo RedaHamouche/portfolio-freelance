@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
-import { getPointOnPath, getPathAngleAtProgress } from '@/utils/pathCalculations';
+import { getPointOnPath, getPathAngleAtProgress, calculateAdaptiveDelta } from '@/utils/pathCalculations';
+import { normalizeAngleForReadability, getPerpendicularOffset } from '@/utils/tangentUtils';
 import styles from './index.module.scss';
 
 interface TextOnPathProps {
@@ -12,54 +13,6 @@ interface TextOnPathProps {
   paddingX: number;
   paddingY: number;
   pathLength: number;
-}
-
-/**
- * Normalise un angle pour que le texte soit toujours lisible (jamais à l'envers)
- * Même fonction que dans PointTrail
- */
-function normalizeAngleForReadability(angle: number): number {
-  let normalizedAngle = ((angle % 360) + 360) % 360;
-  if (normalizedAngle > 180) {
-    normalizedAngle -= 360;
-  }
-  
-  const wasFlipped = normalizedAngle > 90 || normalizedAngle < -90;
-  
-  if (wasFlipped) {
-    normalizedAngle += 180;
-    normalizedAngle = ((normalizedAngle % 360) + 360) % 360;
-    if (normalizedAngle > 180) {
-      normalizedAngle -= 360;
-    }
-  }
-  
-  return normalizedAngle;
-}
-
-/**
- * Calcule la position perpendiculaire à un point sur le path
- * L'offset est toujours vers le bas (perpendiculaire vers le bas)
- */
-function getPerpendicularOffset(
-  point: { x: number; y: number },
-  angle: number,
-  offset: number
-): { x: number; y: number } {
-  // Convertir l'angle en radians
-  const angleRad = (angle * Math.PI) / 180;
-  
-  // Calculer la direction perpendiculaire
-  // Pour obtenir le vecteur perpendiculaire à droite (vers le bas quand le path va vers la droite)
-  // On utilise: perp_x = -sin(angle), perp_y = cos(angle)
-  // Cela donne toujours un vecteur perpendiculaire pointant vers la droite du path
-  const perpX = -Math.sin(angleRad);
-  const perpY = Math.cos(angleRad);
-  
-  return {
-    x: point.x + perpX * offset,
-    y: point.y + perpY * offset,
-  };
 }
 
 export const TextOnPath = memo(function TextOnPath({
@@ -74,25 +27,29 @@ export const TextOnPath = memo(function TextOnPath({
 }: TextOnPathProps) {
   const { mapScale } = useResponsivePath();
   
+  // Pré-calculer le delta adaptatif une seule fois (optimisation)
+  const adaptiveDelta = useMemo(() => calculateAdaptiveDelta(pathLength), [pathLength]);
+  
   // Calculer les positions de chaque lettre le long du path
   const letterPositions = useMemo(() => {
     if (!svgPath || text.length === 0 || pathLength <= 0) return [];
     
     const letters = text.split('');
+    const numLetters = letters.length;
+    
+    // Calculer l'espacement une seule fois
+    const spacing = numLetters > 1 ? length / (numLetters - 1) : 0;
+    
+    // Pré-allouer le tableau pour de meilleures performances
     const positions: Array<{
       letter: string;
       x: number;
       y: number;
       angle: number;
       normalizedAngle: number;
-    }> = [];
+    }> = new Array(numLetters);
     
-    // Calculer les positions de chaque lettre le long du path
-    // On distribue les lettres uniformément le long de la longueur spécifiée
-    // Pour éviter la division par zéro, on gère le cas où il n'y a qu'une seule lettre
-    const numLetters = letters.length;
-    const spacing = numLetters > 1 ? length / (numLetters - 1) : 0;
-    
+    // Calculer les positions de chaque lettre
     for (let i = 0; i < numLetters; i++) {
       // Progress de cette lettre (entre startProgress et startProgress + length)
       const letterProgress = startProgress + i * spacing;
@@ -100,9 +57,9 @@ export const TextOnPath = memo(function TextOnPath({
       // Clamper entre 0 et 1
       const clampedProgress = Math.max(0, Math.min(1, letterProgress));
       
-      // Obtenir la position et l'angle sur le path
+      // Obtenir la position et l'angle sur le path (optimisé: delta pré-calculé)
       const point = getPointOnPath(svgPath, clampedProgress, pathLength);
-      const angle = getPathAngleAtProgress(svgPath, clampedProgress, 1, pathLength);
+      const angle = getPathAngleAtProgress(svgPath, clampedProgress, adaptiveDelta, pathLength);
       
       // Normaliser l'angle pour la lisibilité
       const normalizedAngle = normalizeAngleForReadability(angle);
@@ -111,17 +68,17 @@ export const TextOnPath = memo(function TextOnPath({
       // Utiliser l'angle original pour le calcul de l'offset, pas l'angle normalisé
       const offsetPoint = getPerpendicularOffset(point, angle, offset);
       
-      positions.push({
+      positions[i] = {
         letter: letters[i],
         x: offsetPoint.x + paddingX,
         y: offsetPoint.y + paddingY,
         angle,
         normalizedAngle,
-      });
+      };
     }
     
     return positions;
-  }, [svgPath, text, startProgress, length, offset, paddingX, paddingY, pathLength]);
+  }, [svgPath, text, startProgress, length, offset, paddingX, paddingY, pathLength, adaptiveDelta]);
   
   if (!svgPath || letterPositions.length === 0) return null;
 

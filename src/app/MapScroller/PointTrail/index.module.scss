@@ -1,11 +1,11 @@
 .pointContainer {
   position: absolute;
   transform: translate(-50%, -50%);
-  background-color: $color-mono-white-bg;
+  background-color: $white;
   border-radius: 60px;
   @include flex;
   gap: $spacing-xxs;
-  border: 2px dashed $color-primary;
+  border: 2px dashed $black;
   padding: 7px 14px;
   color: $black;
 
@@ -30,7 +30,7 @@
 
   .arrow {
     .path {
-      fill: $color-primary;
+      fill: $black
     }
   }
 }

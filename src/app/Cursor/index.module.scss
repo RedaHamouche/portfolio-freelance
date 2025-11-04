@@ -2,10 +2,12 @@
     @include square(64px);
     position: fixed;
     z-index: 10000;
-    transform: translate(-50%, -50%);
+    // GSAP gère le positionnement via x et y
+    // xPercent et yPercent sont définis dans le JS pour centrer le curseur
     pointer-events: none;
     @include flex(center, center);
     border-radius: 50%;
+    will-change: transform;
 
     
     @include media("<desktop") {
@@ -17,34 +19,7 @@
 .outerSvg {
     position: absolute;
     will-change: transform;
-
-    &.movingBorderAnimation {
-        stroke-dasharray: 1;
-        animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
-    }
-
-    &.ToClick {
-        &:not(.clickedAnimation ) {
-            animation: movingBorderAnimationKeyFrame 0.8s ease-out alternate-reverse infinite;
-
-        }
-    }
-
-    &.clickedAnimation {
-        transition: 0.1s ease-out;
-        transform: scale(0.7);
-    }
-}
-
-// MOVING BORDER
-@keyframes movingBorderAnimationKeyFrame {
-    from {
-        transform: scale(0.8);
-    }
-    to {
-        stroke-dashoffset: 100;
-        transform: scale(1.1);
-    }
+    // Les animations sont maintenant gérées par GSAP dans animation.ts
 }
 
 .innerSvg {
@@ -55,7 +30,11 @@
 
 .background {
     @include square(50%);
-    background-color: $color-primary;
+    background-color: $black;
     @include flex(center, center);
     border-radius: 50%;
+}
+
+.circle {
+    stroke: $black;
 }

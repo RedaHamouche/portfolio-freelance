@@ -1,5 +1,9 @@
 .mainSvg {
     background-color: $white;
+    // CSS containment pour optimiser le rendu
+    // paint: le contenu ne déborde pas, le navigateur peut optimiser le rendu
+    // layout: les changements de layout sont isolés à cet élément
+    contain: paint layout;
 }
   
 .path {

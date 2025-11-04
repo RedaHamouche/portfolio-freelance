@@ -72,6 +72,9 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     );
   }, [svgSize, mapScale, mapPaddingRatio, windowSize]);
 
+  // State pour stocker le transform du viewport (pour le clipPath du SVG)
+  const [viewportTransform, setViewportTransform] = useState<{ translateX: number; translateY: number; scale: number } | null>(null);
+
   // Fonction pour mettre à jour la vue avec GSAP (optimisé GPU)
   const updateViewport = useCallback(() => {
     if (!svgRef.current || !svgPath || !mapWrapperRef.current || !viewportBounds) return;
@@ -87,6 +90,13 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       mapPaddingRatio,
       viewportBounds
     );
+    
+    // Stocker le transform pour le clipPath du SVG
+    setViewportTransform({
+      translateX: transform.translateX,
+      translateY: transform.translateY,
+      scale: transform.scale,
+    });
     
     // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
     // GSAP gère automatiquement will-change et l'accélération GPU
@@ -176,6 +186,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   return (
     <div
       ref={mapWrapperRef}
+      data-map-wrapper
       style={{
         position: 'absolute',
         top: 0,
@@ -185,6 +196,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',
+        contain: 'paint layout',
         zIndex: 2,
       }}
     >
@@ -197,6 +209,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       <SvgPath
         setSvgPath={setSvgPath}
         svgRef={svgRef}
+        viewportTransform={viewportTransform}
       >
         <SvgPathDebugger
           svgPath={svgPath}

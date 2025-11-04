@@ -3,8 +3,7 @@
 }
   
 .path {
-//   transition: stroke-dashoffset 0.05s ease-out;
-  stroke-dasharray: 20 10; // Points plus visibles
+  // stroke-dasharray et stroke-dashoffset sont gérés par GSAP pour l'animation
   stroke: $black;
 }
 

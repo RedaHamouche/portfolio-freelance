@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useEffect, useCallback } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setPathLength } from '@/store/scrollSlice';
@@ -6,6 +6,7 @@ import Dynamic from '@/templating/Dynamic';
 import DynamicPathComponents from '@/templating/DynamicPathComponents';
 import { SvgPath } from '@/app/MapScroller/components/SvgPath';
 import PointTrail from '@/app/MapScroller/PointTrail';
+import { SvgPathDebugger } from '@/components/SvgPathDebugger';
 import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import gsap from 'gsap';
@@ -83,7 +84,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [updateViewport]);
 
-  const handleGoToNext = () => {
+  const handleGoToNext = useCallback(() => {
     if (!nextComponent) return;
 
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
@@ -98,13 +99,26 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       duration: 0.8,
       ease: 'power2.out'
     });
-  };
+  }, [nextComponent, globalPathLength]);
 
-  const pointPosition = getCurrentPointPosition();
-  const pointAngle = getCurrentPointAngle();
-  const arrowPosition = getArrowPosition();
+  // Mémoïser les calculs de position/angle/arrow pour éviter les recalculs inutiles
+  // Ces valeurs ne sont utilisées que si nextComponent existe, donc on les calcule conditionnellement
+  const { pointPosition, pointAngle, arrowPosition } = useMemo(() => {
+    if (!nextComponent) {
+      return { pointPosition: null, pointAngle: 0, arrowPosition: 'right' as const };
+    }
+    return {
+      pointPosition: getCurrentPointPosition(),
+      pointAngle: getCurrentPointAngle(),
+      arrowPosition: getArrowPosition(),
+    };
+  }, [nextComponent, getCurrentPointPosition, getCurrentPointAngle, getArrowPosition]);
 
-  const { paddingX, paddingY } = calculateMapPadding(svgSize, mapPaddingRatio);
+  // Mémoïser le calcul du padding
+  const { paddingX, paddingY } = useMemo(
+    () => calculateMapPadding(svgSize, mapPaddingRatio),
+    [svgSize, mapPaddingRatio]
+  );
 
   return (
     <div
@@ -128,11 +142,16 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         paddingY={paddingY}
       />
       <SvgPath
-        // dashOffset={dashOffset}
         setSvgPath={setSvgPath}
         svgRef={svgRef}
-      />
-      {nextComponent && (
+      >
+        <SvgPathDebugger
+          svgPath={svgPath}
+          paddingX={paddingX}
+          paddingY={paddingY}
+        />
+      </SvgPath>
+      {nextComponent && pointPosition && (
         <PointTrail 
           x={pointPosition.x + paddingX}
           y={pointPosition.y + paddingY}

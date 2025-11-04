@@ -17,20 +17,22 @@ export interface PathComponentData {
   autoScrollPauseTime?: number;
 }
 
+// Pré-trier les composants une seule fois au chargement du module pour améliorer les performances
+const allComponents = [...pathComponents] as PathComponentData[];
+const sortedByProgressDesc = [...allComponents].sort((a, b) => b.position.progress - a.position.progress);
+const sortedByProgressAsc = [...allComponents].sort((a, b) => a.position.progress - b.position.progress);
+
 /**
  * Trouve le prochain composant sur le path basé sur le progress actuel
  * @deprecated Utiliser findNextComponentInDirection à la place
  */
 export const findNextComponent = (currentProgress: number): PathComponentData | null => {
-  const sortedComponents = [...pathComponents] as PathComponentData[];
-  sortedComponents.sort((a, b) => b.position.progress - a.position.progress);
-  
-  let findNext = sortedComponents.find(c => c.position.progress < currentProgress);
+  // Utiliser la version pré-triée au lieu de trier à chaque appel
+  const findNext = sortedByProgressDesc.find(c => c.position.progress < currentProgress);
   if (!findNext) {
-    findNext = sortedComponents[0]; // boucle au "dernier" (le plus à droite)
+    return sortedByProgressDesc[0] || null; // boucle au "dernier" (le plus à droite)
   }
-  
-  return findNext || null;
+  return findNext;
 };
 
 /**
@@ -43,8 +45,6 @@ export const findNextComponentInDirection = (
   currentProgress: number,
   direction: 'forward' | 'backward' | null
 ): PathComponentData | null => {
-  const allComponents = [...pathComponents] as PathComponentData[];
-  
   // Si pas de direction, on utilise la logique originale
   if (!direction) {
     return findNextComponent(currentProgress);
@@ -52,31 +52,27 @@ export const findNextComponentInDirection = (
   
   if (direction === 'forward') {
     // On cherche le composant le plus proche avec progress > currentProgress
-    const forwardComponents = allComponents
-      .filter(c => c.position.progress > currentProgress)
-      .sort((a, b) => a.position.progress - b.position.progress); // Tri croissant pour avoir le plus proche
+    // Utiliser la version pré-triée par ordre croissant pour avoir le plus proche directement
+    const forwardComponent = sortedByProgressAsc.find(c => c.position.progress > currentProgress);
     
-    if (forwardComponents.length > 0) {
-      return forwardComponents[0];
+    if (forwardComponent) {
+      return forwardComponent;
     }
     
     // Si aucun composant en avant, on boucle au début (le premier avec le plus petit progress)
-    const sorted = allComponents.sort((a, b) => a.position.progress - b.position.progress);
-    return sorted[0] || null;
+    return sortedByProgressAsc[0] || null;
   } else {
     // direction === 'backward'
     // On cherche le composant le plus proche avec progress < currentProgress
-    const backwardComponents = allComponents
-      .filter(c => c.position.progress < currentProgress)
-      .sort((a, b) => b.position.progress - a.position.progress); // Tri décroissant pour avoir le plus proche
+    // Utiliser la version pré-triée par ordre décroissant pour avoir le plus proche directement
+    const backwardComponent = sortedByProgressDesc.find(c => c.position.progress < currentProgress);
     
-    if (backwardComponents.length > 0) {
-      return backwardComponents[0];
+    if (backwardComponent) {
+      return backwardComponent;
     }
     
     // Si aucun composant en arrière, on boucle à la fin (le composant avec le plus grand progress)
-    const sorted = allComponents.sort((a, b) => b.position.progress - a.position.progress);
-    return sorted[0] || null;
+    return sortedByProgressDesc[0] || null;
   }
 };
 

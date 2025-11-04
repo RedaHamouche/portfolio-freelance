@@ -42,7 +42,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   }, [svgPath, dispatch]);
   
   const {
-    // dashOffset,
     nextComponent,
     getCurrentPointPosition,
     getCurrentPointAngle,

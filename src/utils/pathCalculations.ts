@@ -113,12 +113,6 @@ export const getPathAngleAtProgress = (
   return angle;
 };
 
-/**
- * Calcule le dashOffset pour l'animation du path
- */
-export const calculateDashOffset = (totalLength: number, progress: number): number => {
-  return totalLength * progress;
-};
 
 /**
  * Détermine si un composant est actif (dans la range) basé sur le progress

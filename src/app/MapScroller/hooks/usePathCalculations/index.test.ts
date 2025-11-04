@@ -29,7 +29,6 @@ jest.mock('@/utils/pathCalculations', () => ({
   })),
   getPointOnPath: jest.fn(() => ({ x: 100, y: 200 })),
   getPathAngleAtProgress: jest.fn(() => 45),
-  calculateDashOffset: jest.fn((length, progress) => length * progress),
   calculateArrowPosition: jest.fn(() => 'right'),
 }));
 
@@ -51,7 +50,6 @@ describe('usePathCalculations', () => {
     
     const { result } = renderHook(() => usePathCalculations(svgPath));
 
-    expect(result.current).toHaveProperty('dashOffset');
     expect(result.current).toHaveProperty('nextComponent');
     expect(result.current).toHaveProperty('getCurrentPointPosition');
     expect(result.current).toHaveProperty('getCurrentPointAngle');
@@ -70,23 +68,5 @@ describe('usePathCalculations', () => {
     expect(angle).toBe(0);
   });
 
-  it('devrait calculer le dashOffset quand svgPath est disponible', () => {
-    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path') as SVGPathElement;
-    svgPath.setAttribute('d', 'M0,0 L100,0');
-    
-    // Mock getTotalLength
-    Object.defineProperty(svgPath, 'getTotalLength', {
-      value: () => 1000,
-      writable: true,
-      configurable: true,
-    });
-
-    const { result } = renderHook(() => usePathCalculations(svgPath));
-    
-    // Attendre que l'effet se déclenche
-    setTimeout(() => {
-      expect(typeof result.current.dashOffset).toBe('number');
-    }, 0);
-  });
 });
 

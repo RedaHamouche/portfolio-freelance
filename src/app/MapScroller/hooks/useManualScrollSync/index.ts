@@ -14,10 +14,11 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
   const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const isInitializedRef = useRef(false);
   const scrollYRef = useRef(0);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollEndRafIdRef = useRef<number | null>(null);
   const prevProgressRef = useRef<number | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const pendingUpdateRef = useRef(false);
+  const lastScrollTimeRef = useRef(performance.now());
 
   // Fonction pour traiter et dispatcher les mises à jour de scroll
   const processScrollUpdate = useCallback(() => {
@@ -74,15 +75,31 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
     // Indiquer que le scroll est en cours
     if (onScrollState) onScrollState(true);
     
-    // Nettoyer le timeout précédent
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
+    // Mettre à jour le temps du dernier scroll
+    lastScrollTimeRef.current = performance.now();
+    
+    // Annuler le RAF précédent qui détecte l'arrêt du scroll
+    if (scrollEndRafIdRef.current !== null) {
+      cancelAnimationFrame(scrollEndRafIdRef.current);
+      scrollEndRafIdRef.current = null;
     }
     
-    // Créer un nouveau timeout pour détecter l'arrêt du scroll
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (onScrollState) onScrollState(false);
-    }, 150); // 150ms après le dernier événement de scroll
+    // Fonction récursive pour détecter l'arrêt du scroll avec RAF
+    const checkScrollEnd = () => {
+      const timeSinceLastScroll = performance.now() - lastScrollTimeRef.current;
+      
+      // Si plus de 150ms se sont écoulés depuis le dernier scroll, on considère que le scroll est arrêté
+      if (timeSinceLastScroll >= 150) {
+        if (onScrollState) onScrollState(false);
+        scrollEndRafIdRef.current = null;
+      } else {
+        // Continuer à vérifier au prochain frame
+        scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
+      }
+    };
+    
+    // Démarrer la vérification au prochain frame
+    scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
     
     // Programmer une mise à jour via RAF si aucune n'est déjà en cours
     // Cela regroupe les mises à jour et synchronise avec le cycle de rendu du navigateur
@@ -109,8 +126,9 @@ export function useManualScrollSync(globalPathLength: number, onScrollState?: (i
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
+      if (scrollEndRafIdRef.current !== null) {
+        cancelAnimationFrame(scrollEndRafIdRef.current);
+        scrollEndRafIdRef.current = null;
       }
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);

@@ -5,7 +5,7 @@ const initialState = {
   scrollingSpeed: 20,
   direction: null as string | null,
   isAutoPlaying: false,
-  progress: 0,
+  progress: 0.005, // 0.5% - point de départ
   pathLength: 2000,
   autoScrollDirection: 1, // 1 pour aller vers la droite, -1 pour aller vers la gauche
   isAutoScrollTemporarilyPaused: false,

@@ -132,8 +132,8 @@ export const SvgPath = memo(function SvgPath({
           d={pathD}
           fill="none"
           stroke="#6ad7b3"
-          strokeWidth={6}
-          strokeDasharray="8 4"
+          strokeWidth={0.5}
+          // strokeDasharray="8 4"
           className={styles.path}
         />
         {children}

@@ -1,6 +1,7 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import styles from './index.module.scss';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
+import { BREAKPOINTS } from '@/config';
 
 interface SvgPathProps {
   setSvgPath: (el: SVGPathElement | null) => void;
@@ -17,6 +18,23 @@ export const SvgPath = memo(function SvgPath({
 }: SvgPathProps) {
   const { pathD, svgSize, mapPaddingRatio } = useResponsivePath();
   
+  // Détecter si on est sur mobile (désactiver clipPath sur mobile)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < BREAKPOINTS.desktop;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < BREAKPOINTS.desktop);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Mémoïser les calculs de padding pour éviter les recalculs inutiles
   const { paddingX, paddingY, paddedWidth, paddedHeight } = useMemo(() => {
     const px = svgSize.width * mapPaddingRatio;
@@ -30,7 +48,13 @@ export const SvgPath = memo(function SvgPath({
   }, [svgSize.width, svgSize.height, mapPaddingRatio]);
 
   // Calculer le clipPath pour ne rendre que la partie visible + marge
+  // Désactiver sur mobile pour éviter les problèmes de visibilité
   const clipPathRect = useMemo(() => {
+    // Désactiver clipPath sur mobile
+    if (isMobile) {
+      return null;
+    }
+
     if (!viewportTransform || typeof window === 'undefined') {
       // Si pas de transform, pas de clipping (tout visible)
       return null;
@@ -70,7 +94,7 @@ export const SvgPath = memo(function SvgPath({
     }
 
     return { x: clampedX, y: clampedY, width: clampedWidth, height: clampedHeight };
-  }, [viewportTransform, paddedWidth, paddedHeight]);
+  }, [viewportTransform, paddedWidth, paddedHeight, isMobile]);
 
   // Callback pour obtenir la référence du path
   const handlePathRef = useCallback((el: SVGPathElement | null) => {

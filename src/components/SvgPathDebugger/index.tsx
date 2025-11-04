@@ -118,6 +118,8 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
     </div>
   );
 
+  return null
+
   return (
     <>
       {/* Panel de contrôle rendu via portal en dehors du SVG */}

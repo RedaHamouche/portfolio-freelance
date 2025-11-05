@@ -3,12 +3,12 @@
     "id": "title-about-me-on-path",
     "type": "TitleAboutMe",
     "displayName": "Titre About Me sur le path",
-    "title": "À propos",
-    "description": "Développeur freelance passionné par la création d'expériences web innovantes et performantes.",
+    "title": "Web Creator",
+    "description": "I craft elegant, high-performance web experiences that blend design, storytelling, and technology. Passionate about meaningful digital work — from sleek portfolios to immersive brand worlds.",
     "position": {
       "startProgress": 0.015
     },
-    "offset": -60
+    "offset": -120
   },
   {
     "id": "text-example-1",

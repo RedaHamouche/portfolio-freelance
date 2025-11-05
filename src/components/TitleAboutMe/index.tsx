@@ -16,7 +16,7 @@ export default function TitleAboutMe({
   // Animation d'apparition de lettres avec fondu progressif
   // L'animation se déclenche relativement à la position du composant sur le path
   // Gère le wraparound (0 ↔ 1) pour le scroll infini
-  const animationRange = 0.015; // 1.5% avant et après la position du composant
+  const animationRange = 0.008; // 0.8% avant et après la position du composant (réduit pour finir plus tôt)
   
   // Calculer startProgress et endProgress en gérant le wraparound
   let startProgress = componentProgress - animationRange;
@@ -42,9 +42,9 @@ export default function TitleAboutMe({
         startProgress: startProgress,
         endProgress: endProgress,
         staggerDelay: 0.001, // 1ms entre chaque lettre (quasi instantané)
-        duration: 0.05, // Durée de chaque lettre (très court)
+        duration: 0.01, // Durée de chaque lettre (très court)
         withSlide: true, // Ajouter un effet de slide
-        slideDistance: 15, // Distance du slide en pixels
+        slideDistance: 10, // Distance du slide en pixels (augmenté pour partir de plus bas)
       },
     ],
   });

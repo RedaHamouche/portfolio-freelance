@@ -4,27 +4,37 @@
   transform-origin: center center;
   will-change: transform;
   max-width: 250px; // Largeur maximale
+  font-style: italic;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
 
   @include media(">=desktop") {
     max-width: 400px;
   }
-  
-  // Le wrapper de texte permet les retours à la ligne entre les mots
-  .text-wrapper {
-    display: inline;
-    overflow-wrap: normal;
-    word-break: normal;
-  }
-  
-  // Chaque mot est dans un span avec white-space: nowrap pour éviter la coupure
-  .word {
-    display: inline-block;
-    white-space: nowrap;
-  }
-  
-  // Les lettres sont dans des spans inline-block pour l'animation
-  .letter {
-    display: inline-block;
-  }
+}
+
+.title {
+  @include playfair(24px);
+}
+
+// Le wrapper de texte permet les retours à la ligne entre les mots
+.text-wrapper {
+  display: inline;
+  overflow-wrap: normal;
+  word-break: normal;
+  @include playfair(12px);
+}
+
+// Chaque mot est dans un span avec white-space: nowrap pour éviter la coupure
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+// Les lettres sont dans des spans inline-block pour l'animation
+.letter {
+  display: inline-block;
 }
 

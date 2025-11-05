@@ -15,16 +15,16 @@
 }
 
 @font-face {
-    font-family: 'Playfair Display';
-    src: local('Playfair Display'), 
-         url('/fonts/PlayfairDisplay/PlayfairDisplay.woff2') format('woff2'),
-         url('/fonts/PlayfairDisplay/PlayfairDisplay.woff') format('woff');
+    font-family: 'Playfair';
+    src: local('Playfair'), 
+         url('/fonts/Playfair/Playfair.woff2') format('woff2'),
+         url('/fonts/Playfair/Playfair.woff') format('woff');
 }
 @font-face {
-    font-family: 'Playfair Display';
-    src: local('Playfair Display'), 
-         url('/fonts/PlayfairDisplay/PlayfairDisplay-Italic.woff2') format('woff2'),
-         url('/fonts/PlayfairDisplay/PlayfairDisplay-Italic.woff') format('woff');
+    font-family: 'Playfair';
+    src: local('Playfair'), 
+         url('/fonts/Playfair/Playfair-Italic.woff2') format('woff2'),
+         url('/fonts/Playfair/Playfair-Italic.woff') format('woff');
     font-style: italic;
 }
 

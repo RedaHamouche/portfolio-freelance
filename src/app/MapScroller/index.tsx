@@ -80,8 +80,36 @@ const MapScroller: React.FC = () => {
   return (
     <div className={styles.main}>
       <Cursor />
+      {/* Conteneur de scroll factice (crée la hauteur de scroll) */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
-      <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, background: '#fff', margin: 0, padding: 0, zIndex: 1 }}>
+      {/* Viewport fixe avec contexte de stacking isolé pour éviter le bug iOS 26 */}
+      {/* Utilise position: fixed mais avec isolation et transform pour éviter les bugs */}
+      <div 
+        className={styles.viewportFixed}
+        style={{ 
+          width: '100vw', 
+          height: '100dvh', 
+          overflow: 'hidden', 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: '#fff', 
+          margin: 0, 
+          padding: 0, 
+          zIndex: 1,
+          // Créer un nouveau contexte de stacking pour éviter les bugs de layout iOS 26
+          isolation: 'isolate',
+          // GPU acceleration - force un nouveau layer
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          // Forcer le repaint sur GPU
+          backfaceVisibility: 'hidden',
+          // Pointer events pour permettre les interactions
+          pointerEvents: 'auto',
+        }}
+      >
         <MapViewport
           svgRef={svgRef}
           mapWrapperRef={mapWrapperRef}

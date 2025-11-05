@@ -1,4 +1,11 @@
 .main {
+  position: relative;
+}
+
+.viewportFixed {
+  // Créer un contexte de stacking isolé pour éviter les bugs iOS 26
+  // avec position: fixed
+  contain: layout style paint;
 }
 
   

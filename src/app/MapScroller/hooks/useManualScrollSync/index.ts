@@ -9,7 +9,10 @@ import {
   normalizeScrollY,
 } from '@/utils/scrollCalculations';
 
-export function useManualScrollSync(globalPathLength: number, onScrollState?: (isScrolling: boolean) => void) {
+export function useManualScrollSync(
+  globalPathLength: number, 
+  onScrollState?: (isScrolling: boolean) => void
+) {
   const dispatch = useDispatch();
   const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const isInitializedRef = useRef(false);

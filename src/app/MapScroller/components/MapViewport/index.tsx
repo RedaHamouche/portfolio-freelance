@@ -15,6 +15,7 @@ import {
   calculateViewportTransform,
   calculateMapPadding,
   calculateViewportBounds,
+  getViewportDimensions,
 } from '@/utils/viewportCalculations';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 
@@ -56,9 +57,10 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   );
 
   // State pour les dimensions de la fenêtre (pour forcer le recalcul des bounds au resize)
+  // Utilise getViewportDimensions pour éviter les layout shifts sur iOS Safari
   const [windowSize, setWindowSize] = useState(() => {
     if (typeof window === 'undefined') return { width: 0, height: 0 };
-    return { width: window.innerWidth, height: window.innerHeight };
+    return getViewportDimensions();
   });
 
   // Mémoïser les bounds du viewport - recalculées lors du resize ou changement de config
@@ -82,10 +84,11 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     if (typeof window === 'undefined') return;
     
     const pointPosition = getCurrentPointPosition();
+    const viewportDims = windowSize.width && windowSize.height ? windowSize : getViewportDimensions();
     const transform = calculateViewportTransform(
       pointPosition,
-      windowSize.width || window.innerWidth,
-      windowSize.height || window.innerHeight,
+      viewportDims.width,
+      viewportDims.height,
       svgSize,
       mapScale,
       mapPaddingRatio,
@@ -114,16 +117,18 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     updateViewport();
   }, [updateViewport, progress]);
 
-  // Gérer le resize de la fenêtre avec RAF pour optimiser les performances
+  // Gérer le resize de la fenêtre et les changements de visualViewport (iOS Safari)
+  // avec RAF pour optimiser les performances
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     let rafId: number | null = null;
     let resizeTimeout: NodeJS.Timeout | null = null;
     
-    const handleResize = () => {
-      // Mettre à jour la taille de la fenêtre (ce qui déclenchera le recalcul des bounds)
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const updateDimensions = () => {
+      // Mettre à jour la taille du viewport (utilise visualViewport si disponible)
+      // Cela évite les layout shifts quand la barre Safari apparaît/disparaît
+      setWindowSize(getViewportDimensions());
       
       // Annuler les mises à jour en attente
       if (rafId !== null) {
@@ -142,9 +147,29 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       }, 150); // 150ms debounce pour éviter trop de calculs
     };
 
+    const handleResize = () => {
+      updateDimensions();
+    };
+
+    const handleVisualViewportChange = () => {
+      // Se déclenche quand la barre Safari apparaît/disparaît sur iOS
+      updateDimensions();
+    };
+
     window.addEventListener('resize', handleResize, { passive: true });
+    
+    // Écouter les changements de visualViewport (iOS Safari)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewportChange, { passive: true });
+      window.visualViewport.addEventListener('scroll', handleVisualViewportChange, { passive: true });
+    }
+    
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleVisualViewportChange);
+      }
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }

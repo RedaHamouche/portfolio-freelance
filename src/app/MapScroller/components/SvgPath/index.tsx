@@ -4,6 +4,7 @@ import { RootState } from '@/store';
 import styles from './index.module.scss';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { BREAKPOINTS } from '@/config';
+import { getViewportDimensions, getViewportWidth } from '@/utils/viewportCalculations';
 
 interface SvgPathProps {
   setSvgPath: (el: SVGPathElement | null) => void;
@@ -29,18 +30,31 @@ export const SvgPath = memo(function SvgPath({
   // Détecter si on est sur mobile (désactiver clipPath sur mobile)
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.innerWidth < BREAKPOINTS.desktop;
+    return getViewportWidth() < BREAKPOINTS.desktop;
   });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const handleResize = () => {
-      setIsMobile(window.innerWidth < BREAKPOINTS.desktop);
+      setIsMobile(getViewportWidth() < BREAKPOINTS.desktop);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const handleVisualViewportChange = () => {
+      setIsMobile(getViewportWidth() < BREAKPOINTS.desktop);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewportChange, { passive: true });
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+      }
+    };
   }, []);
   
   // Mémoïser les calculs de padding pour éviter les recalculs inutiles
@@ -69,8 +83,7 @@ export const SvgPath = memo(function SvgPath({
     }
 
     const viewportMargin = 100; // 200px de marge pour le preloading
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const { width: viewportWidth, height: viewportHeight } = getViewportDimensions();
 
     // Le transform GSAP est appliqué sur le wrapper parent
     // translateX et translateY sont négatifs car ils déplacent le wrapper vers la gauche/haut

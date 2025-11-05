@@ -81,7 +81,7 @@ const MapScroller: React.FC = () => {
     <div className={styles.main}>
       <Cursor />
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
-      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, background: '#fff', margin: 0, padding: 0, zIndex: 1 }}>
+      <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, background: '#fff', margin: 0, padding: 0, zIndex: 1 }}>
         <MapViewport
           svgRef={svgRef}
           mapWrapperRef={mapWrapperRef}

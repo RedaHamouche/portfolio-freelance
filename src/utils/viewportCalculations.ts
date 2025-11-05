@@ -2,6 +2,47 @@ import type { PointPosition } from './pathCalculations';
 
 // Note: svgSize, scale et paddingRatio sont passés en paramètre aux fonctions pour supporter le responsive (mobile/desktop)
 
+/**
+ * Obtient la hauteur dynamique du viewport (sans les barres UI comme Safari)
+ * Utilise visualViewport API si disponible, sinon window.innerHeight
+ * Cette fonction évite les layout shifts sur mobile iOS
+ */
+export const getViewportHeight = (): number => {
+  if (typeof window === 'undefined') return 0;
+  
+  // Utiliser visualViewport si disponible (supporté sur iOS Safari)
+  // Cela donne la hauteur visible sans les barres UI
+  if (window.visualViewport?.height) {
+    return window.visualViewport.height;
+  }
+  
+  // Fallback sur innerHeight
+  return window.innerHeight;
+};
+
+/**
+ * Obtient la largeur dynamique du viewport
+ */
+export const getViewportWidth = (): number => {
+  if (typeof window === 'undefined') return 0;
+  
+  if (window.visualViewport?.width) {
+    return window.visualViewport.width;
+  }
+  
+  return window.innerWidth;
+};
+
+/**
+ * Obtient les dimensions dynamiques du viewport
+ */
+export const getViewportDimensions = (): { width: number; height: number } => {
+  return {
+    width: getViewportWidth(),
+    height: getViewportHeight(),
+  };
+};
+
 export interface ViewportTransform {
   translateX: number;
   translateY: number;

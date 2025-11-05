@@ -1,4 +1,6 @@
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import styles from './index.module.scss';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { BREAKPOINTS } from '@/config';
@@ -17,6 +19,12 @@ export const SvgPath = memo(function SvgPath({
   viewportTransform
 }: SvgPathProps) {
   const { pathD, svgSize, mapPaddingRatio } = useResponsivePath();
+  const progress = useSelector((state: RootState) => state.scroll.progress);
+  
+  // Console.log pour debug mobile
+  useEffect(() => {
+    console.log('[SvgPath] Progress:', progress, '(', (progress * 100).toFixed(2), '%)');
+  }, [progress]);
   
   // Détecter si on est sur mobile (désactiver clipPath sur mobile)
   const [isMobile, setIsMobile] = useState(() => {

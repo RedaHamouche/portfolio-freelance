@@ -9,6 +9,10 @@ import {
   normalizeScrollY,
 } from '@/utils/scrollCalculations';
 
+// Facteur d'easing léger (0.12 = très subtil, plus élevé = plus rapide)
+const EASING_FACTOR = 0.12;
+const MIN_DELTA = 0.0001; // Seuil minimum pour arrêter l'animation
+
 export function useManualScrollSync(
   globalPathLength: number, 
   onScrollState?: (isScrolling: boolean) => void
@@ -22,8 +26,62 @@ export function useManualScrollSync(
   const rafIdRef = useRef<number | null>(null);
   const pendingUpdateRef = useRef(false);
   const lastScrollTimeRef = useRef(performance.now());
+  
+  // Refs pour l'easing/inertie
+  const targetProgressRef = useRef<number>(0);
+  const currentProgressRef = useRef<number>(0);
+  const easingRafIdRef = useRef<number | null>(null);
+  const isEasingActiveRef = useRef(false);
 
-  // Fonction pour traiter et dispatcher les mises à jour de scroll
+  // Fonction d'easing pour interpoler entre current et target progress
+  const easingLoop = useCallback(() => {
+    if (typeof window === "undefined") return;
+    
+    // Ne pas animer si une modal est ouverte
+    if (isModalOpen) {
+      isEasingActiveRef.current = false;
+      easingRafIdRef.current = null;
+      return;
+    }
+    
+    const current = currentProgressRef.current;
+    const target = targetProgressRef.current;
+    
+    // Calculer la différence (gérer le wraparound circulaire)
+    let delta = target - current;
+    if (Math.abs(delta) > 0.5) {
+      delta = delta > 0 ? delta - 1 : delta + 1;
+    }
+    
+    // Si la différence est très petite, arrêter l'animation
+    if (Math.abs(delta) < MIN_DELTA) {
+      currentProgressRef.current = target;
+      dispatch(setProgress(target));
+      isEasingActiveRef.current = false;
+      easingRafIdRef.current = null;
+      return;
+    }
+    
+    // Interpolation linéaire avec easing
+    let newProgress = current + delta * EASING_FACTOR;
+    // Normaliser entre 0 et 1 (gérer le wraparound avec modulo)
+    newProgress = ((newProgress % 1) + 1) % 1;
+    currentProgressRef.current = newProgress;
+    dispatch(setProgress(newProgress));
+    
+    // Continuer l'animation
+    easingRafIdRef.current = requestAnimationFrame(easingLoop);
+  }, [dispatch, isModalOpen]);
+
+  // Démarrer la boucle d'easing si elle n'est pas déjà active
+  const startEasingLoop = useCallback(() => {
+    if (!isEasingActiveRef.current) {
+      isEasingActiveRef.current = true;
+      easingRafIdRef.current = requestAnimationFrame(easingLoop);
+    }
+  }, [easingLoop]);
+
+  // Fonction pour traiter et mettre à jour la cible du scroll
   const processScrollUpdate = useCallback(() => {
     if (typeof window === "undefined") return;
     
@@ -46,6 +104,9 @@ export function useManualScrollSync(
     
     const newProgress = computeScrollProgress(normalizedY, maxScroll);
     
+    // Mettre à jour la cible pour l'easing
+    targetProgressRef.current = newProgress;
+    
     // Tracker la direction du scroll
     if (prevProgressRef.current !== null) {
       const direction = newProgress > prevProgressRef.current ? 'forward' : 
@@ -56,12 +117,13 @@ export function useManualScrollSync(
     }
     prevProgressRef.current = newProgress;
     
-    dispatch(setProgress(newProgress));
+    // Démarrer la boucle d'easing si nécessaire
+    startEasingLoop();
     
     // Réinitialiser le flag de mise à jour en attente
     rafIdRef.current = null;
     pendingUpdateRef.current = false;
-  }, [globalPathLength, dispatch, isModalOpen]);
+  }, [globalPathLength, dispatch, isModalOpen, startEasingLoop]);
 
   // Handler natif qui met à jour le scrollY et programme une mise à jour via RAF
   const handleScroll = useCallback(() => {
@@ -121,6 +183,16 @@ export function useManualScrollSync(
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
       scrollYRef.current = window.scrollY;
+      
+      // Initialiser les valeurs de progress pour l'easing
+      const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
+      const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+      const { normalizedY } = normalizeScrollY(window.scrollY, maxScroll);
+      const initialProgress = computeScrollProgress(normalizedY, maxScroll);
+      
+      currentProgressRef.current = initialProgress;
+      targetProgressRef.current = initialProgress;
+      
       // Traiter la position initiale
       processScrollUpdate();
     }
@@ -136,6 +208,11 @@ export function useManualScrollSync(
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
       }
+      if (easingRafIdRef.current !== null) {
+        cancelAnimationFrame(easingRafIdRef.current);
+        easingRafIdRef.current = null;
+        isEasingActiveRef.current = false;
+      }
     };
-  }, [handleScroll, processScrollUpdate]);
+  }, [handleScroll, processScrollUpdate, globalPathLength]);
 } 

@@ -3,7 +3,7 @@
  * Utilise l'API du domaine Page pour rendre les composants
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
@@ -13,33 +13,7 @@ import mappingComponent from '../mappingComponent';
 import { calculateMapPadding } from '@/utils/viewportCalculations';
 import { createPageDomain } from '../domains/page';
 
-// Hook utilitaire pour IntersectionObserver sur un tableau de refs
-function useMultipleInView(refs: React.RefObject<HTMLDivElement | null>[], threshold = 0.1) {
-  const [inViews, setInViews] = useState<boolean[]>(refs.map(() => false));
-
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-    refs.forEach((ref, idx) => {
-      if (!ref.current) return;
-      const observer = new window.IntersectionObserver(
-        ([entry]) => {
-          setInViews((prev) => {
-            const copy = [...prev];
-            copy[idx] = entry.isIntersecting;
-            return copy;
-          });
-        },
-        { threshold }
-      );
-      observer.observe(ref.current);
-      observers.push(observer);
-    });
-    return () => observers.forEach((observer) => observer.disconnect());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refs.length]);
-
-  return inViews;
-}
+// useMultipleInView supprimé - voir OPTIMIZATION_NOTES.md pour l'historique
 
 interface DynamicProps {
   svgPath?: SVGPathElement | null;
@@ -83,14 +57,7 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
   // Récupérer les composants via l'API du domaine selon le breakpoint
   const components = useMemo(() => pageDomain.getComponents(isDesktop), [pageDomain, isDesktop]);
 
-  // Utilise useMemo pour initialiser les refs une seule fois
-  const refs = useMemo(
-    () => components.map(() => React.createRef<HTMLDivElement>()),
-    [components]
-  );
-
-  // Hook pour savoir si chaque ref est dans le viewport
-  const inViews = useMultipleInView(refs, 0.1);
+  // Refs supprimés - plus besoin d'IntersectionObserver pour l'opacity
 
   if (!components || components.length === 0) {
     return null;
@@ -125,14 +92,12 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
         return (
           <div
             key={idx}
-            ref={refs[idx]}
             data-component-type={item.type}
             style={{
               position: 'absolute',
               ...positionStyles,
               pointerEvents: 'auto',
-              opacity: inViews[idx] ? 1 : 0,
-              transition: 'opacity 0.5s',
+              opacity: 1, // Opacity directe, pas d'animation ni de lazy loading
               transform: `scale(${1 / mapScale})`,
               transformOrigin: 'top left',
               zIndex: 10,

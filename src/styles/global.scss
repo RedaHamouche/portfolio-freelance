@@ -15,7 +15,4 @@ a, button {
 }
 
 
-.lazyLoadAnimation {
-  opacity: 1 !important;
-  transition: opacity 0.5s;
-}
+/* .lazyLoadAnimation supprimé - voir OPTIMIZATION_NOTES.md pour l'historique */

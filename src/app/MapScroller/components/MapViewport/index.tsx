@@ -10,6 +10,7 @@ import PointTrail from '@/app/MapScroller/PointTrail';
 import { SvgPathDebugger } from '@/components/SvgPathDebugger';
 import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
+import { useDynamicZoom } from '@/app/MapScroller/hooks/useDynamicZoom';
 import gsap from 'gsap';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 import { MapViewportUseCase } from './application/MapViewportUseCase';
@@ -33,6 +34,12 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
   const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
 
+  // Zoom dynamique : dézoome pendant le scroll, revient au zoom normal après l'arrêt
+  // Configuration dans config/index.ts (DYNAMIC_ZOOM_CONFIG)
+  const dynamicScale = useDynamicZoom({
+    baseScale: mapScale,
+  });
+
   // Créer les services de domaine et le use case (mémoïsés)
   const useCaseRef = useRef<MapViewportUseCase | null>(null);
   if (!useCaseRef.current) {
@@ -42,14 +49,14 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     useCaseRef.current = new MapViewportUseCase(boundsService, transformService, dimensionsService);
   }
 
-  // Config mémoïsée pour le use case
+  // Config mémoïsée pour le use case (utilise le scale dynamique)
   const viewportConfig = useMemo(
     () => ({
       svgSize,
-      scale: mapScale,
+      scale: dynamicScale, // Utiliser le scale dynamique au lieu de mapScale
       paddingRatio: mapPaddingRatio,
     }),
-    [svgSize, mapScale, mapPaddingRatio]
+    [svgSize, dynamicScale, mapPaddingRatio]
   );
 
   // Mettre à jour la longueur du path dans le store

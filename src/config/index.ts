@@ -94,6 +94,31 @@ export const imageConfig = {
     desktopBreakpoint: BREAKPOINTS.desktop,
   },
   quality: {
-    default: 85, // Qualité par défaut des images
+    default: 100, // Qualité par défaut des images
+  },
+} as const;
+
+// Dynamic Zoom Configuration
+export const DYNAMIC_ZOOM_CONFIG = {
+  // Configuration par défaut (utilisée si non spécifiée dans mobile/desktop)
+  default: {
+    enabled: true, // Activer le zoom dynamique
+    zoomOutFactor: 0.1, // 10% de dézoom pendant le scroll
+    animationDuration: 0.3, // Durée de l'animation en secondes
+    ease: 'power2.out' as const, // Easing GSAP
+  },
+  // Configuration mobile
+  mobile: {
+    enabled: true, // Activer sur mobile
+    zoomOutFactor: 0.1, // 10% de dézoom
+    animationDuration: 0.3, // Durée de l'animation
+    ease: 'power2.out' as const,
+  },
+  // Configuration desktop
+  desktop: {
+    enabled: true, // Activer sur desktop
+    zoomOutFactor: 0.1, // 10% de dézoom
+    animationDuration: 0.3, // Durée de l'animation
+    ease: 'power2.out' as const,
   },
 } as const;

@@ -19,10 +19,6 @@
   contain: layout style paint; /* Isoler le layout pour éviter les recalculs et réduire le CLS */
   backface-visibility: hidden; /* Optimisation GPU supplémentaire */
 
-  @include media('>=desktop') {
-    width: 64px; /* Largeur fixe desktop */
-  }
-
   &.position-left {
     flex-direction: row-reverse;
 

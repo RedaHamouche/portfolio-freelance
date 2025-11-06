@@ -13,6 +13,11 @@ import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { setProgress } from '../../store/scrollSlice';
 import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
 import { createPathDomain } from '../domains/path';
+import {
+  calculateFakeScrollHeight,
+  calculateMaxScroll,
+  calculateScrollYFromProgress,
+} from '@/utils/scrollCalculations';
 
 interface DynamicPathComponentsProps {
   svgPath: SVGPathElement | null;
@@ -65,25 +70,33 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   // Créer une instance du domaine Path
   const pathDomain = useMemo(() => createPathDomain(), []);
 
-  // Gestion du deeplink (hash)
+  // Récupérer pathLength du store pour optimiser getPointOnPath
+  const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
+
+  // Gestion du deeplink (hash) - seulement pour les changements de hash
+  // Le chargement initial est géré par useScrollInitialization
   useEffect(() => {
-    const handleHash = () => {
+    const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       if (!hash) return;
       const anchorComponent = pathDomain.getComponentByAnchorId(hash, isDesktop);
       if (anchorComponent && anchorComponent.position && typeof anchorComponent.position.progress === 'number') {
-        dispatch(setProgress(anchorComponent.position.progress));
+        const progress = anchorComponent.position.progress;
+        dispatch(setProgress(progress));
+        
+        // Synchroniser la position de scroll avec le progress
+        if (pathLength > 0) {
+          const fakeScrollHeight = calculateFakeScrollHeight(pathLength);
+          const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+          const targetScrollY = calculateScrollYFromProgress(progress, maxScroll);
+          window.scrollTo(0, targetScrollY);
+        }
       }
     };
-    // On gère au chargement
-    handleHash();
-    // On gère si le hash change
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, [dispatch, pathDomain, isDesktop]);
-
-  // Récupérer pathLength du store pour optimiser getPointOnPath
-  const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
+    // On gère seulement les changements de hash (pas le chargement initial)
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [dispatch, pathDomain, isDesktop, pathLength]);
 
   // Récupérer tous les composants via l'API du domaine selon le breakpoint
   const pathComponents = useMemo(() => pathDomain.getAllComponents(isDesktop), [pathDomain, isDesktop]);

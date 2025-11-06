@@ -7,7 +7,7 @@ import { useDirectionalScrollHandler } from '../useDirectionalScrollHandler';
 import { useAutoScrollController } from '../useAutoScrollController';
 import { type ScrollDirection, type AutoScrollDirection } from '@/config';
 
-export const useScrollManager = () => {
+export const useScrollManager = (isScrollSynced: boolean = true) => {
   const dispatch = useDispatch();
   const direction = useSelector((state: RootState) => state.scroll.direction) as ScrollDirection;
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
@@ -20,7 +20,8 @@ export const useScrollManager = () => {
   const handleScrollState = useCallback((isScrolling: boolean) => {
     dispatch(setIsScrolling(isScrolling));
   }, [dispatch]);
-  useManualScrollSync(globalPathLength, handleScrollState);
+  
+  useManualScrollSync(globalPathLength, handleScrollState, isScrollSynced);
 
   // Scroll directionnel (clavier/boutons)
   const { startDirectionalScroll, stopDirectionalScroll } = useDirectionalScrollHandler({

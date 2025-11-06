@@ -13,10 +13,12 @@ import { ScrollStateDetector } from './domain/ScrollStateDetector';
  */
 export function useManualScrollSync(
   globalPathLength: number,
-  onScrollState?: (isScrolling: boolean) => void
+  onScrollState?: (isScrolling: boolean) => void,
+  isScrollSynced: boolean = true
 ) {
   const dispatch = useDispatch();
   const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
+  const currentProgress = useSelector((state: RootState) => state.scroll.progress);
 
   // Créer les services de domaine (mémoïsés pour éviter les recréations)
   const easingService = useMemo(() => new ScrollEasingService(0.12, 0.0001), []);
@@ -54,8 +56,8 @@ export function useManualScrollSync(
     }
 
     const shouldContinue = useCaseRef.current!.animateEasing();
-    const currentProgress = useCaseRef.current!.getCurrentProgress();
-    dispatch(setProgress(currentProgress));
+    const progressFromUseCase = useCaseRef.current!.getCurrentProgress();
+    dispatch(setProgress(progressFromUseCase));
 
     // Tracker la direction
     const direction = useCaseRef.current!.getScrollDirection();
@@ -164,22 +166,10 @@ export function useManualScrollSync(
     }
   }, [onScrollState, isModalOpen, processScrollUpdate]);
 
-  // Initialisation et nettoyage
+  // Ajouter l'event listener scroll (toujours, pour que le scroll fonctionne)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    // Éviter l'appel initial si déjà initialisé
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
-      scrollYRef.current = window.scrollY;
-
-      // Initialiser le use case avec la position actuelle
-      useCaseRef.current!.initialize(globalPathLength);
-
-      // Traiter la position initiale
-      processScrollUpdate();
-    }
-
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
@@ -197,5 +187,32 @@ export function useManualScrollSync(
         isEasingActiveRef.current = false;
       }
     };
-  }, [handleScroll, processScrollUpdate, globalPathLength]);
+  }, [handleScroll]);
+
+  // Initialisation (attend que useScrollInitialization ait fini si hash présent)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Attendre que useScrollInitialization ait fini (si pas encore synced)
+    if (!isScrollSynced) return;
+    // Éviter l'appel initial si déjà initialisé
+    if (isInitializedRef.current) return;
+
+    isInitializedRef.current = true;
+    scrollYRef.current = window.scrollY;
+
+    // Vérifier si un hash est présent dans l'URL
+    const hash = window.location.hash;
+    const hasHash = hash && hash.replace('#', '').trim().length > 0;
+    
+    if (hasHash) {
+      // Hash présent : utiliser le progress du store (défini par useScrollInitialization)
+      // useScrollInitialization a déjà défini le progress et fait le scrollTo
+      useCaseRef.current!.initialize(globalPathLength, currentProgress);
+      // Ne pas appeler processScrollUpdate() - le hash a la priorité
+    } else {
+      // Pas de hash : initialiser normalement depuis window.scrollY
+      useCaseRef.current!.initialize(globalPathLength);
+      processScrollUpdate();
+    }
+  }, [isScrollSynced, globalPathLength, currentProgress, processScrollUpdate]);
 }

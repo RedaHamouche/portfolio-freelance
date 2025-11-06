@@ -14,6 +14,7 @@ import { MapViewport } from './components';
 import { LoadingScreen } from './components/LoadingScreen';
 import { useScrollManager } from './hooks';
 import { useScrollInitialization } from './hooks/useScrollInitialization';
+import { useProgressPersistence } from './hooks/useProgressPersistence';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 
@@ -35,13 +36,16 @@ const MapScroller: React.FC = () => {
   // Initialisation du scroll et synchronisation avec hash
   const isScrollSynced = useScrollInitialization(globalPathLength);
 
+  // Sauvegarder automatiquement le progress dans le localStorage
+  useProgressPersistence();
+
   // Hooks personnalisés
   const {
     startDirectionalScroll,
     stopDirectionalScroll,
     startAutoScroll,
     stopAutoScroll
-  } = useScrollManager();
+  } = useScrollManager(isScrollSynced);
 
   // Mettre à jour la taille de la carte dans le store (responsive)
   useEffect(() => {

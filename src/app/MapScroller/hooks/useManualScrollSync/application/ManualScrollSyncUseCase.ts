@@ -46,12 +46,14 @@ export class ManualScrollSyncUseCase {
 
   /**
    * Initialise le state avec la position de scroll actuelle
+   * @param globalPathLength Longueur du path
+   * @param initialProgress Progress initial optionnel (utilisé si un hash est présent)
    */
-  initialize(globalPathLength: number): void {
-    const initialProgress = this.progressCalculator.calculateInitialProgress(globalPathLength);
-    this.state.currentProgress = initialProgress;
-    this.state.targetProgress = initialProgress;
-    this.state.prevProgress = initialProgress;
+  initialize(globalPathLength: number, initialProgress?: number): void {
+    const progress = initialProgress ?? this.progressCalculator.calculateInitialProgress(globalPathLength);
+    this.state.currentProgress = progress;
+    this.state.targetProgress = progress;
+    this.state.prevProgress = progress;
   }
 
   /**

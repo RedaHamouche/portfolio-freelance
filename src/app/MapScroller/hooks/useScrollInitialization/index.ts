@@ -1,62 +1,47 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress } from '@/store/scrollSlice';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
-import {
-  calculateFakeScrollHeight,
-  calculateMaxScroll,
-  calculateScrollYFromProgress,
-} from '@/utils/scrollCalculations';
+import { ScrollInitializationService } from './domain/ScrollInitializationService';
+import { ScrollInitializationUseCase } from './application/ScrollInitializationUseCase';
 
 /**
  * Hook pour gérer l'initialisation du scroll et la synchronisation avec les hash/anchors
+ * Utilise une architecture DDD avec un service de domaine et un use case
+ * Priorité : hash > localStorage > default
  */
 export const useScrollInitialization = (globalPathLength: number) => {
   const [isScrollSynced, setIsScrollSynced] = useState(false);
   const dispatch = useDispatch();
   const isDesktop = useBreakpoint('>=desktop');
   
-  // Créer une instance du domaine Path
+  // Créer les instances (mémoïsées)
   const pathDomain = useMemo(() => createPathDomain(), []);
+  const service = useMemo(() => new ScrollInitializationService(), []);
+  const useCase = useMemo(() => new ScrollInitializationUseCase(service), [service]);
 
   useEffect(() => {
     // On attend que la longueur du path soit connue
     if (!globalPathLength) return;
 
-    const hash = window.location.hash.replace('#', '');
+    const hash = window.location.hash;
     
-    // Pas de hash, on initialise à 0.5% (point de départ)
-    if (!hash) {
-      const initialProgress = 0.005; // 0.5%
-      dispatch(setProgress(initialProgress));
-      
-      // Synchroniser la position de scroll avec le progress initial
-      const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-      const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
-      const targetScrollY = calculateScrollYFromProgress(initialProgress, maxScroll);
-      
-      window.scrollTo(0, targetScrollY);
-      setIsScrollSynced(true);
-      return;
-    }
+    // Utiliser le use case pour initialiser le progress (priorité: hash > localStorage > default)
+    const result = useCase.initializeProgress(
+      hash,
+      globalPathLength,
+      pathDomain,
+      isDesktop,
+      dispatch
+    );
 
-    // Trouver le composant correspondant au hash via l'API du domaine
-    const anchorComponent = pathDomain.getComponentByAnchorId(hash, isDesktop);
-    
-    if (anchorComponent?.position?.progress !== undefined) {
-      const progress = anchorComponent.position.progress;
-      dispatch(setProgress(progress));
-      
-      const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-      const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
-      const targetScrollY = calculateScrollYFromProgress(progress, maxScroll);
-      
-      window.scrollTo(0, targetScrollY);
+    // Log un warning si le hash n'a pas pu être résolu
+    if (result.source === 'default' && hash && hash.replace('#', '').trim().length > 0) {
+      console.warn(`[useScrollInitialization] Composant avec anchorId "${service.extractHash(hash)}" non trouvé (isDesktop: ${isDesktop})`);
     }
     
     setIsScrollSynced(true);
-  }, [globalPathLength, dispatch, pathDomain, isDesktop]);
+  }, [globalPathLength, dispatch, pathDomain, isDesktop, useCase, service]);
 
   return isScrollSynced;
 };

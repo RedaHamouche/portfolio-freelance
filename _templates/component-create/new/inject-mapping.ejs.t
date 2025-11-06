@@ -4,4 +4,5 @@ inject: true
 skip_if: "import <%= h.changeCase.pascal(name) %> from '@/components/<%= h.changeCase.pascal(name) %>';"
 before: '// HYGEN_IMPORT_COMPONENT DO_NOT_REMOVE'
 ---
-import <%= h.changeCase.pascal(name) %> from '@/components/<%= h.changeCase.pascal(name) %>'; 
+
+const <%= h.changeCase.pascal(name) %>t = dynamic(() => import('@/components/<%= h.changeCase.pascal(name) %>t'), { ssr: true });

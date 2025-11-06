@@ -5,8 +5,8 @@ import {
   getPointOnPath,
   getPathAngleAtProgress,
   calculateArrowPosition,
-  type PointPosition,
 } from '@/utils/pathCalculations';
+import type { PointPosition } from '@/types/path';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 

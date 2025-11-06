@@ -3,7 +3,7 @@ import {
   type ViewportTransform,
   type ViewportBounds,
 } from '@/utils/viewportCalculations';
-import type { PointPosition } from '@/utils/pathCalculations';
+import type { PointPosition } from '@/types/path';
 
 /**
  * Service de domaine pour calculer les transformations du viewport

@@ -8,10 +8,7 @@
  * pour équilibrer la précision et la taille du cache.
  */
 
-export interface PointPosition {
-  x: number;
-  y: number;
-}
+import type { PointPosition } from '@/types/path';
 
 interface CacheEntry<T> {
   value: T;

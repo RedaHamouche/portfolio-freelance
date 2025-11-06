@@ -1,5 +1,5 @@
 import { ViewportTransformService } from './ViewportTransformService';
-import type { PointPosition } from '@/utils/pathCalculations';
+import type { PointPosition } from '@/types/path';
 
 describe('ViewportTransformService', () => {
   let service: ViewportTransformService;

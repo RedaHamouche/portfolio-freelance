@@ -1,10 +1,6 @@
 import { ANCHOR_RANGE } from '@/config';
 import { globalPathPositionCache } from './pathPositionCache';
-
-export interface PointPosition {
-  x: number;
-  y: number;
-}
+import type { PointPosition } from '@/types/path';
 
 export interface PathComponentData {
   id: string;

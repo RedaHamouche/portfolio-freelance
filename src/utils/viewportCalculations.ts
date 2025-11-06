@@ -1,4 +1,4 @@
-import type { PointPosition } from './pathCalculations';
+import type { PointPosition } from '@/types/path';
 
 // Note: svgSize, scale et paddingRatio sont passés en paramètre aux fonctions pour supporter le responsive (mobile/desktop)
 

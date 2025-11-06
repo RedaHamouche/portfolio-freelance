@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react';
+import { useLayoutEffect, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setPathLength } from '@/store/scrollSlice';
@@ -11,13 +11,11 @@ import { SvgPathDebugger } from '@/components/SvgPathDebugger';
 import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import gsap from 'gsap';
-import {
-  calculateViewportTransform,
-  calculateMapPadding,
-  calculateViewportBounds,
-  getViewportDimensions,
-} from '@/utils/viewportCalculations';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
+import { MapViewportUseCase } from './application/MapViewportUseCase';
+import { ViewportBoundsService } from './domain/ViewportBoundsService';
+import { ViewportTransformService } from './domain/ViewportTransformService';
+import { ViewportDimensionsService } from './domain/ViewportDimensionsService';
 
 interface MapViewportProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
@@ -34,7 +32,26 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
   const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
-  
+
+  // Créer les services de domaine et le use case (mémoïsés)
+  const useCaseRef = useRef<MapViewportUseCase | null>(null);
+  if (!useCaseRef.current) {
+    const boundsService = new ViewportBoundsService();
+    const transformService = new ViewportTransformService();
+    const dimensionsService = new ViewportDimensionsService();
+    useCaseRef.current = new MapViewportUseCase(boundsService, transformService, dimensionsService);
+  }
+
+  // Config mémoïsée pour le use case
+  const viewportConfig = useMemo(
+    () => ({
+      svgSize,
+      scale: mapScale,
+      paddingRatio: mapPaddingRatio,
+    }),
+    [svgSize, mapScale, mapPaddingRatio]
+  );
+
   // Mettre à jour la longueur du path dans le store
   useEffect(() => {
     if (svgPath) {
@@ -42,7 +59,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       dispatch(setPathLength(newPathLength));
     }
   }, [svgPath, dispatch]);
-  
+
   const {
     nextComponent,
     getCurrentPointPosition,
@@ -50,30 +67,27 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     getArrowPosition
   } = usePathCalculations(svgPath);
 
-  // Mémoïser le calcul du padding
+  // Calculer le padding (mémoïsé)
   const { paddingX, paddingY } = useMemo(
-    () => calculateMapPadding(svgSize, mapPaddingRatio),
-    [svgSize, mapPaddingRatio]
+    () => useCaseRef.current!.calculatePadding(viewportConfig),
+    [viewportConfig]
   );
 
   // State pour les dimensions de la fenêtre (pour forcer le recalcul des bounds au resize)
-  // Utilise getViewportDimensions pour éviter les layout shifts sur iOS Safari
   const [windowSize, setWindowSize] = useState(() => {
     if (typeof window === 'undefined') return { width: 0, height: 0 };
-    return getViewportDimensions();
+    return useCaseRef.current!.getViewportDimensions();
   });
 
   // Mémoïser les bounds du viewport - recalculées lors du resize ou changement de config
   const viewportBounds = useMemo(() => {
-    if (typeof window === 'undefined' || windowSize.width === 0 || windowSize.height === 0) return null;
-    return calculateViewportBounds(
+    if (!useCaseRef.current!.isValidDimensions(windowSize)) return null;
+    return useCaseRef.current!.calculateBounds(
       windowSize.width,
       windowSize.height,
-      svgSize,
-      mapScale,
-      mapPaddingRatio
+      viewportConfig
     );
-  }, [svgSize, mapScale, mapPaddingRatio, windowSize]);
+  }, [viewportConfig, windowSize]);
 
   // State pour stocker le transform du viewport (pour le clipPath du SVG)
   const [viewportTransform, setViewportTransform] = useState<{ translateX: number; translateY: number; scale: number } | null>(null);
@@ -82,26 +96,29 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const updateViewport = useCallback(() => {
     if (!svgRef.current || !svgPath || !mapWrapperRef.current || !viewportBounds) return;
     if (typeof window === 'undefined') return;
-    
+
     const pointPosition = getCurrentPointPosition();
-    const viewportDims = windowSize.width && windowSize.height ? windowSize : getViewportDimensions();
-    const transform = calculateViewportTransform(
+    const viewportDims = useCaseRef.current!.isValidDimensions(windowSize)
+      ? windowSize
+      : useCaseRef.current!.getViewportDimensions();
+
+    const transform = useCaseRef.current!.calculateTransform(
       pointPosition,
       viewportDims.width,
       viewportDims.height,
-      svgSize,
-      mapScale,
-      mapPaddingRatio,
+      viewportConfig,
       viewportBounds
     );
-    
+
+    if (!transform) return;
+
     // Stocker le transform pour le clipPath du SVG
     setViewportTransform({
       translateX: transform.translateX,
       translateY: transform.translateY,
       scale: transform.scale,
     });
-    
+
     // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
     // GSAP gère automatiquement will-change et l'accélération GPU
     gsap.set(mapWrapperRef.current, {
@@ -110,7 +127,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       scale: transform.scale,
       transformOrigin: 'top left',
     });
-  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, svgSize, mapScale, mapPaddingRatio, viewportBounds, windowSize]);
+  }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, viewportConfig, viewportBounds, windowSize]);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
@@ -121,15 +138,15 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   // avec RAF pour optimiser les performances
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     let rafId: number | null = null;
     let resizeTimeout: NodeJS.Timeout | null = null;
-    
+
     const updateDimensions = () => {
       // Mettre à jour la taille du viewport (utilise visualViewport si disponible)
       // Cela évite les layout shifts quand la barre Safari apparaît/disparaît
-      setWindowSize(getViewportDimensions());
-      
+      setWindowSize(useCaseRef.current!.getViewportDimensions());
+
       // Annuler les mises à jour en attente
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
@@ -137,7 +154,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       if (resizeTimeout !== null) {
         clearTimeout(resizeTimeout);
       }
-      
+
       // Debounce avec timeout + RAF pour regrouper les mises à jour
       resizeTimeout = setTimeout(() => {
         rafId = requestAnimationFrame(() => {
@@ -157,13 +174,13 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     };
 
     window.addEventListener('resize', handleResize, { passive: true });
-    
+
     // Écouter les changements de visualViewport (iOS Safari)
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleVisualViewportChange, { passive: true });
       window.visualViewport.addEventListener('scroll', handleVisualViewportChange, { passive: true });
     }
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       if (window.visualViewport) {
@@ -267,4 +284,4 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       )}
     </div>
   );
-}; 
+};

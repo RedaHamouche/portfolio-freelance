@@ -10,6 +10,22 @@
     "autoScrollPauseTime": 2000
   },
   {
+    "id": "piece-of-art",
+    "type": "PieceOfArt",
+    "displayName": "Piece of Art",
+    "anchorId": "pieceOfArt",
+    "position": {
+      "progress": 0.3
+    },
+    "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=450&fit=crop&q=80",
+    "desktopSrc": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=600&fit=crop&q=80",
+    "mobileSrc": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=300&fit=crop&q=80",
+    "alt": "Artwork by artist",
+    "width": 300,
+    "height": 225,
+    "autoScrollPauseTime": 1000
+  },
+  {
     "id": "open-modal-button",
     "type": "OpenModalButton",
     "displayName": "Open Modal",

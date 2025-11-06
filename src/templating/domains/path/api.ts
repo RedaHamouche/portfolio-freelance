@@ -71,12 +71,80 @@ export interface PathDomainAPI {
 
 /**
  * Implémentation de l'API du domaine Path
+ * Optimisé avec cache des arrays triés pour éviter les tris répétés
  */
 export class PathDomain implements PathDomainAPI {
   private repository: PathRepository;
+  
+  // Cache des arrays triés et des composants avec anchorId pour éviter les recalculs
+  private sortedCache: {
+    desktop?: {
+      componentsWithAnchor: PathComponentData[];
+      sortedAsc: PathComponentData[];
+      sortedDesc: PathComponentData[];
+    };
+    mobile?: {
+      componentsWithAnchor: PathComponentData[];
+      sortedAsc: PathComponentData[];
+      sortedDesc: PathComponentData[];
+    };
+  } = {};
 
   constructor(repository: PathRepository) {
     this.repository = repository;
+  }
+
+  /**
+   * Récupère ou construit le cache des composants triés
+   */
+  private getSortedCache(isDesktop: boolean = true): {
+    componentsWithAnchor: PathComponentData[];
+    sortedAsc: PathComponentData[];
+    sortedDesc: PathComponentData[];
+  } {
+    const cacheKey = isDesktop ? 'desktop' : 'mobile';
+    let cache = this.sortedCache[cacheKey];
+    
+    if (!cache) {
+      const components = this.repository.load(isDesktop);
+      // Filtrer et convertir en PathComponentData
+      const componentsWithAnchor: PathComponentData[] = components
+        .filter(c => c.anchorId)
+        .map(c => ({
+          id: c.id,
+          type: c.type,
+          displayName: c.displayName,
+          anchorId: c.anchorId!,
+          position: { progress: c.position.progress },
+          autoScrollPauseTime: c.autoScrollPauseTime,
+        }));
+      
+      // Trier une seule fois et mettre en cache
+      const sortedAsc = [...componentsWithAnchor].sort((a, b) => a.position.progress - b.position.progress);
+      const sortedDesc = [...componentsWithAnchor].sort((a, b) => b.position.progress - a.position.progress);
+      
+      cache = {
+        componentsWithAnchor,
+        sortedAsc,
+        sortedDesc,
+      };
+      
+      this.sortedCache[cacheKey] = cache;
+    }
+    
+    return cache;
+  }
+
+  /**
+   * Invalide le cache (utile si les composants changent)
+   */
+  private invalidateCache(isDesktop?: boolean): void {
+    if (isDesktop === undefined) {
+      this.sortedCache = {};
+    } else {
+      const cacheKey = isDesktop ? 'desktop' : 'mobile';
+      delete this.sortedCache[cacheKey];
+    }
   }
 
   getAllComponents(isDesktop: boolean = true): PathComponent[] {
@@ -84,13 +152,13 @@ export class PathDomain implements PathDomainAPI {
   }
 
   getComponentById(id: string, isDesktop: boolean = true): PathComponent | undefined {
-    const components = this.getAllComponents(isDesktop);
-    return components.find(c => c.id === id);
+    // Utiliser l'index du repository pour O(1) au lieu de O(n)
+    return this.repository.getComponentById(id, isDesktop);
   }
 
   getComponentByAnchorId(anchorId: string, isDesktop: boolean = true): PathComponent | undefined {
-    const components = this.getAllComponents(isDesktop);
-    return components.find(c => c.anchorId === anchorId);
+    // Utiliser l'index du repository pour O(1) au lieu de O(n)
+    return this.repository.getComponentByAnchorId(anchorId, isDesktop);
   }
 
   getActiveComponents(currentProgress: number, isDesktop: boolean = true): PathComponent[] {
@@ -118,20 +186,24 @@ export class PathDomain implements PathDomainAPI {
     direction: 'forward' | 'backward' | null,
     isDesktop: boolean = true
   ): PathComponent | null {
-    const components = this.getAllComponents(isDesktop);
-    // Filtrer et convertir PathComponent[] en PathComponentData[] pour la compatibilité
-    // Les composants sans anchorId ne peuvent pas être utilisés pour la navigation
-    const componentData: PathComponentData[] = components
-      .filter(c => c.anchorId) // Filtrer ceux qui ont un anchorId
-      .map(c => ({
-        id: c.id,
-        type: c.type,
-        displayName: c.displayName,
-        anchorId: c.anchorId!, // TypeScript sait que anchorId existe grâce au filtre
-        position: { progress: c.position.progress },
-        autoScrollPauseTime: c.autoScrollPauseTime,
-      }));
-    return findNextComponentInDirection(currentProgress, direction, componentData) as PathComponent | null;
+    // Utiliser le cache des arrays triés pour éviter les tris répétés
+    const cache = this.getSortedCache(isDesktop);
+    
+    // Utiliser findNextComponentInDirection avec les arrays triés en cache
+    // Cela permet d'utiliser la recherche binaire optimisée
+    const result = findNextComponentInDirection(
+      currentProgress,
+      direction,
+      cache.componentsWithAnchor,
+      cache.sortedAsc,
+      cache.sortedDesc
+    );
+    
+    // Convertir PathComponentData en PathComponent en récupérant le composant complet
+    if (!result) return null;
+    
+    const fullComponent = this.getComponentById(result.id, isDesktop);
+    return fullComponent ?? null;
   }
 
   getNextAnchor(
@@ -140,20 +212,16 @@ export class PathDomain implements PathDomainAPI {
     tolerance: number = 0.002,
     isDesktop: boolean = true
   ): PathComponent | null {
-    const components = this.getAllComponents(isDesktop);
-    // Filtrer et convertir PathComponent[] en PathComponentData[] pour la compatibilité
-    // getNextAnchor nécessite des composants avec autoScrollPauseTime, donc on filtre aussi ceux sans anchorId
-    const componentData: PathComponentData[] = components
-      .filter(c => c.anchorId) // Filtrer ceux qui ont un anchorId
-      .map(c => ({
-        id: c.id,
-        type: c.type,
-        displayName: c.displayName,
-        anchorId: c.anchorId!, // TypeScript sait que anchorId existe grâce au filtre
-        position: { progress: c.position.progress },
-        autoScrollPauseTime: c.autoScrollPauseTime,
-      }));
-    return getNextAnchor(fromProgress, toProgress, componentData, tolerance) as PathComponent | null;
+    // Utiliser le cache pour éviter les filtres/maps répétés
+    const cache = this.getSortedCache(isDesktop);
+    
+    const result = getNextAnchor(fromProgress, toProgress, cache.componentsWithAnchor, tolerance);
+    
+    // Convertir PathComponentData en PathComponent
+    if (!result) return null;
+    
+    const fullComponent = this.getComponentById(result.id, isDesktop);
+    return fullComponent ?? null;
   }
 }
 

@@ -156,12 +156,15 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   );
 
   // Hook pour savoir si chaque composant est "actif" selon la range (mémoïsé)
+  // Optimisé : calculer getActiveComponents une seule fois et utiliser un Set pour O(1) lookup
+  const activeComponentIds = React.useMemo(() => {
+    const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
+    return new Set(activeComponents.map((c) => c.id));
+  }, [progress, pathDomain, isDesktop]);
+
   const activeAnchors = React.useMemo(
-    () => pathComponents.map((component) => {
-      const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
-      return activeComponents.some(ac => ac.id === component.id);
-    }),
-    [progress, pathComponents, pathDomain, isDesktop]
+    () => pathComponents.map((c) => activeComponentIds.has(c.id)),
+    [pathComponents, activeComponentIds]
   );
 
   // Hook pour savoir si chaque ref est dans le viewport

@@ -88,26 +88,34 @@ const PointTrail = memo(function PointTrail({
     [arrowPosition, wasFlipped]
   );
   
+  // Calculer le translate pour éviter les reflows (plus performant que top/left)
+  const translateX = x;
+  const translateY = y;
+  const scale = 1 / mapScale;
+
   return (
     <button
       type="button"
       className={classnames(styles.pointContainer, styles[`position-${normalizedArrowPosition}`])}
       style={{
-        top: `${y}px`,
-        left: `${x}px`,
-        transform: `translate(-50%, -50%) scale(${1 / mapScale}) rotate(${normalizedAngle}deg)`,
+        // Utiliser transform au lieu de top/left pour éviter les reflows et réduire le CLS
+        transform: `translate(calc(${translateX}px - 50%), calc(${translateY}px - 50%)) scale(${scale}) rotate(${normalizedAngle}deg)`,
         transformOrigin: 'center',
       }}
       onClick={onGoToNext}
       tabIndex={0}
+      aria-label={nextComponent ? `Aller à ${nextComponent.displayName}` : 'Aller au prochain composant'}
     >
-      <span className={styles.nextComponentText}>{nextComponent?.displayName}</span>
+      <span className={styles.nextComponentText} title={nextComponent?.displayName}>
+        {nextComponent?.displayName}
+      </span>
       <div className={styles.arrowContainer}>
         <svg
           className={styles.arrow}
           xmlns="http://www.w3.org/2000/svg"
           width={14}
           height={15}
+          aria-hidden="true"
         >
           <path
             className={styles.path}

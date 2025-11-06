@@ -1,15 +1,27 @@
 .pointContainer {
   position: absolute;
-  transform: translate(-50%, -50%);
+  /* Position initiale : sera remplacée par transform dans le style inline */
+  top: 0;
+  left: 0;
   background-color: $white;
   border-radius: 60px;
   @include flex;
   gap: $spacing-xxs;
   border: 2px dashed $black;
-  padding: 7px 14px;
+  padding: 4px 12px;
   color: $black;
+  box-sizing: border-box; /* Inclure padding et border dans la largeur */
 
   @include montreal(10px);
+
+  /* Optimisations CLS : dimensions fixes et will-change pour éviter les layout shifts */
+  will-change: transform; /* Optimiser les animations de position (GPU acceleration) */
+  contain: layout style paint; /* Isoler le layout pour éviter les recalculs et réduire le CLS */
+  backface-visibility: hidden; /* Optimisation GPU supplémentaire */
+
+  @include media('>=desktop') {
+    width: 64px; /* Largeur fixe desktop */
+  }
 
   &.position-left {
     flex-direction: row-reverse;
@@ -24,9 +36,19 @@
   
 // }
 
+.nextComponentText {
+  /* Propriétés pour l'ellipsis sur le texte */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+  width: 70px;
+  overflow: hidden;
+}
+
 .arrowContainer {
   display: flex;
   align-items: center;
+  flex-shrink: 0; /* Empêcher la flèche de rétrécir */
 
   .arrow {
     .path {

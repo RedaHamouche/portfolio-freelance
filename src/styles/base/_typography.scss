@@ -6,12 +6,14 @@
     src: local('Montreal'), 
          url('/fonts/Montreal/Montreal-Regular.woff2') format('woff2'),
          url('/fonts/Montreal/Montreal-Regular.woff') format('woff');
+    font-display: swap; /* Évite les layout shifts lors du chargement */
 }
 @font-face {
     font-family: 'Montreal-Bold';
     src: local('Montreal-Bold'), 
          url('/fonts/Montreal/Montreal-Bold.woff2') format('woff2'),
          url('/fonts/Montreal/Montreal-Bold.woff') format('woff');
+    font-display: swap; /* Évite les layout shifts lors du chargement */
 }
 
 @font-face {
@@ -19,6 +21,7 @@
     src: local('Playfair'), 
          url('/fonts/Playfair/Playfair.woff2') format('woff2'),
          url('/fonts/Playfair/Playfair.woff') format('woff');
+    font-display: swap; /* Évite les layout shifts lors du chargement */
 }
 @font-face {
     font-family: 'Playfair';
@@ -26,6 +29,7 @@
          url('/fonts/Playfair/Playfair-Italic.woff2') format('woff2'),
          url('/fonts/Playfair/Playfair-Italic.woff') format('woff');
     font-style: italic;
+    font-display: swap; /* Évite les layout shifts lors du chargement */
 }
 
 

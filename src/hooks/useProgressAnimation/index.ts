@@ -23,7 +23,8 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
     x?: (value: number) => void;
     y?: (value: number) => void;
     opacity?: (value: number) => void;
-    scale?: (value: number) => void;
+    scaleX?: (value: number) => void;
+    scaleY?: (value: number) => void;
     rotation?: (value: number) => void;
   }>({});
 
@@ -46,6 +47,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
     if (!elementRef.current) return;
 
     // Créer les quickSetters pour des performances optimales
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     quickSettersRef.current = {
       x: gsap.quickTo(elementRef.current, 'x', {
         duration: 0.3,
@@ -59,7 +61,11 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
         duration: 0.2,
         ease: 'power2.out',
       }),
-      scale: gsap.quickTo(elementRef.current, 'scale', {
+      scaleX: gsap.quickTo(elementRef.current, 'scaleX', {
+        duration: 0.3,
+        ease: 'power2.out',
+      }),
+      scaleY: gsap.quickTo(elementRef.current, 'scaleY', {
         duration: 0.3,
         ease: 'power2.out',
       }),
@@ -70,11 +76,13 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
     };
 
     // Initialiser les valeurs par défaut
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     gsap.set(elementRef.current, {
       x: 0,
       y: 0,
       opacity: 1,
-      scale: 1,
+      scaleX: 1,
+      scaleY: 1,
       rotation: 0,
     });
   }, []);
@@ -147,13 +155,15 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
     if (!elementRef.current) return;
 
     const { x, y, opacity, scale, rotation } = animationValues;
-    const { x: setX, y: setY, opacity: setOpacity, scale: setScale, rotation: setRotation } = quickSettersRef.current;
+    const { x: setX, y: setY, opacity: setOpacity, scaleX: setScaleX, scaleY: setScaleY, rotation: setRotation } = quickSettersRef.current;
 
     // Appliquer les valeurs avec les quickSetters (haute performance)
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     if (setX && x !== undefined) setX(x);
     if (setY && y !== undefined) setY(y);
     if (setOpacity && opacity !== undefined) setOpacity(opacity);
-    if (setScale && scale !== undefined) setScale(scale);
+    if (setScaleX && scale !== undefined) setScaleX(scale);
+    if (setScaleY && scale !== undefined) setScaleY(scale);
     if (setRotation && rotation !== undefined) setRotation(rotation);
   }, [animationValues]);
 

@@ -53,8 +53,10 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
   });
 
   // Initialiser l'état de l'outerSvg (scale) et du circle (strokeDashoffset)
+  // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
   gsap.set(outerSvg, {
-    scale: 1,
+    scaleX: 1,
+    scaleY: 1,
   });
   gsap.set(circle, {
     strokeDashoffset: 0,
@@ -71,8 +73,10 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
       clickAnimation.kill();
     }
 
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     clickAnimation = gsap.to(innerSvg, {
-      scale: isClicking ? 0.7 : 1,
+      scaleX: isClicking ? 0.7 : 1,
+      scaleY: isClicking ? 0.7 : 1,
       duration: 0.1,
       ease: 'power2.out',
     });
@@ -88,15 +92,18 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
 
     if (isScrolling) {
       // Animation infinie de scale et stroke-dashoffset pendant le scroll
+      // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
       scrollAnimation = gsap.timeline({ repeat: -1, yoyo: true });
       scrollAnimation
         .to(outerSvg, {
-          scale: 0.8,
+          scaleX: 0.8,
+          scaleY: 0.8,
           duration: 0.8,
           ease: 'power1.out',
         })
         .to(outerSvg, {
-          scale: 1.1,
+          scaleX: 1.1,
+          scaleY: 1.1,
           duration: 0.8,
           ease: 'power1.out',
         })
@@ -107,8 +114,10 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
         }, 0); // Commencer en même temps que le scale
     } else {
       // Retour à l'état initial quand le scroll s'arrête
+      // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
       gsap.to(outerSvg, {
-        scale: 1,
+        scaleX: 1,
+        scaleY: 1,
         duration: 0.3,
         ease: 'power2.out',
       });
@@ -130,15 +139,18 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
 
     if (isClickable) {
       // Animation infinie de scale et stroke-dashoffset quand le curseur est sur un élément cliquable
+      // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
       clickableAnimation = gsap.timeline({ repeat: -1, yoyo: true });
       clickableAnimation
         .to(outerSvg, {
-          scale: 0.8,
+          scaleX: 0.8,
+          scaleY: 0.8,
           duration: 0.8,
           ease: 'power1.out',
         })
         .to(outerSvg, {
-          scale: 1.1,
+          scaleX: 1.1,
+          scaleY: 1.1,
           duration: 0.8,
           ease: 'power1.out',
         })
@@ -149,8 +161,10 @@ export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimation
         }, 0); // Commencer en même temps que le scale
     } else {
       // Retour à l'état initial
+      // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
       gsap.to(outerSvg, {
-        scale: 1,
+        scaleX: 1,
+        scaleY: 1,
         duration: 0.3,
         ease: 'power2.out',
       });

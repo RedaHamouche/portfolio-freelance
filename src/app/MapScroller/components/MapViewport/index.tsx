@@ -139,10 +139,12 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
     // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
     // GSAP gère automatiquement will-change et l'accélération GPU
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     gsap.set(mapWrapperRef.current, {
       x: transform.translateX,
       y: transform.translateY,
-      scale: transform.scale,
+      scaleX: transform.scale,
+      scaleY: transform.scale,
       transformOrigin: 'top left',
     });
   }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, viewportConfig, viewportBounds, windowSize]);

@@ -44,9 +44,12 @@ export default function PieceOfArt({
     if (!animatedRef.current || isInitializedRef.current) return;
     
     // Initialiser la position de départ avec GSAP (centré)
+    // Initialiser avec scaleX et scaleY pour éviter l'erreur "scale not eligible for reset"
     gsap.set(animatedRef.current, {
       xPercent: -50,
       yPercent: -50,
+      scaleX: 1,
+      scaleY: 1,
     });
     
     isInitializedRef.current = true;
@@ -94,10 +97,12 @@ export default function PieceOfArt({
     }
     
     // Animer tous les effets en même temps
+    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
     animationRef.current = gsap.to(animatedRef.current, {
       xPercent: -50 + animationValues.translateX,
       yPercent: -50 + animationValues.translateY,
-      scale: animationValues.scale,
+      scaleX: animationValues.scale,
+      scaleY: animationValues.scale,
       rotation: animationValues.rotation,
       duration: 0.4,
       ease: 'power2.out',

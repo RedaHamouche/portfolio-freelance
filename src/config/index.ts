@@ -76,6 +76,33 @@ export const SCROLL_CONFIG = {
 export type ScrollDirection = 'haut' | 'bas' | null;
 export type AutoScrollDirection = 1 | -1;
 
+// Scroll Inertia & Easing Configuration
+// ============================================
+// INERTIE : Force du mouvement continu après l'arrêt du scroll
+// ============================================
+// Plus petit = plus d'inertie (plus lent), plus grand = moins d'inertie (plus rapide)
+// Valeurs recommandées : 0.01 (très forte) à 0.30 (très faible)
+// Valeur actuelle : 0.06 = inertie forte pour un scroll agréable
+export const SCROLL_INERTIA_FACTOR = 0.06; // ← MODIFIEZ POUR AJUSTER L'INERTIE
+
+// ============================================
+// EASING : Courbe d'animation (comment l'animation décélère)
+// ============================================
+// Options : 'linear', 'easeOut', 'easeInOut', 'easeOutQuad', 'easeOutCubic'
+// - 'linear' : Pas de courbe (décélération constante)
+// - 'easeOut' : Décélération douce (recommandé)
+// - 'easeInOut' : Accélération puis décélération
+// - 'easeOutQuad' : Décélération plus douce
+// - 'easeOutCubic' : Décélération très douce
+export const SCROLL_EASING_TYPE: 'linear' 
+| 'easeOut' 
+| 'easeInOut' 
+| 'easeOutQuad' 
+| 'easeOutCubic' = 'easeOut'; // ← MODIFIEZ POUR CHANGER LA COURBE
+
+// Seuil minimum pour arrêter l'animation (delta minimum)
+export const SCROLL_EASING_MIN_DELTA = 0.0001;
+
 // Auto Scroll
 export const AUTO_SCROLL_SPEED = 0.04; // valeur par défaut, modifiable
 

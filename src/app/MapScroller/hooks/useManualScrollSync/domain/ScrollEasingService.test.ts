@@ -1,10 +1,10 @@
-import { ScrollEasingService } from './ScrollEasingService';
+import { ScrollEasingService, EasingFunctions } from './ScrollEasingService';
 
 describe('ScrollEasingService', () => {
   let service: ScrollEasingService;
 
   beforeEach(() => {
-    service = new ScrollEasingService(0.12, 0.0001);
+    service = new ScrollEasingService(0.12, EasingFunctions.linear, 0.0001);
   });
 
   describe('calculateCircularDelta', () => {

@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { setProgress, setLastScrollDirection } from '@/store/scrollSlice';
 import { ManualScrollSyncUseCase } from './application/ManualScrollSyncUseCase';
-import { ScrollEasingService } from './domain/ScrollEasingService';
+import { ScrollEasingService, EasingFunctions } from './domain/ScrollEasingService';
 import { ScrollProgressCalculator } from './domain/ScrollProgressCalculator';
 import { ScrollStateDetector } from './domain/ScrollStateDetector';
+import { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA } from '@/config';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress
@@ -21,7 +22,16 @@ export function useManualScrollSync(
   const currentProgress = useSelector((state: RootState) => state.scroll.progress);
 
   // Créer les services de domaine (mémoïsés pour éviter les recréations)
-  const easingService = useMemo(() => new ScrollEasingService(0.12, 0.0001), []);
+  // Inertie et Easing sont découplés et paramétrables via la config
+  const easingFunction = useMemo(() => {
+    return EasingFunctions[SCROLL_EASING_TYPE] || EasingFunctions.linear;
+  }, []);
+  
+  const easingService = useMemo(() => new ScrollEasingService(
+    SCROLL_INERTIA_FACTOR, // Force de l'inertie
+    easingFunction,        // Courbe d'easing
+    SCROLL_EASING_MIN_DELTA
+  ), [easingFunction]);
   const progressCalculator = useMemo(() => new ScrollProgressCalculator(), []);
   const stateDetector = useMemo(() => new ScrollStateDetector(150), []);
 

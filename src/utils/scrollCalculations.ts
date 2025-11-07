@@ -66,3 +66,44 @@ export const normalizeScrollY = (
   };
 };
 
+/**
+ * Calcule le target progress ajusté en respectant la direction du scroll
+ * Gère le wraparound circulaire pour choisir le bon chemin selon la direction
+ * 
+ * @param currentProgress Progress actuel (0-1)
+ * @param targetProgress Progress cible (0-1)
+ * @param direction Direction du scroll : 'forward', 'backward', ou null
+ * @returns Le progress ajusté (0-1) qui respecte la direction
+ */
+export const calculateAdjustedTargetProgress = (
+  currentProgress: number,
+  targetProgress: number,
+  direction: 'forward' | 'backward' | null
+): number => {
+  // Calculer les deux chemins possibles (forward et backward)
+  const directDelta = targetProgress - currentProgress;
+  const forwardDelta = directDelta >= 0 ? directDelta : directDelta + 1; // Chemin forward (vers l'avant)
+  const backwardDelta = directDelta <= 0 ? directDelta : directDelta - 1; // Chemin backward (vers l'arrière)
+  
+  // Toujours respecter la direction du PointTrail, même si ce n'est pas le chemin le plus court
+  let delta: number;
+  
+  if (direction === 'forward') {
+    // Direction forward : toujours prendre le chemin forward
+    delta = forwardDelta;
+  } else if (direction === 'backward') {
+    // Direction backward : toujours prendre le chemin backward
+    delta = backwardDelta;
+  } else {
+    // Pas de direction : utiliser le chemin le plus court
+    delta = Math.abs(forwardDelta) <= Math.abs(backwardDelta) ? forwardDelta : backwardDelta;
+  }
+  
+  // Calculer le target progress ajusté en ajoutant le delta au progress actuel
+  let adjustedTargetProgress = currentProgress + delta;
+  // Normaliser entre 0 et 1
+  adjustedTargetProgress = ((adjustedTargetProgress % 1) + 1) % 1;
+  
+  return adjustedTargetProgress;
+};
+

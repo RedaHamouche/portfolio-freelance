@@ -4,6 +4,7 @@ import {
   calculateMaxScroll,
   calculateScrollYFromProgress,
   normalizeScrollY,
+  calculateAdjustedTargetProgress,
 } from './scrollCalculations';
 import { SCROLL_CONFIG } from '@/config';
 
@@ -115,6 +116,93 @@ describe('scrollCalculations', () => {
       expect(result.shouldCorrect).toBe(false);
       expect(result.normalizedY).toBe(500);
       expect(result.correctionY).toBeUndefined();
+    });
+  });
+
+  describe('calculateAdjustedTargetProgress', () => {
+    describe('direction forward', () => {
+      it('devrait toujours prendre le chemin forward même si backward est plus court', () => {
+        // Cas : 0.99 -> 0.02, forward devrait prendre le wraparound (0.03) au lieu du direct (-0.97)
+        const result = calculateAdjustedTargetProgress(0.99, 0.02, 'forward');
+        expect(result).toBeCloseTo(0.02, 5);
+        // Vérifier que c'est bien le chemin forward (wraparound)
+        // 0.99 + 0.03 = 1.02, normalisé = 0.02
+      });
+
+      it('devrait prendre le chemin direct forward quand c\'est le plus court', () => {
+        // Cas : 0.1 -> 0.9, forward direct (0.8)
+        const result = calculateAdjustedTargetProgress(0.1, 0.9, 'forward');
+        expect(result).toBeCloseTo(0.9, 5);
+      });
+
+      it('devrait gérer le cas où on est proche de 0', () => {
+        // Cas : 0.01 -> 0.02, forward direct (0.01)
+        const result = calculateAdjustedTargetProgress(0.01, 0.02, 'forward');
+        expect(result).toBeCloseTo(0.02, 5);
+      });
+    });
+
+    describe('direction backward', () => {
+      it('devrait toujours prendre le chemin backward même si forward est plus court', () => {
+        // Cas : 0.01 -> 0.99, backward devrait prendre le wraparound (-0.02) au lieu du direct (0.98)
+        const result = calculateAdjustedTargetProgress(0.01, 0.99, 'backward');
+        expect(result).toBeCloseTo(0.99, 5);
+        // Vérifier que c'est bien le chemin backward (wraparound)
+        // 0.01 - 0.02 = -0.01, normalisé = 0.99
+      });
+
+      it('devrait prendre le chemin direct backward quand c\'est le plus court', () => {
+        // Cas : 0.9 -> 0.1, backward direct (-0.8)
+        const result = calculateAdjustedTargetProgress(0.9, 0.1, 'backward');
+        expect(result).toBeCloseTo(0.1, 5);
+      });
+
+      it('devrait gérer le cas PieceOfArt sur mobile (0.99 -> 0.02, backward)', () => {
+        // Cas spécifique : PieceOfArt mobile à 0.02, on est à 0.99, direction backward
+        // Le chemin backward direct est -0.97, ce qui donne 0.02
+        const result = calculateAdjustedTargetProgress(0.99, 0.02, 'backward');
+        expect(result).toBeCloseTo(0.02, 5);
+      });
+    });
+
+    describe('direction null (chemin le plus court)', () => {
+      it('devrait choisir le chemin le plus court quand direction est null', () => {
+        // Cas : 0.1 -> 0.9, le chemin direct (0.8) est plus court que wraparound (0.2)
+        const result = calculateAdjustedTargetProgress(0.1, 0.9, null);
+        expect(result).toBeCloseTo(0.9, 5);
+      });
+
+      it('devrait choisir le wraparound si c\'est le chemin le plus court', () => {
+        // Cas : 0.95 -> 0.05, le wraparound (0.1) est plus court que direct (-0.9)
+        const result = calculateAdjustedTargetProgress(0.95, 0.05, null);
+        expect(result).toBeCloseTo(0.05, 5);
+      });
+    });
+
+    describe('cas limites', () => {
+      it('devrait gérer progress = 0', () => {
+        const result = calculateAdjustedTargetProgress(0, 0.5, 'forward');
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThanOrEqual(1);
+        expect(result).toBeCloseTo(0.5, 5);
+      });
+
+      it('devrait gérer progress = 1 (normalisé à 0)', () => {
+        const result = calculateAdjustedTargetProgress(1, 0.5, 'forward');
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThanOrEqual(1);
+      });
+
+      it('devrait normaliser le résultat entre 0 et 1', () => {
+        const result = calculateAdjustedTargetProgress(0.9, 0.3, 'forward');
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThan(1);
+      });
+
+      it('devrait gérer le cas où currentProgress = targetProgress', () => {
+        const result = calculateAdjustedTargetProgress(0.5, 0.5, 'forward');
+        expect(result).toBeCloseTo(0.5, 5);
+      });
     });
   });
 });

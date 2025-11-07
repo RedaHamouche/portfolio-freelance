@@ -12,7 +12,7 @@ import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useDynamicZoom } from '@/app/MapScroller/hooks/useDynamicZoom';
 import gsap from 'gsap';
-import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
+import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll, calculateAdjustedTargetProgress } from '@/utils/scrollCalculations';
 import { getViewportHeight } from '@/utils/viewportCalculations';
 import { MapViewportUseCase } from './application/MapViewportUseCase';
 import { ViewportBoundsService } from './domain/ViewportBoundsService';
@@ -32,6 +32,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   globalPathLength
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
   const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
@@ -271,7 +272,17 @@ export const MapViewport: React.FC<MapViewportProps> = ({
       const viewportHeight = getViewportHeight();
       const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
       const maxScroll = calculateMaxScroll(fakeScrollHeight, viewportHeight);
-      const targetScrollY = calculateScrollYFromProgress(nextComponent.position.progress, maxScroll);
+      
+      // Calculer le target progress en respectant toujours la direction du PointTrail
+      // Le PointTrail pointe déjà dans la bonne direction grâce à findNextComponentInDirection
+      const adjustedTargetProgress = calculateAdjustedTargetProgress(
+        progress,
+        nextComponent.position.progress,
+        lastScrollDirection
+      );
+      
+      // Calculer le scrollY à partir du progress ajusté
+      const targetScrollY = calculateScrollYFromProgress(adjustedTargetProgress, maxScroll);
 
       // Utiliser window.scrollTo directement au lieu de GSAP pour éviter les problèmes sur iOS
       // GSAP ScrollToPlugin peut avoir des problèmes avec les animations sur iOS Safari
@@ -280,7 +291,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         behavior: 'smooth'
       });
     });
-  }, [nextComponent, globalPathLength]);
+  }, [nextComponent, globalPathLength, progress, lastScrollDirection]);
 
   // Mémoïser les calculs de position/angle/arrow pour éviter les recalculs inutiles
   // Ces valeurs ne sont utilisées que si nextComponent existe, donc on les calcule conditionnellement

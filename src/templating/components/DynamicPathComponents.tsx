@@ -145,6 +145,12 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
       
       // Throttle : ne mettre à jour que toutes les 200ms maximum
       if (timeSinceLastUpdate < THROTTLE_MS) {
+        // OPTIMISATION: Vérifier si l'anchorId a changé avant de reprogrammer
+        // Si l'anchorId n'a pas changé, on n'a pas besoin de reprogrammer
+        if (anchorId === lastUpdatedAnchorIdRef.current) {
+          rafIdRef.current = null;
+          return; // Pas besoin de mettre à jour, annuler
+        }
         // Reprogrammer pour plus tard (throttle actif)
         rafIdRef.current = requestAnimationFrame(updateHash);
         return;

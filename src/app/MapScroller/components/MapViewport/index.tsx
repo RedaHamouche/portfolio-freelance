@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { setPathLength } from '@/store/scrollSlice';
+import { setPathLength, setAutoPlaying } from '@/store/scrollSlice';
 import Dynamic from '@/templating/components/Dynamic';
 import DynamicPathComponents from '@/templating/components/DynamicPathComponents';
 import DynamicPathTangenteComponents from '@/templating/components/DynamicPathTangenteComponents';
@@ -33,6 +33,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
+  const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
   const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
@@ -264,6 +265,12 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     if (!nextComponent) return;
     if (typeof window === 'undefined') return;
 
+    // CRITIQUE: Annuler l'autoplay si actif (même si on clique sur PointTrail pendant l'autoplay)
+    // Cela permet à l'utilisateur de reprendre le contrôle en cliquant sur PointTrail
+    if (isAutoPlaying) {
+      dispatch(setAutoPlaying(false));
+    }
+
     // Utiliser requestAnimationFrame pour s'assurer que les dimensions sont stables
     // Cela évite les problèmes sur iOS où window.innerHeight peut changer
     requestAnimationFrame(() => {
@@ -291,7 +298,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         behavior: 'smooth'
       });
     });
-  }, [nextComponent, globalPathLength, progress, lastScrollDirection]);
+  }, [nextComponent, globalPathLength, progress, lastScrollDirection, dispatch, isAutoPlaying]);
 
   // Mémoïser les calculs de position/angle/arrow pour éviter les recalculs inutiles
   // Ces valeurs ne sont utilisées que si nextComponent existe, donc on les calcule conditionnellement

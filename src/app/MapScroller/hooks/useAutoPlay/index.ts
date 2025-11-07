@@ -106,8 +106,8 @@ export function useAutoPlay({
 
   // Fonction d'animation
   const animate = useCallback(() => {
-    // Ne pas animer si modal ouverte
-    if (isModalOpen) return;
+    // Ne pas animer si modal ouverte (utiliser la ref pour éviter les dépendances)
+    if (isModalOpenRef.current) return;
 
     const dt = SCROLL_CONFIG.FRAME_DELAY / 1000; // approx 60fps
     const currentProgress = progressRef.current;
@@ -194,7 +194,8 @@ export function useAutoPlay({
     }
 
     // Réinitialiser la pause si on n'est plus sur un anchor
-    if (!result.shouldPause) {
+    // OPTIMISATION: Ne dispatcher que si on était en pause (évite les dispatches inutiles)
+    if (!result.shouldPause && lastPausedAnchorIdRef.current !== null) {
       lastPausedAnchorIdRef.current = null;
       dispatch(setAutoScrollTemporarilyPaused(false));
     }
@@ -221,7 +222,7 @@ export function useAutoPlay({
         console.warn('[useAutoPlay] Erreur lors du scroll:', error);
       }
     }
-  }, [autoScrollDirection, dispatch, start, isDesktop, isModalOpen, canPauseOnAnchor]);
+  }, [autoScrollDirection, dispatch, start, isDesktop, canPauseOnAnchor]);
 
   // Nettoyer le timeout de pause quand la modal s'ouvre
   useEffect(() => {

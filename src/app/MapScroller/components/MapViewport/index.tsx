@@ -13,6 +13,7 @@ import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useDynamicZoom } from '@/app/MapScroller/hooks/useDynamicZoom';
 import gsap from 'gsap';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
+import { getViewportHeight } from '@/utils/viewportCalculations';
 import { MapViewportUseCase } from './application/MapViewportUseCase';
 import { ViewportBoundsService } from './domain/ViewportBoundsService';
 import { ViewportTransformService } from './domain/ViewportTransformService';
@@ -215,18 +216,24 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
   const handleGoToNext = useCallback(() => {
     if (!nextComponent) return;
+    if (typeof window === 'undefined') return;
 
-    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
-    const targetScrollY = calculateScrollYFromProgress(nextComponent.position.progress, maxScroll);
+    // Utiliser requestAnimationFrame pour s'assurer que les dimensions sont stables
+    // Cela évite les problèmes sur iOS où window.innerHeight peut changer
+    requestAnimationFrame(() => {
+      // Utiliser getViewportHeight() pour être cohérent avec le reste de l'application
+      // Cette fonction utilise window.innerHeight de manière stable
+      const viewportHeight = getViewportHeight();
+      const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
+      const maxScroll = calculateMaxScroll(fakeScrollHeight, viewportHeight);
+      const targetScrollY = calculateScrollYFromProgress(nextComponent.position.progress, maxScroll);
 
-    gsap.to(window, {
-      scrollTo: {
-        y: targetScrollY,
-        autoKill: true
-      },
-      duration: 0.8,
-      ease: 'power2.out'
+      // Utiliser window.scrollTo directement au lieu de GSAP pour éviter les problèmes sur iOS
+      // GSAP ScrollToPlugin peut avoir des problèmes avec les animations sur iOS Safari
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: 'smooth'
+      });
     });
   }, [nextComponent, globalPathLength]);
 

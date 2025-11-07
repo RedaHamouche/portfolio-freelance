@@ -5,7 +5,6 @@ import gsap from 'gsap';
 import styles from './index.module.scss';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import Cursor from '../Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -20,7 +19,7 @@ import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, ScrollToPlugin);
+  gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
   
   // Configurer ScrollTrigger pour ignorer les changements de taille causés par la barre Safari
   // Cela évite les recalculs qui causent le path de disparaître quand la barre Safari bouge
@@ -90,8 +89,7 @@ const MapScroller: React.FC = () => {
       <Cursor />
       {/* Conteneur de scroll factice (crée la hauteur de scroll) */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
-      {/* Viewport fixe avec contexte de stacking isolé pour éviter le bug iOS 26 */}
-      {/* Utilise position: fixed mais avec isolation et transform pour éviter les bugs */}
+      {/* Viewport fixe pour afficher la carte */}
       <div 
         className={styles.viewportFixed}
         style={{ 

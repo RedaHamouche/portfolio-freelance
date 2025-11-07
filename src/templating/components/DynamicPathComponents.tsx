@@ -18,6 +18,7 @@ import {
   calculateMaxScroll,
   calculateScrollYFromProgress,
 } from '@/utils/scrollCalculations';
+import { getViewportHeight } from '@/utils/viewportCalculations';
 
 interface DynamicPathComponentsProps {
   svgPath: SVGPathElement | null;
@@ -87,9 +88,9 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
         // Synchroniser la position de scroll avec le progress
         if (pathLength > 0) {
           const fakeScrollHeight = calculateFakeScrollHeight(pathLength);
-          const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+          const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
           const targetScrollY = calculateScrollYFromProgress(progress, maxScroll);
-          window.scrollTo(0, targetScrollY);
+          window.scrollTo({ top: targetScrollY, behavior: 'auto' });
         }
       }
     };

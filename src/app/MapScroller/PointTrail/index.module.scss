@@ -19,6 +19,11 @@
   /* NOTE: contain retiré pour éviter le bug Safari iOS où le contenu disparaît quand progress = 0 */
   /* contain: layout style paint; */
   backface-visibility: hidden; /* Optimisation GPU supplémentaire */
+  
+  /* Assurer que le bouton est cliquable sur iOS */
+  touch-action: manipulation; /* Éviter le délai de 300ms sur iOS et permettre les interactions */
+  cursor: pointer; /* Indiquer que c'est cliquable */
+  -webkit-tap-highlight-color: transparent; /* Désactiver le highlight bleu sur iOS */
 
   &.position-left {
     flex-direction: row-reverse;

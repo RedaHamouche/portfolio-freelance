@@ -1,6 +1,4 @@
-import React, { memo, useCallback, useMemo, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
+import React, { memo, useCallback, useMemo } from 'react';
 import styles from './index.module.scss';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 
@@ -8,23 +6,14 @@ interface SvgPathProps {
   setSvgPath: (el: SVGPathElement | null) => void;
   svgRef: React.RefObject<SVGSVGElement | null>;
   children?: React.ReactNode;
-  viewportTransform?: { translateX: number; translateY: number; scale: number } | null; // Gardé pour compatibilité mais non utilisé
 }
 
 export const SvgPath = memo(function SvgPath({
   setSvgPath,
   svgRef,
-  children,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  viewportTransform: _viewportTransform // Non utilisé mais gardé pour compatibilité
+  children
 }: SvgPathProps) {
   const { pathD, svgSize, mapPaddingRatio } = useResponsivePath();
-  const progress = useSelector((state: RootState) => state.scroll.progress);
-  
-  // Console.log pour debug mobile
-  useEffect(() => {
-    console.log('[SvgPath] Progress:', progress, '(', (progress * 100).toFixed(2), '%)');
-  }, [progress]);
   
   // Mémoïser les calculs de padding pour éviter les recalculs inutiles
   const { paddingX, paddingY, paddedWidth, paddedHeight } = useMemo(() => {

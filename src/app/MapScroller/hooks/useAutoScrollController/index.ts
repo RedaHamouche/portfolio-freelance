@@ -4,6 +4,7 @@ import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScr
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { AUTO_SCROLL_SPEED, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
+import { getViewportHeight } from '@/utils/viewportCalculations';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
@@ -92,9 +93,9 @@ export function useAutoScrollController({
     
     // Synchroniser la position de scroll
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLengthRef.current);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
     const targetScrollY = calculateScrollYFromProgress(newProgress, maxScroll);
-    window.scrollTo(0, targetScrollY);
+    window.scrollTo({ top: targetScrollY, behavior: 'auto' });
   }, [isAutoPlaying, autoScrollDirection, dispatch, start, pathDomain, isDesktop]);
 
   // Stocker la référence de animate

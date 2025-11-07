@@ -9,6 +9,7 @@ import {
   calculateMaxScroll,
   calculateScrollYFromProgress,
 } from '@/utils/scrollCalculations';
+import { getViewportHeight } from '@/utils/viewportCalculations';
 
 export interface ScrollInitializationResult {
   progress: number;
@@ -81,7 +82,7 @@ export class ScrollInitializationUseCase {
    */
   private calculateScrollY(progress: number, globalPathLength: number): number {
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
     return calculateScrollYFromProgress(progress, maxScroll);
   }
 

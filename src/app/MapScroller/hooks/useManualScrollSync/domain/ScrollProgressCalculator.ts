@@ -4,6 +4,7 @@ import {
   calculateMaxScroll,
   normalizeScrollY,
 } from '@/utils/scrollCalculations';
+import { getViewportHeight } from '@/utils/viewportCalculations';
 
 /**
  * Service de domaine pour calculer le progress à partir de la position de scroll
@@ -22,7 +23,7 @@ export class ScrollProgressCalculator {
     }
 
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
     const { normalizedY, shouldCorrect, correctionY } = normalizeScrollY(scrollY, maxScroll);
 
     const progress = computeScrollProgress(normalizedY, maxScroll);
@@ -43,7 +44,7 @@ export class ScrollProgressCalculator {
     }
 
     const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, window.innerHeight);
+    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
     const { normalizedY } = normalizeScrollY(window.scrollY, maxScroll);
 
     return computeScrollProgress(normalizedY, maxScroll);

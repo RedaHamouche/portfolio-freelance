@@ -37,6 +37,7 @@ export class ScrollInitializationService {
   /**
    * Récupère le progress à partir d'un hash
    * Retourne null si le composant n'est pas trouvé ou n'a pas de progress
+   * Valide que le progress est dans la plage [0, 1]
    */
   getProgressFromHash(
     anchorId: string,
@@ -52,6 +53,12 @@ export class ScrollInitializationService {
     const progress = component.position?.progress;
     
     if (progress === undefined || progress === null) {
+      return null;
+    }
+
+    // Valider que le progress est dans la plage valide [0, 1]
+    if (progress < 0 || progress > 1 || isNaN(progress)) {
+      console.warn(`[ScrollInitializationService] Progress invalide depuis hash "${anchorId}": ${progress}`);
       return null;
     }
 

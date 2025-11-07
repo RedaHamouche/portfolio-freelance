@@ -54,8 +54,10 @@ export function useAutoPlay({
   const progressRef = useRef(progress);
   const globalPathLengthRef = useRef(globalPathLength);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutIdRef = useRef<number>(0); // ID unique pour chaque timeout (protection contre les redémarrages rapides)
   const animateRef = useRef<FrameRequestCallback | null>(null);
   const isAutoPlayingRef = useRef(isAutoPlaying);
+  const isModalOpenRef = useRef(isModalOpen);
 
   // Synchronisation des refs
   useEffect(() => {
@@ -69,6 +71,28 @@ export function useAutoPlay({
   useEffect(() => {
     isAutoPlayingRef.current = isAutoPlaying;
   }, [isAutoPlaying]);
+
+  useEffect(() => {
+    isModalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
+
+  // CRITIQUE: Nettoyer le timeout de pause quand la direction change
+  // Cela évite les conflits quand on change de direction et qu'on repasse par le même anchor
+  useEffect(() => {
+    // Nettoyer le timeout de pause pour éviter les conflits lors du changement de direction
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    // Invalider le timeout actuel en incrémentant l'ID
+    timeoutIdRef.current += 1;
+    
+    // Réinitialiser les états de pause pour permettre une nouvelle pause dans la nouvelle direction
+    isPausedRef.current = false;
+    lastPausedAnchorIdRef.current = null;
+    dispatch(setAutoScrollTemporarilyPaused(false));
+  }, [autoScrollDirection, dispatch]);
 
   // Fonction pour vérifier si on peut faire une pause sur un anchor (cooldown de 5 secondes)
   // Mémoïsée en dehors de animate pour éviter la recréation à chaque frame
@@ -120,7 +144,42 @@ export function useAutoPlay({
       dispatch(setAutoScrollTemporarilyPaused(true));
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      
+      // Stocker l'anchorId actuel pour vérifier qu'il n'a pas changé quand le timeout se déclenche
+      const currentAnchorId = result.anchorId;
+      
+      // Générer un ID unique pour ce timeout (protection contre les redémarrages rapides)
+      timeoutIdRef.current += 1;
+      const currentTimeoutId = timeoutIdRef.current;
+      
       timeoutRef.current = setTimeout(() => {
+        // CRITIQUE: Vérifier que ce timeout est toujours valide
+        // Si timeoutIdRef a changé, cela signifie qu'un nouveau timeout a été créé (redémarrage rapide)
+        if (timeoutIdRef.current !== currentTimeoutId) {
+          return; // Ce timeout est obsolète, ne rien faire
+        }
+        
+        // Vérifier que la modal n'est pas ouverte avant de reprendre
+        if (isModalOpenRef.current) {
+          return;
+        }
+        
+        // Vérifier que l'autoplay est toujours actif
+        if (!isAutoPlayingRef.current) {
+          return;
+        }
+        
+        // Vérifier que l'anchor n'a pas changé (protection contre les redémarrages rapides)
+        // Si lastPausedAnchorIdRef a changé, cela signifie qu'on a redémarré l'autoplay
+        if (lastPausedAnchorIdRef.current !== currentAnchorId) {
+          return; // L'anchor a changé, ne pas reprendre
+        }
+        
+        // Vérifier que isPausedRef est toujours true (sinon on a déjà repris ou redémarré)
+        if (!isPausedRef.current) {
+          return; // On n'est plus en pause, ne rien faire
+        }
+        
         isPausedRef.current = false;
         dispatch(setAutoScrollTemporarilyPaused(false));
 
@@ -141,44 +200,106 @@ export function useAutoPlay({
     }
 
     // Synchroniser la position de scroll
-    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLengthRef.current);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
-    const targetScrollY = calculateScrollYFromProgress(result.newProgress, maxScroll);
-    
-    // window.scrollTo() ne déclenche pas les événements wheel/touch, donc useManualScrollSync
-    // ne détectera pas ce scroll comme manuel (on écoute uniquement wheel/touch pour les scrolls manuels)
-    window.scrollTo({ top: targetScrollY, behavior: 'auto' });
+    // Ne pas scroller si la modal est ouverte (évite les conflits avec la restauration du scroll de la modal)
+    if (!isModalOpenRef.current) {
+      try {
+        const fakeScrollHeight = calculateFakeScrollHeight(globalPathLengthRef.current);
+        const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
+        const targetScrollY = calculateScrollYFromProgress(result.newProgress, maxScroll);
+        
+        // Valider que targetScrollY est un nombre valide
+        if (isNaN(targetScrollY) || !isFinite(targetScrollY)) {
+          console.warn(`[useAutoPlay] targetScrollY invalide: ${targetScrollY}, scroll ignoré`);
+          return;
+        }
+        
+        // window.scrollTo() ne déclenche pas les événements wheel/touch, donc useManualScrollSync
+        // ne détectera pas ce scroll comme manuel (on écoute uniquement wheel/touch pour les scrolls manuels)
+        window.scrollTo({ top: targetScrollY, behavior: 'auto' });
+      } catch (error) {
+        // Gérer les erreurs de window.scrollTo() (peut échouer si la modal est en train de restaurer le scroll)
+        console.warn('[useAutoPlay] Erreur lors du scroll:', error);
+      }
+    }
   }, [autoScrollDirection, dispatch, start, isDesktop, isModalOpen, canPauseOnAnchor]);
+
+  // Nettoyer le timeout de pause quand la modal s'ouvre
+  useEffect(() => {
+    if (isModalOpen) {
+      // CRITIQUE: Nettoyer le timeout de pause pour éviter les conflits
+      // Quand la modal s'ouvre, on ne veut pas que le timeout de pause se déclenche
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
+      // Invalider le timeout actuel en incrémentant l'ID
+      timeoutIdRef.current += 1;
+      
+      // Réinitialiser les états de pause
+      isPausedRef.current = false;
+      dispatch(setAutoScrollTemporarilyPaused(false));
+    }
+  }, [isModalOpen, dispatch]);
 
   // Stocker la référence de animate et mettre à jour useRafLoop si la boucle est active
   useEffect(() => {
     animateRef.current = animate;
-    // Si l'autoplay est actif, mettre à jour le callback dans useRafLoop
+    // Si l'autoplay est actif et la modal n'est pas ouverte, mettre à jour le callback dans useRafLoop
     // useRafLoop.start() met toujours à jour cbRef.current, même si la boucle est déjà en cours
     // Cela permet de changer la direction sans mettre en pause l'autoplay
-    if (isAutoPlaying) {
+    if (isAutoPlaying && !isModalOpen) {
       start(animate);
+    } else if (isModalOpen) {
+      // Si la modal s'ouvre, arrêter l'animation
+      stop();
     }
-  }, [animate, isAutoPlaying, start]);
+  }, [animate, isAutoPlaying, isModalOpen, start, stop]);
 
   // Démarrer/arrêter l'autoplay
   const startAutoPlay = useCallback(() => {
+    // Nettoyer les timeouts précédents pour éviter les conflits
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    // Invalider le timeout actuel en incrémentant l'ID (protection contre les redémarrages rapides)
+    // Cela empêche les timeouts obsolètes de se déclencher
+    timeoutIdRef.current += 1;
+    
     // Réinitialiser les états de pause pour permettre le redémarrage
     isPausedRef.current = false;
     lastPausedAnchorIdRef.current = null;
     dispatch(setIsScrolling(true));
     dispatch(setAutoScrollTemporarilyPaused(false));
     stop();
+    
+    // Ne pas démarrer si la modal est ouverte
+    if (isModalOpenRef.current) {
+      return;
+    }
+    
     start(animate);
   }, [start, stop, animate, dispatch]);
 
   const stopAutoPlay = useCallback(() => {
     dispatch(setIsScrolling(false));
     stop();
+    
+    // CRITIQUE: Nettoyer tous les états de pause pour éviter les conflits lors de redémarrages rapides
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    
+    // Invalider le timeout actuel en incrémentant l'ID (protection contre les redémarrages rapides)
+    timeoutIdRef.current += 1;
+    
+    // Réinitialiser les états de pause pour éviter les conflits
+    isPausedRef.current = false;
+    lastPausedAnchorIdRef.current = null;
+    dispatch(setAutoScrollTemporarilyPaused(false));
   }, [stop, dispatch]);
 
   // Cleanup des timeouts au démontage

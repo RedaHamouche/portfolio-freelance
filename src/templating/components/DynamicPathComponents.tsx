@@ -113,21 +113,77 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   // activeAnchors et inViews supprimés - tous les composants sont toujours visibles
 
   // Mise à jour du hash dans l'URL quand un composant anchor devient actif
-  useEffect(() => {
+  // Utiliser useMemo pour calculer l'anchorId actif (évite les recalculs inutiles)
+  const activeAnchorId = React.useMemo(() => {
     const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
     const firstActiveWithAnchor = activeComponents.find(c => c.anchorId);
-    if (firstActiveWithAnchor?.anchorId) {
-      const anchorId = firstActiveWithAnchor.anchorId;
-      if (window.location.hash.replace('#', '') !== anchorId) {
-        history.replaceState(null, '', `#${anchorId}`);
-      }
-    } else {
-      // Aucun composant actif, on retire le hash
-      if (window.location.hash) {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
-      }
-    }
+    return firstActiveWithAnchor?.anchorId || null;
   }, [progress, pathDomain, isDesktop]);
+  
+  // Refs pour le throttling et le tracking
+  const lastUpdatedAnchorIdRef = React.useRef<string | null>(null);
+  const rafIdRef = React.useRef<number | null>(null);
+  const lastUpdateTimeRef = React.useRef<number>(0);
+  const pendingAnchorIdRef = React.useRef<string | null>(null);
+  const THROTTLE_MS = 200; // Throttle de 200ms pour limiter les appels à history.replaceState()
+  
+  // Mettre à jour le hash avec throttling basé sur requestAnimationFrame
+  useEffect(() => {
+    // Stocker l'anchorId actuel pour traitement différé
+    pendingAnchorIdRef.current = activeAnchorId;
+    
+    // Annuler le RAF précédent si présent
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+    }
+    
+    // Fonction de mise à jour avec throttling
+    const updateHash = () => {
+      const now = performance.now();
+      const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+      const anchorId = pendingAnchorIdRef.current;
+      
+      // Throttle : ne mettre à jour que toutes les 200ms maximum
+      if (timeSinceLastUpdate < THROTTLE_MS) {
+        // Reprogrammer pour plus tard (throttle actif)
+        rafIdRef.current = requestAnimationFrame(updateHash);
+        return;
+      }
+      
+      // Vérifier si l'anchorId a vraiment changé
+      if (anchorId !== lastUpdatedAnchorIdRef.current) {
+        const currentHash = window.location.hash.replace('#', '');
+        
+        if (anchorId) {
+          // Mettre à jour le hash avec le nouvel anchorId
+          if (currentHash !== anchorId) {
+            history.replaceState(null, '', `#${anchorId}`);
+          }
+          lastUpdatedAnchorIdRef.current = anchorId;
+        } else {
+          // Aucun composant actif, retirer le hash si présent
+          if (window.location.hash) {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+          lastUpdatedAnchorIdRef.current = null;
+        }
+        
+        lastUpdateTimeRef.current = now;
+      }
+      
+      rafIdRef.current = null;
+    };
+    
+    // Programmer la mise à jour avec RAF
+    rafIdRef.current = requestAnimationFrame(updateHash);
+    
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [activeAnchorId]);
 
   // Mémoïser toutes les positions d'un coup en utilisant l'API du domaine
   const positions = useMemo(

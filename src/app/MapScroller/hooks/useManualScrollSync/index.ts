@@ -85,7 +85,9 @@ export function useManualScrollSync(
     if (pathLengthChanged && wasDefaultValue && isRealValue && isInitializedRef.current) {
       // Le pathLength est passé de la valeur par défaut à la vraie valeur
       // Réinitialiser le système avec le bon pathLength
-      console.log('[useManualScrollSync] PathLength changé de', lastInitializedPathLengthRef.current, 'à', globalPathLength, '- Réinitialisation');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useManualScrollSync] PathLength changé de', lastInitializedPathLengthRef.current, 'à', globalPathLength, '- Réinitialisation');
+      }
       scrollYRef.current = window.scrollY;
       try {
         getUseCase().initialize(globalPathLength);

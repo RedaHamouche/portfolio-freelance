@@ -106,6 +106,10 @@ export function useAutoPlay({
 
   // Fonction d'animation
   const animate = useCallback(() => {
+    // CRITIQUE: Vérifier isAutoPlayingRef AVANT toute autre chose pour éviter les race conditions
+    // Si l'autoplay a été annulé (par exemple par un clic sur PointTrail), on ne doit pas continuer
+    if (!isAutoPlayingRef.current) return;
+    
     // Ne pas animer si modal ouverte (utiliser la ref pour éviter les dépendances)
     if (isModalOpenRef.current) return;
 
@@ -251,8 +255,9 @@ export function useAutoPlay({
     // Cela permet de changer la direction sans mettre en pause l'autoplay
     if (isAutoPlaying && !isModalOpen) {
       start(animate);
-    } else if (isModalOpen) {
-      // Si la modal s'ouvre, arrêter l'animation
+    } else {
+      // CRITIQUE: Arrêter l'animation si isAutoPlaying devient false OU si la modal s'ouvre
+      // Cela évite les race conditions où animate() pourrait s'exécuter après l'annulation
       stop();
     }
   }, [animate, isAutoPlaying, isModalOpen, start, stop]);

@@ -15,7 +15,7 @@
     "displayName": "Piece of Art",
     "anchorId": "pieceOfArt",
     "position": {
-      "progress": 0.3
+      "progress": 0.02
     },
     "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=450&fit=crop&q=80",
     "desktopSrc": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=600&fit=crop&q=80",

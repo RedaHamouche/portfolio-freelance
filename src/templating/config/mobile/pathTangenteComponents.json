@@ -1,25 +1,4 @@
 [
-  {
-    "id": "title-about-me-on-path",
-    "type": "TitleAboutMe",
-    "displayName": "Titre About Me sur le path",
-    "title": "À propos",
-    "description": "Développeur freelance passionné par la création d'expériences web innovantes et performantes.",
-    "position": {
-      "startProgress": 0.015
-    },
-    "offset": -64
-  },
-  {
-    "id": "text-example-1",
-    "type": "TextOnPath",
-    "displayName": "Mon texte qui suit la courbe",
-    "text": "Hello world",
-    "position": {
-      "startProgress": 0.2,
-      "length": 0.1
-    },
-    "offset": 30
-  }
+
 ]
 

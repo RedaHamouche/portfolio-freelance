@@ -1,9 +1,10 @@
 .mainSvg {
     background-color: $white;
+    // NOTE: contain retiré pour éviter le bug Safari iOS où le path disparaît quand progress = 0
     // CSS containment pour optimiser le rendu
     // paint: le contenu ne déborde pas, le navigateur peut optimiser le rendu
     // layout: les changements de layout sont isolés à cet élément
-    contain: paint layout;
+    // contain: paint layout;
 }
   
 .path {

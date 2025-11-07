@@ -17,6 +17,7 @@ import { MapViewportUseCase } from './application/MapViewportUseCase';
 import { ViewportBoundsService } from './domain/ViewportBoundsService';
 import { ViewportTransformService } from './domain/ViewportTransformService';
 import { ViewportDimensionsService } from './domain/ViewportDimensionsService';
+import type { ViewportBounds } from '@/utils/viewportCalculations';
 
 interface MapViewportProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
@@ -40,7 +41,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     baseScale: mapScale,
   });
 
-  // Créer les services de domaine et le use case (mémoïsés)
+  // Créer les services de domaine et le use case (mémoïsés)Ò
   const useCaseRef = useRef<MapViewportUseCase | null>(null);
   if (!useCaseRef.current) {
     const boundsService = new ViewportBoundsService();
@@ -87,17 +88,25 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   });
 
   // Mémoïser les bounds du viewport - recalculées lors du resize ou changement de config
+  // Utiliser un ref pour garder les dernières bounds valides et éviter les recalculs pendant le scroll
+  const viewportBoundsRef = useRef<ViewportBounds | null>(null);
   const viewportBounds = useMemo(() => {
-    if (!useCaseRef.current!.isValidDimensions(windowSize)) return null;
-    return useCaseRef.current!.calculateBounds(
+    if (!useCaseRef.current!.isValidDimensions(windowSize)) {
+      // Si dimensions invalides, retourner les dernières bounds valides pour éviter les problèmes
+      return viewportBoundsRef.current;
+    }
+    const newBounds = useCaseRef.current!.calculateBounds(
       windowSize.width,
       windowSize.height,
       viewportConfig
     );
+    // Mettre à jour le ref avec les nouvelles bounds valides
+    if (newBounds) {
+      viewportBoundsRef.current = newBounds;
+    }
+    return newBounds ?? viewportBoundsRef.current;
   }, [viewportConfig, windowSize]);
 
-  // State pour stocker le transform du viewport (pour le clipPath du SVG)
-  const [viewportTransform, setViewportTransform] = useState<{ translateX: number; translateY: number; scale: number } | null>(null);
 
   // Fonction pour mettre à jour la vue avec GSAP (optimisé GPU)
   const updateViewport = useCallback(() => {
@@ -119,13 +128,6 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
     if (!transform) return;
 
-    // Stocker le transform pour le clipPath du SVG
-    setViewportTransform({
-      translateX: transform.translateX,
-      translateY: transform.translateY,
-      scale: transform.scale,
-    });
-
     // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
     // GSAP gère automatiquement will-change et l'accélération GPU
     gsap.set(mapWrapperRef.current, {
@@ -143,6 +145,9 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
   // Gérer le resize de la fenêtre et les changements de visualViewport (iOS Safari)
   // avec RAF pour optimiser les performances
+  // IMPORTANT: Ignorer les changements de visualViewport pendant le scroll pour éviter les bugs
+  const isScrolling = useSelector((state: RootState) => state.scroll.isScrolling);
+  
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -177,6 +182,11 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
     const handleVisualViewportChange = () => {
       // Se déclenche quand la barre Safari apparaît/disparaît sur iOS
+      // IGNORER pendant le scroll pour éviter les bugs où le path disparaît
+      if (isScrolling) {
+        // Ne pas mettre à jour pendant le scroll - cela évite les recalculs qui causent le bug
+        return;
+      }
       updateDimensions();
     };
 
@@ -201,7 +211,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         clearTimeout(resizeTimeout);
       }
     };
-  }, [updateViewport]);
+  }, [updateViewport, isScrolling]);
 
   const handleGoToNext = useCallback(() => {
     if (!nextComponent) return;
@@ -246,7 +256,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         minWidth: '100vw',
         minHeight: '100vh',
         willChange: 'transform',
-        contain: 'paint layout',
+        // NOTE: contain retiré pour éviter le bug Safari iOS où le path disparaît quand progress = 0
+        // contain: 'paint layout',
         zIndex: 2,
       }}
     >
@@ -265,11 +276,10 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         paddingX={paddingX}
         paddingY={paddingY}
       />
-      <SvgPath
-        setSvgPath={setSvgPath}
-        svgRef={svgRef}
-        viewportTransform={viewportTransform}
-      >
+            <SvgPath
+              setSvgPath={setSvgPath}
+              svgRef={svgRef}
+            >
         <SvgPathDebugger
           svgPath={svgPath}
           paddingX={paddingX}

@@ -3,33 +3,26 @@ import type { PointPosition } from '@/types/path';
 // Note: svgSize, scale et paddingRatio sont passés en paramètre aux fonctions pour supporter le responsive (mobile/desktop)
 
 /**
- * Obtient la hauteur dynamique du viewport (sans les barres UI comme Safari)
- * Utilise visualViewport API si disponible, sinon window.innerHeight
- * Cette fonction évite les layout shifts sur mobile iOS
+ * Obtient la hauteur dynamique du viewport
+ * Utilise window.innerHeight pour avoir une valeur stable qui ne change pas avec la barre Safari
+ * 
+ * NOTE: On utilise innerHeight au lieu de visualViewport.height car visualViewport change trop souvent
+ * quand la barre Safari bouge, ce qui cause des bugs où le path disparaît.
+ * 
+ * ScrollTrigger.config({ ignoreMobileResize: true }) empêche ScrollTrigger de rafraîchir automatiquement,
+ * mais on utilise quand même innerHeight directement pour plus de simplicité et de contrôle.
  */
 export const getViewportHeight = (): number => {
   if (typeof window === 'undefined') return 0;
-  
-  // Utiliser visualViewport si disponible (supporté sur iOS Safari)
-  // Cela donne la hauteur visible sans les barres UI
-  if (window.visualViewport?.height) {
-    return window.visualViewport.height;
-  }
-  
-  // Fallback sur innerHeight
   return window.innerHeight;
 };
 
 /**
  * Obtient la largeur dynamique du viewport
+ * Utilise window.innerWidth pour avoir une valeur stable
  */
 export const getViewportWidth = (): number => {
   if (typeof window === 'undefined') return 0;
-  
-  if (window.visualViewport?.width) {
-    return window.visualViewport.width;
-  }
-  
   return window.innerWidth;
 };
 

@@ -16,7 +16,8 @@
 
   /* Optimisations CLS : dimensions fixes et will-change pour éviter les layout shifts */
   will-change: transform; /* Optimiser les animations de position (GPU acceleration) */
-  contain: layout style paint; /* Isoler le layout pour éviter les recalculs et réduire le CLS */
+  /* NOTE: contain retiré pour éviter le bug Safari iOS où le contenu disparaît quand progress = 0 */
+  /* contain: layout style paint; */
   backface-visibility: hidden; /* Optimisation GPU supplémentaire */
 
   &.position-left {

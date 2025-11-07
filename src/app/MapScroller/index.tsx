@@ -21,6 +21,10 @@ import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, ScrollToPlugin);
+  
+  // Configurer ScrollTrigger pour ignorer les changements de taille causés par la barre Safari
+  // Cela évite les recalculs qui causent le path de disparaître quand la barre Safari bouge
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 const MapScroller: React.FC = () => {
@@ -103,10 +107,10 @@ const MapScroller: React.FC = () => {
           margin: 0, 
           padding: 0, 
           zIndex: 1,
-          // Créer un nouveau contexte de stacking pour éviter les bugs de layout iOS 26
-          isolation: 'isolate',
-          // GPU acceleration - force un nouveau layer
-          transform: 'translateZ(0)',
+          // NOTE: isolation retiré pour éviter le bug Safari iOS où le contenu disparaît quand progress = 0
+          // isolation: 'isolate',
+          // GPU acceleration - force un nouveau layer (utilise translate3d pour meilleure compatibilité iOS)
+          transform: 'translate3d(0, 0, 0)',
           willChange: 'transform',
           // Forcer le repaint sur GPU
           backfaceVisibility: 'hidden',

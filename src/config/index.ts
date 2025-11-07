@@ -64,7 +64,8 @@ export const SCROLL_CONFIG = {
   FRAME_DELAY: 16,
   
   // Bump pour sortir de la zone d'un anchor après pause (en progress)
-  ANCHOR_BUMP: 0.002,
+  // Doit être supérieur à ANCHOR_TOLERANCE pour éviter la double détection
+  ANCHOR_BUMP: 0.004,
   
   // Marges pour le scroll infini
   SCROLL_MARGINS: {
@@ -104,7 +105,7 @@ export const SCROLL_EASING_TYPE: 'linear'
 export const SCROLL_EASING_MIN_DELTA = 0.0001;
 
 // Auto Scroll
-export const AUTO_SCROLL_SPEED = 0.04; // valeur par défaut, modifiable
+export const AUTO_SCROLL_SPEED = 0.06; // valeur par défaut, modifiable (augmenté pour un scroll plus rapide)
 
 // Anchor Configuration
 export const ANCHOR_RANGE = 0.01; // 1% autour du progress

@@ -10,6 +10,8 @@ export function useRafLoop() {
 
   // Fonction pour démarrer la boucle
   const start = useCallback((cb: FrameRequestCallback) => {
+    // Toujours mettre à jour le callback, même si la boucle est déjà en cours
+    // Cela permet de changer la direction de l'autoplay sans le mettre en pause
     cbRef.current = cb;
     if (rafRef.current === null) {
       const loop = (time: number) => {

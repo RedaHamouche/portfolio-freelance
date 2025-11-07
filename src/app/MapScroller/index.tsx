@@ -16,6 +16,7 @@ import { useScrollInitialization } from './hooks/useScrollInitialization';
 import { useProgressPersistence } from './hooks/useProgressPersistence';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
+import AutoPlayButton from '@/components/AutoPlayButton';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -87,6 +88,8 @@ const MapScroller: React.FC = () => {
   return (
     <main className={styles.main}>
       <Cursor />
+      {/* Bouton temporaire play/pause pour tester l'autoplay */}
+      <AutoPlayButton />
       {/* Conteneur de scroll factice (crée la hauteur de scroll) */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
       {/* Viewport fixe pour afficher la carte */}

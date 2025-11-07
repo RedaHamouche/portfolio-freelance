@@ -4,8 +4,8 @@ import { RootState } from '@/store';
 import { setIsScrolling } from '@/store/scrollSlice';
 import { useManualScrollSync } from '../useManualScrollSync';
 import { useDirectionalScrollHandler } from '../useDirectionalScrollHandler';
-import { useAutoScrollController } from '../useAutoScrollController';
-import { type ScrollDirection, type AutoScrollDirection } from '@/config';
+import { useAutoPlay } from '../useAutoPlay';
+import { type ScrollDirection } from '@/config';
 
 export const useScrollManager = (isScrollSynced: boolean = true) => {
   const dispatch = useDispatch();
@@ -13,8 +13,6 @@ export const useScrollManager = (isScrollSynced: boolean = true) => {
   const speed = useSelector((state: RootState) => state.scroll.scrollingSpeed);
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const globalPathLength = useSelector((state: RootState) => state.scroll.pathLength);
-  const autoScrollDirection = useSelector((state: RootState) => state.scroll.autoScrollDirection) as AutoScrollDirection;
-  const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
 
   // Scroll manuel natif
   const handleScrollState = useCallback((isScrolling: boolean) => {
@@ -31,13 +29,15 @@ export const useScrollManager = (isScrollSynced: boolean = true) => {
     progress
   });
 
-  // Auto-scroll (play/pause, direction, anchor)
-  const { startAutoScroll, stopAutoScroll } = useAutoScrollController({
-    isAutoPlaying,
-    autoScrollDirection,
+  // Auto-scroll (play/pause, direction, anchor) - Nouvelle implémentation DDD
+  const { startAutoPlay, stopAutoPlay } = useAutoPlay({
     globalPathLength,
     progress
   });
+  
+  // Adapter les noms pour compatibilité avec l'ancien code
+  const startAutoScroll = startAutoPlay;
+  const stopAutoScroll = stopAutoPlay;
 
   return {
     startDirectionalScroll,

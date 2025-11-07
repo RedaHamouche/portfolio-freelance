@@ -102,7 +102,7 @@ export const imageConfig = {
 export const DYNAMIC_ZOOM_CONFIG = {
   // Configuration par défaut (utilisée si non spécifiée dans mobile/desktop)
   default: {
-    enabled: true, // Activer le zoom dynamique
+    enabled: false, // Activer le zoom dynamique
     zoomOutFactor: 0.1, // 10% de dézoom pendant le scroll
     animationDuration: 0.3, // Durée de l'animation en secondes
     ease: 'power2.out' as const, // Easing GSAP

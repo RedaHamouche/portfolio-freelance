@@ -63,8 +63,11 @@ export class ScrollEasingService {
   /**
    * Interpole la valeur actuelle vers la cible avec easing
    * Retourne la nouvelle valeur interpolée et un booléen indiquant si l'animation doit continuer
+   * @param current Valeur actuelle
+   * @param target Valeur cible
+   * @param dynamicInertiaFactor Facteur d'inertie dynamique optionnel (basé sur la vélocité)
    */
-  interpolate(current: number, target: number): {
+  interpolate(current: number, target: number, dynamicInertiaFactor?: number): {
     newValue: number;
     shouldContinue: boolean;
   } {
@@ -79,11 +82,13 @@ export class ScrollEasingService {
     }
 
     // Calculer le facteur d'interpolation
-    // 1. Utiliser le facteur d'inertie pour la vitesse de base
-    const rawInterpolationFactor = this.inertiaFactor;
+    // 1. Utiliser le facteur d'inertie dynamique si fourni, sinon utiliser le facteur statique
+    const baseInertiaFactor = dynamicInertiaFactor !== undefined ? dynamicInertiaFactor : this.inertiaFactor;
+    const rawInterpolationFactor = baseInertiaFactor;
     
     // 2. Appliquer la courbe d'easing pour modifier la vitesse selon la courbe
     // L'easing transforme le facteur d'interpolation pour créer une courbe d'animation
+    // Utiliser "power2.out" pour une décélération naturelle (similaire à GSAP)
     const easedInterpolationFactor = this.easingFunction(rawInterpolationFactor);
     
     // 3. Interpoler avec le facteur final (inertie + easing)

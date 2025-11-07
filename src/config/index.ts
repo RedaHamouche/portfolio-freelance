@@ -104,6 +104,32 @@ export const SCROLL_EASING_TYPE: 'linear'
 // Seuil minimum pour arrêter l'animation (delta minimum)
 export const SCROLL_EASING_MIN_DELTA = 0.0001;
 
+// ============================================
+// VELOCITY-BASED INERTIA : Inertie basée sur la vélocité (friction naturelle)
+// ============================================
+// Simule une "masse" naturelle : plus tu scrolles fort, plus le PointTrail a de traînée
+// Configuration pour mobile et desktop
+export const SCROLL_VELOCITY_CONFIG = {
+  // Activer l'inertie basée sur la vélocité
+  enabled: true,
+  
+  // Configuration mobile
+  mobile: {
+    friction: 0.92, // Coefficient de friction (0.92 = décroissance de 8% par frame)
+    maxVelocity: 0.1, // Vélocité maximale (pour éviter les valeurs extrêmes)
+    velocityToInertiaMultiplier: 0.5, // Multiplicateur pour convertir la vélocité en inertiaFactor
+    baseInertiaFactor: 0.06, // Facteur d'inertie de base (quand vélocité = 0)
+  },
+  
+  // Configuration desktop
+  desktop: {
+    friction: 0.94, // Friction légèrement plus faible sur desktop (plus d'inertie)
+    maxVelocity: 0.12,
+    velocityToInertiaMultiplier: 0.6,
+    baseInertiaFactor: 0.06,
+  },
+} as const;
+
 // Auto Scroll Configuration
 // ============================================
 // Configuration de la vitesse d'autoscroll pour mobile et desktop

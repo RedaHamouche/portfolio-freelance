@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useCallback, useRef, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { setProgress, setLastScrollDirection, setAutoPlaying, setAutoScrollDirection } from '@/store/scrollSlice';
@@ -6,7 +6,8 @@ import { ManualScrollSyncUseCase } from './application/ManualScrollSyncUseCase';
 import { ScrollEasingService, EasingFunctions } from './domain/ScrollEasingService';
 import { ScrollProgressCalculator } from './domain/ScrollProgressCalculator';
 import { ScrollStateDetector } from './domain/ScrollStateDetector';
-import { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA } from '@/config';
+import { ScrollVelocityService } from './domain/ScrollVelocityService';
+import { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA, SCROLL_VELOCITY_CONFIG, BREAKPOINTS } from '@/config';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress
@@ -22,6 +23,31 @@ export function useManualScrollSync(
   const currentProgress = useSelector((state: RootState) => state.scroll.progress);
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
 
+  // Détecter si on est sur mobile ou desktop
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth >= BREAKPOINTS.desktop;
+  });
+
+  // Mettre à jour isDesktop lors du resize
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= BREAKPOINTS.desktop);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Configuration de vélocité selon mobile/desktop
+  const velocityConfig = useMemo(() => {
+    const config = isDesktop ? SCROLL_VELOCITY_CONFIG.desktop : SCROLL_VELOCITY_CONFIG.mobile;
+    return {
+      enabled: SCROLL_VELOCITY_CONFIG.enabled,
+      ...config,
+    };
+  }, [isDesktop]);
+
   // Services de domaine (mémoïsés)
   const easingFunction = useMemo(() => {
     return EasingFunctions[SCROLL_EASING_TYPE] || EasingFunctions.linear;
@@ -35,6 +61,10 @@ export function useManualScrollSync(
   
   const progressCalculator = useMemo(() => new ScrollProgressCalculator(), []);
   const stateDetector = useMemo(() => new ScrollStateDetector(150), []);
+  const velocityService = useMemo(() => new ScrollVelocityService(
+    velocityConfig.friction,
+    velocityConfig.maxVelocity
+  ), [velocityConfig.friction, velocityConfig.maxVelocity]);
 
   // Use case (créé une seule fois, jamais null après création)
   const useCaseRef = useRef<ManualScrollSyncUseCase | null>(null);
@@ -42,7 +72,9 @@ export function useManualScrollSync(
     useCaseRef.current = new ManualScrollSyncUseCase(
       easingService,
       progressCalculator,
-      stateDetector
+      stateDetector,
+      velocityService,
+      velocityConfig
     );
   }
   
@@ -52,11 +84,13 @@ export function useManualScrollSync(
       useCaseRef.current = new ManualScrollSyncUseCase(
         easingService,
         progressCalculator,
-        stateDetector
+        stateDetector,
+        velocityService,
+        velocityConfig
       );
     }
     return useCaseRef.current;
-  }, [easingService, progressCalculator, stateDetector]);
+  }, [easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
 
   // Refs
   const isInitializedRef = useRef(false);
@@ -99,7 +133,9 @@ export function useManualScrollSync(
         useCaseRef.current = new ManualScrollSyncUseCase(
           easingService,
           progressCalculator,
-          stateDetector
+          stateDetector,
+          velocityService,
+          velocityConfig
         );
         useCaseRef.current.initialize(globalPathLength);
         lastInitializedPathLengthRef.current = globalPathLength;
@@ -120,13 +156,15 @@ export function useManualScrollSync(
         useCaseRef.current = new ManualScrollSyncUseCase(
           easingService,
           progressCalculator,
-          stateDetector
+          stateDetector,
+          velocityService,
+          velocityConfig
         );
         useCaseRef.current.initialize(globalPathLength);
         lastInitializedPathLengthRef.current = globalPathLength;
       }
     }
-  }, [isAutoPlaying, globalPathLength, dispatch, progressCalculator, getUseCase, easingService, stateDetector]);
+  }, [isAutoPlaying, globalPathLength, dispatch, progressCalculator, getUseCase, easingService, stateDetector, velocityService, velocityConfig]);
 
   // Boucle d'easing
   const easingLoop = useCallback(() => {
@@ -194,6 +232,10 @@ export function useManualScrollSync(
 
     scrollYRef.current = window.scrollY;
     const useCase = getUseCase();
+    
+    // Mettre à jour la vélocité depuis la position de scroll
+    useCase.updateVelocity(scrollYRef.current);
+    
     const result = useCase.updateScrollPosition(scrollYRef.current, globalPathLength);
 
     if (result.shouldCorrect && result.correctionY !== undefined) {
@@ -241,11 +283,19 @@ export function useManualScrollSync(
         useCaseRef.current = new ManualScrollSyncUseCase(
           easingService,
           progressCalculator,
-          stateDetector
+          stateDetector,
+          velocityService,
+          velocityConfig
         );
         useCaseRef.current.initialize(globalPathLength);
         lastInitializedPathLengthRef.current = globalPathLength;
       }
+    }
+
+    // Capturer la vélocité depuis l'événement wheel
+    if (event && event.type === 'wheel') {
+      const wheelEvent = event as WheelEvent;
+      getUseCase().updateVelocityFromWheel(wheelEvent.deltaY);
     }
 
     // Ignorer les touches sur éléments interactifs (boutons, etc.)
@@ -269,6 +319,9 @@ export function useManualScrollSync(
 
     // Mettre à jour scrollYRef immédiatement
     scrollYRef.current = window.scrollY;
+    
+    // Mettre à jour la vélocité depuis la position de scroll
+    getUseCase().updateVelocity(scrollYRef.current);
 
     // Mettre en pause l'autoplay si actif
     if (isAutoPlayingRef.current) {
@@ -313,7 +366,7 @@ export function useManualScrollSync(
         });
       });
     }
-  }, [onScrollState, isModalOpen, processScrollUpdate, dispatch, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector]);
+  }, [onScrollState, isModalOpen, processScrollUpdate, dispatch, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
 
   // Handler pour l'événement scroll
   const handleScroll = useCallback(() => {
@@ -337,7 +390,9 @@ export function useManualScrollSync(
         useCaseRef.current = new ManualScrollSyncUseCase(
           easingService,
           progressCalculator,
-          stateDetector
+          stateDetector,
+          velocityService,
+          velocityConfig
         );
         useCaseRef.current.initialize(globalPathLength);
         lastInitializedPathLengthRef.current = globalPathLength;
@@ -345,6 +400,9 @@ export function useManualScrollSync(
     }
 
     scrollYRef.current = window.scrollY;
+    
+    // Mettre à jour la vélocité depuis la position de scroll
+    getUseCase().updateVelocity(scrollYRef.current);
 
     // Programmer la mise à jour via RAF
     if (!pendingUpdateRef.current) {
@@ -381,7 +439,7 @@ export function useManualScrollSync(
     };
 
     scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
-  }, [isModalOpen, processScrollUpdate, onScrollState, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector]);
+  }, [isModalOpen, processScrollUpdate, onScrollState, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
 
   // Event listeners
   useEffect(() => {
@@ -440,7 +498,9 @@ export function useManualScrollSync(
       useCaseRef.current = new ManualScrollSyncUseCase(
         easingService,
         progressCalculator,
-        stateDetector
+        stateDetector,
+        velocityService,
+        velocityConfig
       );
       if (hasHash) {
         useCaseRef.current.initialize(globalPathLength, currentProgress);
@@ -449,5 +509,5 @@ export function useManualScrollSync(
       }
       lastInitializedPathLengthRef.current = globalPathLength;
     }
-  }, [isScrollSynced, globalPathLength, currentProgress, processScrollUpdate, getUseCase, easingService, progressCalculator, stateDetector]);
+  }, [isScrollSynced, globalPathLength, currentProgress, processScrollUpdate, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
 }

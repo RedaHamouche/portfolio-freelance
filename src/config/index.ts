@@ -104,8 +104,27 @@ export const SCROLL_EASING_TYPE: 'linear'
 // Seuil minimum pour arrêter l'animation (delta minimum)
 export const SCROLL_EASING_MIN_DELTA = 0.0001;
 
-// Auto Scroll
-export const AUTO_SCROLL_SPEED = 0.06; // valeur par défaut, modifiable (augmenté pour un scroll plus rapide)
+// Auto Scroll Configuration
+// ============================================
+// Configuration de la vitesse d'autoscroll pour mobile et desktop
+// ============================================
+export const AUTO_SCROLL_CONFIG = {
+  // Vitesse par défaut (utilisée si non spécifiée dans mobile/desktop)
+  default: {
+    speed: 0.8, // Vitesse par défaut
+  },
+  // Configuration mobile
+  mobile: {
+    speed: 0.6, // Vitesse sur mobile (modifiable)
+  },
+  // Configuration desktop
+  desktop: {
+    speed: 0.8, // Vitesse sur desktop (modifiable)
+  },
+} as const;
+
+// Rétrocompatibilité : export de la vitesse par défaut
+export const AUTO_SCROLL_SPEED = AUTO_SCROLL_CONFIG.default.speed;
 
 // Anchor Configuration
 export const ANCHOR_RANGE = 0.01; // 1% autour du progress

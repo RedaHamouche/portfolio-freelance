@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setAutoScrollDirection, setAutoPlaying, setLastScrollDirection } from '@/store/scrollSlice';
@@ -19,6 +19,10 @@ const AutoPlayButton: React.FC = () => {
 
   // Utiliser un état local pour tracker le chargement
   const [isSystemReady, setIsSystemReady] = useState(false);
+  
+  // Refs pour éviter le double déclenchement (touch + click sur mobile)
+  const lastTouchTimeRef = useRef<number>(0);
+  const lastDirectionTouchTimeRef = useRef<number>(0);
 
   // Vérifier si le système est prêt en attendant que le path soit chargé
   useEffect(() => {
@@ -36,12 +40,44 @@ const AutoPlayButton: React.FC = () => {
     checkSystemReady();
   }, []);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault(); // Empêcher le comportement par défaut
+      e.stopPropagation(); // Empêcher la propagation
+      
+      // Sur mobile, éviter le double déclenchement (touch + click)
+      // Si c'est un événement touch, on ignore les clicks pendant 300ms
+      if (e.type === 'touchstart' || (e as React.TouchEvent).touches) {
+        lastTouchTimeRef.current = Date.now();
+      } else if (e.type === 'click') {
+        // Si un touch a eu lieu récemment (< 300ms), ignorer le click
+        const timeSinceTouch = Date.now() - lastTouchTimeRef.current;
+        if (timeSinceTouch < 300) {
+          return;
+        }
+      }
+    }
     if (!isSystemReady) return; // Empêcher le clic si le système n'est pas prêt
     dispatch(setAutoPlaying(!isAutoPlaying));
   };
 
-  const handleDirectionChange = () => {
+  const handleDirectionChange = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault(); // Empêcher le comportement par défaut
+      e.stopPropagation(); // Empêcher la propagation
+      
+      // Sur mobile, éviter le double déclenchement (touch + click)
+      // Si c'est un événement touch, on ignore les clicks pendant 300ms
+      if (e.type === 'touchend' || (e as React.TouchEvent).touches) {
+        lastDirectionTouchTimeRef.current = Date.now();
+      } else if (e.type === 'click') {
+        // Si un touch a eu lieu récemment (< 300ms), ignorer le click
+        const timeSinceTouch = Date.now() - lastDirectionTouchTimeRef.current;
+        if (timeSinceTouch < 300) {
+          return;
+        }
+      }
+    }
     if (!isSystemReady) return; // Empêcher le clic si le système n'est pas prêt
     const newDirection = autoScrollDirection === 1 ? -1 : 1;
     dispatch(setAutoScrollDirection(newDirection));
@@ -65,6 +101,7 @@ const AutoPlayButton: React.FC = () => {
       <button
         type="button"
         onClick={handlePlayPause}
+        onTouchEnd={handlePlayPause}
         disabled={!isSystemReady}
         className={styles.playPauseButton}
         style={{
@@ -79,6 +116,7 @@ const AutoPlayButton: React.FC = () => {
       <button
         type="button"
         onClick={handleDirectionChange}
+        onTouchEnd={handleDirectionChange}
         disabled={!isSystemReady}
         className={styles.directionButton}
         style={{

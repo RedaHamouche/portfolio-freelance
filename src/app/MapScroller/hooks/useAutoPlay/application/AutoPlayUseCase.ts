@@ -42,11 +42,12 @@ export class AutoPlayUseCase {
       return null;
     }
 
-    // Calculer le nouveau progress
+    // Calculer le nouveau progress avec la vitesse appropriée selon le device
     const newProgress = this.progressService.calculateNextProgress(
       params.currentProgress,
       params.direction,
-      params.dt
+      params.dt,
+      params.isDesktop
     );
 
     // Détecter un anchor entre l'ancien et le nouveau progress

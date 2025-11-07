@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
-import { AUTO_SCROLL_SPEED, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
+import { AUTO_SCROLL_CONFIG, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
 import { getViewportHeight } from '@/utils/viewportCalculations';
 import { createPathDomain } from '@/templating/domains/path';
@@ -50,7 +50,9 @@ export function useAutoScrollController({
     
     const dt = SCROLL_CONFIG.FRAME_DELAY / 1000; // approx 60fps
     const currentProgress = progressRef.current;
-    const newProgress = (currentProgress + autoScrollDirection * AUTO_SCROLL_SPEED * dt + 1) % 1;
+    // Utiliser la vitesse appropriée selon le device
+    const speed = isDesktop ? AUTO_SCROLL_CONFIG.desktop.speed : AUTO_SCROLL_CONFIG.mobile.speed;
+    const newProgress = (currentProgress + autoScrollDirection * speed * dt + 1) % 1;
     
     // Tracker la direction du scroll
     const direction = autoScrollDirection > 0 ? 'forward' : 'backward';

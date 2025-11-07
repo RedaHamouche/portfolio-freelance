@@ -17,6 +17,12 @@
   font-weight: bold;
   font-size: 14px;
   transition: opacity 0.2s;
+  
+  // Optimisations pour mobile (iPhone)
+  touch-action: manipulation; // Évite le double-tap zoom et améliore la réactivité
+  -webkit-tap-highlight-color: transparent; // Supprime le highlight bleu sur iOS
+  cursor: pointer;
+  user-select: none; // Empêche la sélection de texte lors du tap
 }
 
 .playPauseButton {

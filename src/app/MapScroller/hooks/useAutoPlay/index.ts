@@ -250,6 +250,10 @@ export function useAutoPlay({
   // Stocker la référence de animate et mettre à jour useRafLoop si la boucle est active
   useEffect(() => {
     animateRef.current = animate;
+    // CRITIQUE: Mettre à jour isAutoPlayingRef AVANT de décider d'arrêter/démarrer
+    // Cela garantit que animate() utilise la bonne valeur même si elle change pendant l'exécution
+    isAutoPlayingRef.current = isAutoPlaying;
+    
     // Si l'autoplay est actif et la modal n'est pas ouverte, mettre à jour le callback dans useRafLoop
     // useRafLoop.start() met toujours à jour cbRef.current, même si la boucle est déjà en cours
     // Cela permet de changer la direction sans mettre en pause l'autoplay

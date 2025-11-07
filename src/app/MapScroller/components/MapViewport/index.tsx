@@ -83,9 +83,17 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   );
 
   // State pour les dimensions de la fenêtre (pour forcer le recalcul des bounds au resize)
+  // Utiliser un ref pour garder les dimensions stables qui ignorent la barre Safari
+  // Stratégie : garder la hauteur MAXIMALE observée (sans barre Safari) comme référence
+  const maxHeightRef = useRef<number>(0);
+  const stableDimensionsRef = useRef<{ width: number; height: number } | null>(null);
   const [windowSize, setWindowSize] = useState(() => {
     if (typeof window === 'undefined') return { width: 0, height: 0 };
-    return useCaseRef.current!.getViewportDimensions();
+    const dims = useCaseRef.current!.getViewportDimensions();
+    // Initialiser avec la hauteur maximale (sans barre Safari)
+    maxHeightRef.current = dims.height;
+    stableDimensionsRef.current = dims;
+    return dims;
   });
 
   // Mémoïser les bounds du viewport - recalculées lors du resize ou changement de config
@@ -156,9 +164,44 @@ export const MapViewport: React.FC<MapViewportProps> = ({
     let resizeTimeout: NodeJS.Timeout | null = null;
 
     const updateDimensions = () => {
-      // Mettre à jour la taille du viewport (utilise visualViewport si disponible)
-      // Cela évite les layout shifts quand la barre Safari apparaît/disparaît
-      setWindowSize(useCaseRef.current!.getViewportDimensions());
+      const newDims = useCaseRef.current!.getViewportDimensions();
+      const stableDims = stableDimensionsRef.current;
+      
+      // PROBLÈME 1 : Ignorer les changements dus à la barre Safari iOS
+      // Stratégie : utiliser la hauteur MAXIMALE observée comme référence
+      // Quand la barre Safari apparaît, la hauteur diminue → on ignore
+      // Quand la barre Safari disparaît, la hauteur augmente → on met à jour la hauteur max
+      
+      // Si la nouvelle hauteur est plus grande, c'est que la barre Safari a disparu
+      // → mettre à jour la hauteur maximale
+      if (newDims.height > maxHeightRef.current) {
+        maxHeightRef.current = newDims.height;
+      }
+      
+      // Déterminer les dimensions finales à utiliser
+      let finalDims: { width: number; height: number };
+      
+      // Si la nouvelle hauteur est plus petite ET que la largeur n'a pas changé,
+      // c'est probablement la barre Safari qui apparaît → utiliser la hauteur max
+      if (stableDims && newDims.height < maxHeightRef.current && newDims.width === stableDims.width) {
+        // Ignorer ce changement - utiliser la hauteur maximale (sans barre Safari)
+        finalDims = {
+          width: newDims.width,
+          height: maxHeightRef.current
+        };
+      } else {
+        // Vrai resize - utiliser les nouvelles dimensions
+        finalDims = newDims;
+      }
+      
+      // OPTIMISATION : Ne mettre à jour le state que si les dimensions ont vraiment changé
+      // Cela évite les re-renders inutiles
+      if (!stableDims || 
+          stableDims.width !== finalDims.width || 
+          stableDims.height !== finalDims.height) {
+        stableDimensionsRef.current = finalDims;
+        setWindowSize(finalDims);
+      }
 
       // Annuler les mises à jour en attente
       if (rafId !== null) {

@@ -68,8 +68,8 @@ export const SCROLL_CONFIG = {
   
   // Marges pour le scroll infini
   SCROLL_MARGINS: {
-    TOP: 2,
-    BOTTOM: 1
+    TOP: 20,
+    BOTTOM: 20
   }
 } as const;
 

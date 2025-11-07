@@ -17,6 +17,7 @@ import { AutoPlayUseCase } from './application/AutoPlayUseCase';
 import { AutoPlayProgressService } from './domain/AutoPlayProgressService';
 import { AutoPlayPauseService } from './domain/AutoPlayPauseService';
 import { AutoPlayAnchorDetector } from './domain/AutoPlayAnchorDetector';
+import { AutoPlayEasingService } from './domain/AutoPlayEasingService';
 
 /**
  * Hook pour gérer l'autoplay avec architecture DDD
@@ -44,7 +45,8 @@ export function useAutoPlay({
     const progressService = new AutoPlayProgressService();
     const pauseService = new AutoPlayPauseService();
     const anchorDetector = new AutoPlayAnchorDetector(pathDomain);
-    useCaseRef.current = new AutoPlayUseCase(progressService, pauseService, anchorDetector);
+    const easingService = new AutoPlayEasingService(pathDomain);
+    useCaseRef.current = new AutoPlayUseCase(progressService, pauseService, anchorDetector, easingService);
   }
 
   // Refs pour la gestion de l'état

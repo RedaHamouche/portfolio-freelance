@@ -1,7 +1,8 @@
 import { AutoPlayProgressService } from '../domain/AutoPlayProgressService';
 import { AutoPlayPauseService } from '../domain/AutoPlayPauseService';
 import { AutoPlayAnchorDetector } from '../domain/AutoPlayAnchorDetector';
-import { SCROLL_CONFIG } from '@/config';
+import { AutoPlayEasingService } from '../domain/AutoPlayEasingService';
+import { SCROLL_CONFIG, AUTO_SCROLL_CONFIG } from '@/config';
 
 export interface AutoPlayAnimateParams {
   isAutoPlaying: boolean;
@@ -28,7 +29,8 @@ export class AutoPlayUseCase {
   constructor(
     private readonly progressService: AutoPlayProgressService,
     private readonly pauseService: AutoPlayPauseService,
-    private readonly anchorDetector: AutoPlayAnchorDetector
+    private readonly anchorDetector: AutoPlayAnchorDetector,
+    private readonly easingService: AutoPlayEasingService
   ) {}
 
   /**
@@ -42,12 +44,29 @@ export class AutoPlayUseCase {
       return null;
     }
 
-    // Calculer le nouveau progress avec la vitesse appropriée selon le device
+    // Calculer le multiplicateur de vitesse avec easing (ralentissement à l'approche, accélération après)
+    let speedMultiplier = 1;
+    if (AUTO_SCROLL_CONFIG.easing.enabled) {
+      speedMultiplier = this.easingService.calculateSpeedMultiplier(
+        params.currentProgress,
+        params.direction,
+        params.isDesktop,
+        {
+          approachDistance: AUTO_SCROLL_CONFIG.easing.approachDistance,
+          minSpeed: AUTO_SCROLL_CONFIG.easing.minSpeed,
+          accelerationDistance: AUTO_SCROLL_CONFIG.easing.accelerationDistance,
+          maxSpeed: AUTO_SCROLL_CONFIG.easing.maxSpeed,
+        }
+      );
+    }
+
+    // Calculer le nouveau progress avec la vitesse appropriée selon le device et l'easing
     const newProgress = this.progressService.calculateNextProgress(
       params.currentProgress,
       params.direction,
       params.dt,
-      params.isDesktop
+      params.isDesktop,
+      speedMultiplier
     );
 
     // Détecter un anchor entre l'ancien et le nouveau progress

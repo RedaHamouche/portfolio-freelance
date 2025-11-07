@@ -121,6 +121,14 @@ export const AUTO_SCROLL_CONFIG = {
   desktop: {
     speed: 0.8, // Vitesse sur desktop (modifiable)
   },
+  // Configuration de l'easing (ralentissement à l'approche, accélération après)
+  easing: {
+    enabled: true, // Activer/désactiver l'easing
+    approachDistance: 0.05, // Distance à partir de laquelle on commence à ralentir (5% du path)
+    minSpeed: 0.3, // Vitesse minimale à l'approche (30% de la vitesse normale)
+    accelerationDistance: 0.03, // Distance après le composant pour accélérer (3% du path)
+    maxSpeed: 1.5, // Vitesse maximale après le composant (150% de la vitesse normale)
+  },
 } as const;
 
 // Rétrocompatibilité : export de la vitesse par défaut

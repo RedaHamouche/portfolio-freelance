@@ -82,7 +82,7 @@ const MapScroller: React.FC = () => {
   }
 
   return (
-    <div className={styles.main}>
+    <main className={styles.main}>
       <Cursor />
       {/* Conteneur de scroll factice (crée la hauteur de scroll) */}
       <div style={{ width: '100vw', height: fakeScrollHeight, position: 'relative', zIndex: 0 }} />
@@ -120,7 +120,7 @@ const MapScroller: React.FC = () => {
           globalPathLength={globalPathLength}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

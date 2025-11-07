@@ -103,6 +103,9 @@ export function useManualScrollSync(
   const isEasingActiveRef = useRef(false);
   const isAutoPlayingRef = useRef(isAutoPlaying);
   const prevIsAutoPlayingRef = useRef(isAutoPlaying);
+  
+  // Seuil de changement minimum pour desktop (évite les micro-dispatches sans délai)
+  const lastDispatchedProgressRef = useRef<number | null>(null);
 
   // Synchroniser isAutoPlayingRef et détecter les changements de pathLength
   useEffect(() => {
@@ -198,12 +201,13 @@ export function useManualScrollSync(
     }
   }, [dispatch, isModalOpen, getUseCase]);
 
-  const startEasingLoop = useCallback(() => {
-    if (!isEasingActiveRef.current) {
-      isEasingActiveRef.current = true;
-      easingRafIdRef.current = requestAnimationFrame(easingLoop);
-    }
-  }, [easingLoop]);
+  // TEMPORAIRE : Désactivé pour diagnostic
+  // const startEasingLoop = useCallback(() => {
+  //   if (!isEasingActiveRef.current) {
+  //     isEasingActiveRef.current = true;
+  //     easingRafIdRef.current = requestAnimationFrame(easingLoop);
+  //   }
+  // }, [easingLoop]);
 
   // Traiter la mise à jour du scroll
   const processScrollUpdate = useCallback(() => {
@@ -242,8 +246,36 @@ export function useManualScrollSync(
       window.scrollTo(0, result.correctionY);
     }
 
-    const newProgress = useCase.getCurrentProgress();
-    dispatch(setProgress(newProgress));
+    // Utiliser targetProgress directement (sans easing/inertia) - scroll natif uniquement
+    // Le navigateur gère le momentum scrolling naturellement
+    const newProgress = useCase.getTargetProgress();
+    useCase.syncCurrentToTarget();
+    
+    // Sur desktop : utiliser un seuil de changement minimum au lieu du throttling temporel
+    // Cela évite les micro-dispatches qui causent des saccades, sans introduire de délai
+    const PROGRESS_CHANGE_THRESHOLD = 0.0005; // Seuil minimum pour dispatcher (évite les micro-changements)
+    
+    if (isDesktop) {
+      if (lastDispatchedProgressRef.current === null) {
+        // Premier dispatch, toujours le faire
+        lastDispatchedProgressRef.current = newProgress;
+        dispatch(setProgress(newProgress));
+      } else {
+        // Vérifier si le changement est significatif
+        const progressDelta = Math.abs(newProgress - lastDispatchedProgressRef.current);
+        
+        // Gérer le wraparound (0 ↔ 1)
+        const wrappedDelta = Math.min(progressDelta, 1 - progressDelta);
+        
+        if (wrappedDelta >= PROGRESS_CHANGE_THRESHOLD) {
+          lastDispatchedProgressRef.current = newProgress;
+          dispatch(setProgress(newProgress));
+        }
+      }
+    } else {
+      // Sur mobile, dispatch direct (touch events moins fréquents)
+      dispatch(setProgress(newProgress));
+    }
 
     // Tracker la direction seulement si l'autoplay n'est pas actif
     if (!isAutoPlayingRef.current) {
@@ -255,10 +287,11 @@ export function useManualScrollSync(
       }
     }
 
-    startEasingLoop();
+    // TEMPORAIRE : Désactiver complètement easingLoop pour diagnostic
+    // startEasingLoop();
     rafIdRef.current = null;
     pendingUpdateRef.current = false;
-  }, [globalPathLength, isModalOpen, startEasingLoop, dispatch, getUseCase]);
+  }, [globalPathLength, isModalOpen, dispatch, getUseCase, isDesktop]);
 
   // Handler pour les interactions utilisateur (wheel, touch)
   const handleUserInteraction = useCallback((event?: Event) => {
@@ -467,6 +500,7 @@ export function useManualScrollSync(
       if (scrollEndRafIdRef.current !== null) {
         cancelAnimationFrame(scrollEndRafIdRef.current);
       }
+      lastDispatchedProgressRef.current = null;
     };
   }, [handleUserInteraction, handleScroll]);
 

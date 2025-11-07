@@ -67,39 +67,28 @@ export class ScrollEasingService {
    * @param target Valeur cible
    * @param dynamicInertiaFactor Facteur d'inertie dynamique optionnel (basé sur la vélocité)
    */
-  interpolate(current: number, target: number, dynamicInertiaFactor?: number): {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interpolate(current: number, target: number, _dynamicInertiaFactor?: number): {
     newValue: number;
     shouldContinue: boolean;
   } {
+    // TEMPORAIRE : Désactiver complètement l'easing et la vélocité pour diagnostic
+    // Aller directement à la cible sans interpolation
     const delta = this.calculateCircularDelta(current, target);
+    const absoluteDelta = Math.abs(delta);
 
     // Si la différence est très petite, arrêter l'animation
-    if (Math.abs(delta) < this.minDelta) {
+    if (absoluteDelta < this.minDelta) {
       return {
         newValue: target,
         shouldContinue: false,
       };
     }
 
-    // Calculer le facteur d'interpolation
-    // 1. Utiliser le facteur d'inertie dynamique si fourni, sinon utiliser le facteur statique
-    const baseInertiaFactor = dynamicInertiaFactor !== undefined ? dynamicInertiaFactor : this.inertiaFactor;
-    const rawInterpolationFactor = baseInertiaFactor;
-    
-    // 2. Appliquer la courbe d'easing pour modifier la vitesse selon la courbe
-    // L'easing transforme le facteur d'interpolation pour créer une courbe d'animation
-    // Utiliser "power2.out" pour une décélération naturelle (similaire à GSAP)
-    const easedInterpolationFactor = this.easingFunction(rawInterpolationFactor);
-    
-    // 3. Interpoler avec le facteur final (inertie + easing)
-    let newValue = current + delta * easedInterpolationFactor;
-    
-    // Normaliser entre 0 et 1 (gérer le wraparound avec modulo)
-    newValue = ((newValue % 1) + 1) % 1;
-
+    // Pas d'interpolation, aller directement à la cible
     return {
-      newValue,
-      shouldContinue: true,
+      newValue: target,
+      shouldContinue: false,
     };
   }
 

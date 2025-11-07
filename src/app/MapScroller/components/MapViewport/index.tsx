@@ -152,6 +152,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, viewportConfig, viewportBounds, windowSize]);
 
   // Gérer le positionnement de la vue
+  // Pas de seuil - laisser le navigateur gérer le scroll naturellement
   useLayoutEffect(() => {
     updateViewport();
   }, [updateViewport, progress]);

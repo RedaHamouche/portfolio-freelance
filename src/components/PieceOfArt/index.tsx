@@ -88,6 +88,7 @@ export default function PieceOfArt({
   }, [progress]);
 
   // Appliquer tous les effets d'animation avec GSAP
+  // Pas de seuil - laisser le navigateur gérer le scroll naturellement
   useEffect(() => {
     if (!animatedRef.current || !isInitializedRef.current) return;
     

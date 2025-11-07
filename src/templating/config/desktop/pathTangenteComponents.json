@@ -1,25 +1,4 @@
 [
-  {
-    "id": "title-about-me-on-path",
-    "type": "TitleAboutMe",
-    "displayName": "Titre About Me sur le path",
-    "title": "Web Creator",
-    "description": "I craft elegant, high-performance web experiences that blend design, storytelling, and technology. Passionate about meaningful digital work — from sleek portfolios to immersive brand worlds.",
-    "position": {
-      "startProgress": 0.015
-    },
-    "offset": -120
-  },
-  {
-    "id": "text-example-1",
-    "type": "TextOnPath",
-    "displayName": "Mon texte qui suit la courbe",
-    "text": "Hello world",
-    "position": {
-      "startProgress": 0.2,
-      "length": 0.1
-    },
-    "offset": 40
-  }
+
 ]
 

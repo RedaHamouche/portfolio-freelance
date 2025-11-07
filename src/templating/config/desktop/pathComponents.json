@@ -1,15 +1,5 @@
 [
   {
-    "id": "projects-banner",
-    "type": "ProjectsBanner",
-    "displayName": "Projets ejbjbfjblejfb",
-    "anchorId": "projectsBanner",
-    "position": {
-      "progress": 0.1
-    },
-    "autoScrollPauseTime": 2000
-  },
-  {
     "id": "piece-of-art",
     "type": "PieceOfArt",
     "displayName": "Piece of Art",

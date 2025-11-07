@@ -135,6 +135,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
   }, [config]);
 
   // Update des animations complexes (à chaque changement de progress)
+  // Pas de seuil - laisser le navigateur gérer le scroll naturellement
   useEffect(() => {
     if (!elementRef.current) return;
 

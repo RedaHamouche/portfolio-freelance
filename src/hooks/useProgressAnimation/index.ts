@@ -87,7 +87,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
     });
   }, []);
 
-  // Calculer les valeurs d'animation basées sur le progress
+  // Calculer les valeurs d'animation
   const animationValues = useMemo(() => {
     if (!elementRef.current) return animationStateRef.current;
 
@@ -114,7 +114,9 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
       }
     });
 
+    // Mettre à jour le state
     animationStateRef.current = newState;
+    
     return newState;
   }, [config, animationContext]);
 

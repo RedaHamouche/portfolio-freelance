@@ -37,7 +37,14 @@ export default function PieceOfArt({
   const defaultMobileSrc = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=300&fit=crop&q=80';
   const defaultSrc = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=450&fit=crop&q=80';
 
-  const animationRef = useRef<gsap.core.Tween | null>(null);
+  // OPTIMISATION: Utiliser gsap.quickTo pour de meilleures performances
+  const quickSettersRef = useRef<{
+    xPercent?: (value: number) => void;
+    yPercent?: (value: number) => void;
+    scaleX?: (value: number) => void;
+    scaleY?: (value: number) => void;
+    rotation?: (value: number) => void;
+  }>({});
   const isInitializedRef = useRef(false);
 
   useEffect(() => {
@@ -51,6 +58,15 @@ export default function PieceOfArt({
       scaleX: 1,
       scaleY: 1,
     });
+    
+    // OPTIMISATION: Créer les quickSetters une seule fois pour de meilleures performances
+    quickSettersRef.current = {
+      xPercent: gsap.quickTo(animatedRef.current, 'xPercent', { duration: 0.4, ease: 'power2.out' }),
+      yPercent: gsap.quickTo(animatedRef.current, 'yPercent', { duration: 0.4, ease: 'power2.out' }),
+      scaleX: gsap.quickTo(animatedRef.current, 'scaleX', { duration: 0.4, ease: 'power2.out' }),
+      scaleY: gsap.quickTo(animatedRef.current, 'scaleY', { duration: 0.4, ease: 'power2.out' }),
+      rotation: gsap.quickTo(animatedRef.current, 'rotation', { duration: 0.4, ease: 'power2.out' }),
+    };
     
     isInitializedRef.current = true;
   }, []);
@@ -87,34 +103,18 @@ export default function PieceOfArt({
     };
   }, [progress]);
 
-  // Appliquer tous les effets d'animation avec GSAP
+  // OPTIMISATION: Appliquer les effets avec gsap.quickTo (plus performant que gsap.to)
   useEffect(() => {
     if (!animatedRef.current || !isInitializedRef.current) return;
+    if (!quickSettersRef.current.xPercent) return; // Attendre l'initialisation
     
-    // Tuer l'animation précédente si elle existe
-    if (animationRef.current) {
-      animationRef.current.kill();
-    }
-    
-    // Animer tous les effets en même temps
-    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
-    animationRef.current = gsap.to(animatedRef.current, {
-      xPercent: -50 + animationValues.translateX,
-      yPercent: -50 + animationValues.translateY,
-      scaleX: animationValues.scale,
-      scaleY: animationValues.scale,
-      rotation: animationValues.rotation,
-      duration: 0.4,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-    
-    return () => {
-      if (animationRef.current) {
-        animationRef.current.kill();
-        animationRef.current = null;
-      }
-    };
+    // Utiliser quickSetters pour de meilleures performances (pas de création/destruction d'animations)
+    const { xPercent, yPercent, scaleX, scaleY, rotation } = quickSettersRef.current;
+    if (xPercent) xPercent(-50 + animationValues.translateX);
+    if (yPercent) yPercent(-50 + animationValues.translateY);
+    if (scaleX) scaleX(animationValues.scale);
+    if (scaleY) scaleY(animationValues.scale);
+    if (rotation) rotation(animationValues.rotation);
   }, [animationValues]);
 
   return (

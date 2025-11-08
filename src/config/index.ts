@@ -83,8 +83,8 @@ export type AutoScrollDirection = 1 | -1;
 // ============================================
 // Plus petit = plus d'inertie (plus lent), plus grand = moins d'inertie (plus rapide)
 // Valeurs recommandées : 0.01 (très forte) à 0.30 (très faible)
-// Valeur actuelle : 0.06 = inertie forte pour un scroll agréable
-export const SCROLL_INERTIA_FACTOR = 0.06; // ← MODIFIEZ POUR AJUSTER L'INERTIE
+// 1.0 = pas d'inertie (synchronisation directe)
+export const SCROLL_INERTIA_FACTOR = 1.0; // Désactivé : synchronisation directe
 
 // ============================================
 // EASING : Courbe d'animation (comment l'animation décélère)
@@ -110,8 +110,8 @@ export const SCROLL_EASING_MIN_DELTA = 0.0001;
 // Simule une "masse" naturelle : plus tu scrolles fort, plus le PointTrail a de traînée
 // Configuration pour mobile et desktop
 export const SCROLL_VELOCITY_CONFIG = {
-  // Activer l'inertie basée sur la vélocité
-  enabled: true,
+  // Désactiver l'inertie basée sur la vélocité (friction/masse)
+  enabled: false,
   
   // Configuration mobile
   mobile: {

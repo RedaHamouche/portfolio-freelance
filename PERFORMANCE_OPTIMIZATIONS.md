@@ -1,337 +1,204 @@
-# Analyse de Performance - Optimisations Identifiées
+# Analyse des Optimisations de Performance
 
-## 🔍 Problèmes de Performance Identifiés
+## 🔴 CRITIQUES - À Optimiser Urgemment
 
-### 1. **PathDomain - Recherches O(n) répétées**
+### 1. **useDynamicZoom** - Zoom Dynamique
 
-**Fichier**: `src/templating/domains/path/api.ts`
+**Fichier**: `src/app/MapScroller/hooks/useDynamicZoom/index.ts`
 
-**Problème**:
+- **Problème**: Animation GSAP à chaque changement de `isScrolling`
+- **Impact**: Recalculs de `viewportConfig` → recalculs de `viewportBounds` → re-render de `MapViewport`
+- **Fréquence**: À chaque changement d'état de scroll
+- **Recommandation**: Désactiver par défaut si pas essentiel (`DYNAMIC_ZOOM_CONFIG.default.enabled = false`)
 
-- `getComponentById()` : utilise `.find()` à chaque appel → O(n)
-- `getComponentByAnchorId()` : utilise `.find()` à chaque appel → O(n)
-- `getAllComponents()` est appelé à chaque recherche, puis `.find()` itère sur tous les composants
+### 2. **Double RAF dans handleUserInteraction**
 
-**Impact**: Si vous avez 50 composants, chaque recherche parcourt 50 éléments
-
-**Solution**: Créer des Maps indexées par ID et anchorId dans le repository
-
-```typescript
-// Dans PathRepository
-private idIndex: Map<string, PathComponent> = new Map();
-private anchorIdIndex: Map<string, PathComponent> = new Map();
-```
-
-**Gain**: O(1) au lieu de O(n) pour les recherches par ID/anchorId
-
----
-
-### 2. **pathCalculations.ts - Tri répété à chaque recherche**
-
-**Fichier**: `src/utils/pathCalculations.ts`
-
-**Problème**:
-
-- `sortComponents()` est appelé à chaque `findNextComponentInDirection()`
-- Trie les arrays complets à chaque fois → O(n log n) à chaque recherche
-- Les arrays triés ne sont pas mis en cache
-
-**Impact**: Si vous cherchez le prochain composant 60 fois par seconde (scroll), vous triez 60 fois
-
-**Solution**: Mettre en cache les arrays triés dans le PathDomain
+**Fichier**: `src/app/MapScroller/hooks/useManualScrollSync/index.ts:361-366`
 
 ```typescript
-// Dans PathDomain
-private sortedComponentsCache: {
-  asc: PathComponent[];
-  desc: PathComponent[];
-} | null = null;
-```
-
-**Gain**: O(n log n) une seule fois au chargement, puis O(log n) avec recherche binaire
-
----
-
-### 3. **findNextComponentInDirection - Utilise .find() au lieu de recherche binaire**
-
-**Fichier**: `src/utils/pathCalculations.ts`
-
-**Problème**:
-
-- Utilise `.find()` sur un array trié → O(n)
-- Pourrait utiliser une recherche binaire → O(log n)
-
-**Solution**: Implémenter une recherche binaire pour les arrays triés
-
-```typescript
-function binarySearchForward(
-  sorted: PathComponentData[],
-  target: number
-): PathComponentData | null {
-  let left = 0;
-  let right = sorted.length - 1;
-  let result = null;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (sorted[mid].position.progress > target) {
-      result = sorted[mid];
-      right = mid - 1; // Chercher plus tôt
-    } else {
-      left = mid + 1;
-    }
-  }
-  return result;
-}
-```
-
-**Gain**: O(log n) au lieu de O(n)
-
----
-
-### 4. **DynamicPathComponents - getActiveComponents appelé N fois**
-
-**Fichier**: `src/templating/components/DynamicPathComponents.tsx`
-
-**Problème**:
-
-```typescript
-const activeAnchors = React.useMemo(
-  () =>
-    pathComponents.map((component) => {
-      const activeComponents = pathDomain.getActiveComponents(
-        progress,
-        isDesktop
-      ); // ⚠️ Appelé N fois
-      return activeComponents.some((ac) => ac.id === component.id);
-    }),
-  [progress, pathComponents, pathDomain, isDesktop]
-);
-```
-
-- `getActiveComponents()` est appelé pour chaque composant → O(n²)
-- Filtre tous les composants à chaque itération
-
-**Solution**: Calculer une seule fois et utiliser un Set
-
-```typescript
-const activeComponentIds = useMemo(() => {
-  const active = pathDomain.getActiveComponents(progress, isDesktop);
-  return new Set(active.map((c) => c.id));
-}, [progress, pathDomain, isDesktop]);
-
-const activeAnchors = useMemo(
-  () => pathComponents.map((c) => activeComponentIds.has(c.id)),
-  [pathComponents, activeComponentIds]
-);
-```
-
-**Gain**: O(n) au lieu de O(n²)
-
----
-
-### 5. **getActiveComponents - Filtre linéaire répété**
-
-**Fichier**: `src/templating/domains/path/api.ts`
-
-**Problème**:
-
-```typescript
-getActiveComponents(currentProgress: number, isDesktop: boolean = true): PathComponent[] {
-  const components = this.getAllComponents(isDesktop);
-  return components.filter(c =>
-    isComponentActive(c.position.progress, currentProgress)
-  );
-}
-```
-
-- Filtre tous les composants à chaque appel → O(n)
-
-**Solution**: Utiliser un index spatial ou un interval tree pour les recherches par range
-
-- Alternative plus simple : mettre en cache les composants actifs si le progress n'a pas changé significativement
-
-**Gain**: Réduction des appels inutiles
-
----
-
-### 6. **PathRepository - Pas de cache d'indexation**
-
-**Fichier**: `src/templating/domains/path/repository.ts`
-
-**Problème**:
-
-- Charge les composants depuis JSON mais ne crée pas d'index
-- Chaque recherche doit parcourir tous les composants
-
-**Solution**: Créer des index au chargement
-
-```typescript
-class PathRepository {
-  private desktopConfig: PathComponentsConfig | null = null;
-  private mobileConfig: PathComponentsConfig | null = null;
-
-  // Index pour recherches rapides
-  private desktopIdIndex: Map<string, PathComponent> | null = null;
-  private desktopAnchorIdIndex: Map<string, PathComponent> | null = null;
-  private mobileIdIndex: Map<string, PathComponent> | null = null;
-  private mobileAnchorIdIndex: Map<string, PathComponent> | null = null;
-
-  private buildIndexes(config: PathComponentsConfig) {
-    const idIndex = new Map();
-    const anchorIdIndex = new Map();
-
-    config.forEach((component) => {
-      idIndex.set(component.id, component);
-      if (component.anchorId) {
-        anchorIdIndex.set(component.anchorId, component);
-      }
-    });
-
-    return { idIndex, anchorIdIndex };
-  }
-}
-```
-
-**Gain**: O(1) pour les recherches par ID/anchorId
-
----
-
-### 7. **getNextAnchor - Utilise .find() au lieu d'optimisation**
-
-**Fichier**: `src/utils/pathCalculations.ts`
-
-**Problème**:
-
-```typescript
-export const getNextAnchor = (
-  fromProgress: number,
-  toProgress: number,
-  components: PathComponentData[],
-  tolerance: number = 0.002
-): PathComponentData | null => {
-  return (
-    components.find((c) => {
-      // ... logique de vérification
-    }) || null
-  );
-};
-```
-
-- Parcourt tous les composants → O(n)
-- Pourrait utiliser un index spatial ou une recherche binaire
-
-**Solution**: Filtrer d'abord les composants dans la plage, puis chercher
-
-```typescript
-// Filtrer les composants dans la plage (plus efficace)
-const candidates = components.filter((c) => {
-  if (!c.autoScrollPauseTime || c.autoScrollPauseTime <= 0) return false;
-  // Logique de plage optimisée
+rafIdRef.current = requestAnimationFrame(() => {
+  scrollYRef.current = window.scrollY;
+  requestAnimationFrame(() => {
+    scrollYRef.current = window.scrollY;
+    processScrollUpdate();
+  });
 });
-// Puis chercher le plus proche
 ```
 
-**Gain**: Réduction du nombre de composants à vérifier
+- **Problème**: Double RAF inutile, `scrollYRef.current` mis à jour deux fois
+- **Impact**: Délai supplémentaire d'une frame
+- **Recommandation**: Supprimer le double RAF, garder un seul
 
----
+### 3. **checkScrollEnd avec RAF continu**
 
-### 8. **DynamicPathComponents - Calcul de positions répété**
+**Fichier**: `src/app/MapScroller/hooks/useManualScrollSync/index.ts:344-354`
 
-**Fichier**: `src/templating/components/DynamicPathComponents.tsx`
+- **Problème**: RAF qui tourne en continu pour détecter l'arrêt du scroll
+- **Impact**: Calculs inutiles même quand le scroll est arrêté
+- **Recommandation**: Remplacer par un `setTimeout` avec `SCROLL_CONFIG.SCROLL_END_DELAY`
 
-**Problème**:
+### 4. **Calculs de direction à chaque frame**
 
-- Les positions sont recalculées même si seul le progress change
-- `getPointOnPath` est appelé pour chaque composant à chaque render
+**Fichier**: `src/app/MapScroller/hooks/useManualScrollSync/index.ts:184-191, 248-256`
 
-**Solution**: Mettre en cache les positions calculées et ne recalculer que si nécessaire
+- **Problème**: `getScrollDirection()` appelé à chaque frame dans `easingLoop` et `processScrollUpdate`
+- **Impact**: Calculs inutiles si la direction n'a pas changé
+- **Recommandation**: Cacher la direction avec un ref et ne recalculer que si nécessaire
+
+### 5. **updateVelocity même si désactivé**
+
+**Fichier**: `src/app/MapScroller/hooks/useManualScrollSync/index.ts:237, 324, 405`
+
+- **Problème**: `updateVelocity()` appelé même si `SCROLL_VELOCITY_CONFIG.enabled = false`
+- **Impact**: Calculs inutiles
+- **Recommandation**: Ajouter une condition `if (velocityConfig.enabled)` avant chaque appel
+
+## 🟡 MOYENS - À Optimiser
+
+### 6. **DynamicPathComponents - Calcul de toutes les positions**
+
+**Fichier**: `src/templating/components/DynamicPathComponents.tsx:195-200`
+
+- **Problème**: Toutes les positions recalculées à chaque changement de `progress`
+- **Impact**: Si 50 composants, 50 appels à `getPointOnPath` à chaque frame
+- **Recommandation**: Lazy loading ou calculer seulement les composants visibles
+
+### 7. **DynamicPathTangenteComponents - Calcul de toutes les positions**
+
+**Fichier**: `src/templating/components/DynamicPathTangenteComponents.tsx:44-81`
+
+- **Problème**: Toutes les positions et angles recalculés à chaque changement de `progress`
+- **Impact**: Si 10 composants tangente, 10 appels à `getPointOnPath` + 10 appels à `getPathAngleAtProgress`
+- **Recommandation**: Lazy loading ou calculer seulement les composants visibles
+
+### 8. **PieceOfArt - Animation GSAP à chaque progress**
+
+**Fichier**: `src/components/PieceOfArt/index.tsx:91-118`
+
+- **Problème**: Animation GSAP créée/détruite à chaque changement de `progress`
+- **Impact**: Si plusieurs `PieceOfArt`, plusieurs animations GSAP simultanées
+- **Recommandation**: Throttle les animations ou utiliser `gsap.quickTo` au lieu de `gsap.to`
+
+### 9. **useProgressAnimation - Calculs à chaque progress**
+
+**Fichier**: `src/hooks/useProgressAnimation/index.ts:91-119, 138-151`
+
+- **Problème**: Calculs d'animation et updates complexes à chaque changement de `progress`
+- **Impact**: Si plusieurs composants utilisent ce hook, calculs multipliés
+- **Recommandation**: Throttle ou debounce les calculs
+
+### 10. **MapViewport - updateViewport à chaque progress**
+
+**Fichier**: `src/app/MapScroller/components/MapViewport/index.tsx:155-157`
+
+- **Problème**: `useLayoutEffect` déclenche `updateViewport` à chaque changement de `progress`
+- **Impact**: GSAP `set` appelé à chaque frame (60fps)
+- **Recommandation**: Throttle avec un seuil de changement minimal (`PROGRESS_THRESHOLD = 0.0001`)
+
+### 11. **getActiveComponents à chaque progress**
+
+**Fichier**: `src/templating/components/DynamicPathComponents.tsx:118`
+
+- **Problème**: `pathDomain.getActiveComponents()` appelé à chaque changement de `progress`
+- **Impact**: Parcours de tous les composants à chaque frame
+- **Recommandation**: Cacher le résultat et ne recalculer que si le progress a changé significativement
+
+## 🟢 LÉGERS - À Surveiller
+
+### 12. **Hash update avec RAF et throttling**
+
+**Fichier**: `src/templating/components/DynamicPathComponents.tsx:131-192`
+
+- **Problème**: RAF + throttling complexe pour mettre à jour le hash
+- **Impact**: Légère surcharge, mais nécessaire pour éviter trop de `history.replaceState`
+- **Recommandation**: Garder mais simplifier si possible
+
+### 13. **usePathCalculations - Recalculs fréquents**
+
+**Fichier**: `src/app/MapScroller/hooks/usePathCalculations/index.ts`
+
+- **Problème**: `getCurrentPointPosition` et `getCurrentPointAngle` recalculés à chaque render
+- **Impact**: Appels à `getPointOnPath` et `getPathAngleAtProgress` (mais avec cache)
+- **Recommandation**: Garder car le cache est efficace
+
+## 📊 Résumé des Recommandations
+
+### À Optimiser Immédiatement (P0):
+
+1. ✅ **useDynamicZoom** - Désactiver par défaut
+2. ✅ **Double RAF** - Supprimer dans `handleUserInteraction`
+3. ✅ **checkScrollEnd RAF continu** - Remplacer par timeout
+4. ✅ **Cacher getScrollDirection()** - Ne recalculer que si nécessaire
+5. ✅ **Condition updateVelocity** - Ne pas appeler si désactivé
+
+### À Optimiser si Possible (P1):
+
+6. ⚠️ **Lazy loading DynamicPathComponents** - Calculer seulement les visibles
+7. ⚠️ **Lazy loading DynamicPathTangenteComponents** - Calculer seulement les visibles
+8. ⚠️ **Throttle PieceOfArt animations** - Utiliser `gsap.quickTo`
+9. ⚠️ **Throttle updateViewport** - Seuil minimal de changement
+10. ⚠️ **Cache getActiveComponents** - Seuil de changement significatif
+
+### À Surveiller (P2):
+
+11. ⚠️ **Throttle useProgressAnimation** - Si plusieurs composants
+12. ⚠️ **Simplifier hash update** - Si possible
+
+## 🎯 Impact Estimé
+
+### Optimisations P0 (Critiques):
+
+- **Réduction des calculs**: ~30-40%
+- **Réduction des dispatches Redux**: ~20-30%
+- **Amélioration de la fluidité**: Significative
+
+### Optimisations P1 (Importantes):
+
+- **Réduction des calculs**: ~50-70% (si beaucoup de composants)
+- **Amélioration de la fluidité**: Modérée à élevée
+
+### Optimisations P2 (Optionnelles):
+
+- **Réduction des calculs**: ~10-20%
+- **Amélioration de la fluidité**: Légère
+
+## 📝 Notes d'Implémentation
+
+### Cache de Direction
 
 ```typescript
-// Cache des positions par progress
-const positionCache = useRef<Map<number, { x: number; y: number }>>(new Map());
+const lastScrollDirectionRef = useRef<string | null>(null);
+
+// Dans easingLoop et processScrollUpdate:
+const direction = useCase.getScrollDirection();
+if (direction && direction !== lastScrollDirectionRef.current) {
+  lastScrollDirectionRef.current = direction;
+  dispatch(setLastScrollDirection(direction));
+}
 ```
 
-**Gain**: Évite les recalculs inutiles de `getPointAtLength()` (coûteux)
+### Timeout au lieu de RAF continu
 
----
+```typescript
+const scrollEndTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-## 📊 Résumé des Optimisations
+// Remplacer le RAF continu par:
+if (scrollEndTimeoutRef.current !== null) {
+  clearTimeout(scrollEndTimeoutRef.current);
+}
+scrollEndTimeoutRef.current = setTimeout(() => {
+  const isEnded = getUseCase().checkScrollEnd();
+  if (isEnded) {
+    if (onScrollState) onScrollState(false);
+  }
+}, SCROLL_CONFIG.SCROLL_END_DELAY);
+```
 
-| Fichier                               | Problème               | Complexité Actuelle     | Complexité Optimisée | Gain                     |
-| ------------------------------------- | ---------------------- | ----------------------- | -------------------- | ------------------------ |
-| `PathDomain.getComponentById`         | `.find()` linéaire     | O(n)                    | O(1) avec Map        | **100x** (50 composants) |
-| `PathDomain.getComponentByAnchorId`   | `.find()` linéaire     | O(n)                    | O(1) avec Map        | **100x** (50 composants) |
-| `sortComponents`                      | Tri à chaque recherche | O(n log n) × recherches | O(n log n) une fois  | **60x** (60fps)          |
-| `findNextComponentInDirection`        | `.find()` sur trié     | O(n)                    | O(log n) binaire     | **8x** (50 composants)   |
-| `DynamicPathComponents.activeAnchors` | O(n²) avec `.some()`   | O(n²)                   | O(n) avec Set        | **50x** (50 composants)  |
-| `getNextAnchor`                       | `.find()` linéaire     | O(n)                    | O(log n) avec index  | **8x** (50 composants)   |
+### Condition updateVelocity
 
----
-
-## 🚀 Plan d'Implémentation Recommandé
-
-### Phase 1 : Indexation (Impact élevé, effort moyen)
-
-1. Ajouter des Maps dans PathRepository pour ID et anchorId
-2. Mettre à jour PathDomain pour utiliser les index
-3. **Gain estimé**: 50-100x sur les recherches par ID
-
-### Phase 2 : Cache des arrays triés (Impact élevé, effort faible)
-
-1. Mettre en cache les arrays triés dans PathDomain
-2. Invalider le cache uniquement si les composants changent
-3. **Gain estimé**: 60x sur les recherches de direction (60fps)
-
-### Phase 3 : Recherche binaire (Impact moyen, effort moyen)
-
-1. Implémenter recherche binaire pour `findNextComponentInDirection`
-2. **Gain estimé**: 8x sur les recherches directionnelles
-
-### Phase 4 : Optimisation DynamicPathComponents (Impact élevé, effort faible)
-
-1. Utiliser Set pour `activeAnchors`
-2. **Gain estimé**: 50x sur le calcul des composants actifs
-
-### Phase 5 : Cache des positions (Impact moyen, effort moyen)
-
-1. Mettre en cache les positions calculées
-2. **Gain estimé**: Réduction des appels coûteux à `getPointAtLength()`
-
----
-
-## 🎯 Autres Optimisations Possibles
-
-### 1. **Lazy Loading des Composants**
-
-- Ne charger que les composants proches du viewport
-- Utiliser IntersectionObserver de manière plus agressive
-
-### 2. **Virtualisation**
-
-- Ne rendre que les composants visibles
-- Utiliser react-window ou react-virtual
-
-### 3. **Debouncing des Calculs**
-
-- Debouncer les calculs de position pendant le scroll rapide
-- Calculer seulement à la fin du scroll
-
-### 4. **Web Workers**
-
-- Déplacer les calculs lourds (tri, recherche) dans un Web Worker
-- Éviter de bloquer le thread principal
-
-### 5. **Memoization Aggressive**
-
-- Utiliser `useMemo` plus agressivement pour les calculs coûteux
-- Éviter les recalculs inutiles
-
----
-
-## 📝 Notes
-
-- Les optimisations sont classées par impact/effort
-- Commencer par Phase 1 et 2 pour le meilleur ROI
-- Tester les performances avant/après chaque optimisation
-- Utiliser React DevTools Profiler pour mesurer l'impact réel
+```typescript
+// Avant chaque appel à updateVelocity:
+if (velocityConfig.enabled) {
+  useCase.updateVelocity(scrollYRef.current);
+}
+```

@@ -76,6 +76,12 @@ export interface PathDomainAPI {
 export class PathDomain implements PathDomainAPI {
   private repository: PathRepository;
   
+  // Cache des composants chargés (une fois pour desktop, une fois pour mobile)
+  private componentsCache: {
+    desktop?: PathComponent[];
+    mobile?: PathComponent[];
+  } = {};
+  
   // Cache des arrays triés et des composants avec anchorId pour éviter les recalculs
   private sortedCache: {
     desktop?: {
@@ -89,6 +95,19 @@ export class PathDomain implements PathDomainAPI {
       sortedDesc: PathComponentData[];
     };
   } = {};
+  
+  // OPTIMISATION: Cache pour getActiveComponents avec seuil de changement significatif
+  private activeComponentsCache: {
+    desktop?: {
+      lastProgress: number;
+      result: PathComponent[];
+    };
+    mobile?: {
+      lastProgress: number;
+      result: PathComponent[];
+    };
+  } = {};
+  private readonly ACTIVE_COMPONENTS_PROGRESS_THRESHOLD = 0.001; // Seuil de changement significatif (0.1% du path)
 
   constructor(repository: PathRepository) {
     this.repository = repository;
@@ -148,7 +167,12 @@ export class PathDomain implements PathDomainAPI {
   }
 
   getAllComponents(isDesktop: boolean = true): PathComponent[] {
-    return this.repository.load(isDesktop);
+    // OPTIMISATION: Mettre en cache les composants (le JSON ne change pas après le chargement)
+    const cacheKey = isDesktop ? 'desktop' : 'mobile';
+    if (!this.componentsCache[cacheKey]) {
+      this.componentsCache[cacheKey] = this.repository.load(isDesktop);
+    }
+    return this.componentsCache[cacheKey];
   }
 
   getComponentById(id: string, isDesktop: boolean = true): PathComponent | undefined {
@@ -162,10 +186,33 @@ export class PathDomain implements PathDomainAPI {
   }
 
   getActiveComponents(currentProgress: number, isDesktop: boolean = true): PathComponent[] {
+    // OPTIMISATION: Utiliser le cache si le progress n'a pas changé significativement
+    const cacheKey = isDesktop ? 'desktop' : 'mobile';
+    const cached = this.activeComponentsCache[cacheKey];
+    
+    if (cached) {
+      const progressDelta = Math.abs(currentProgress - cached.lastProgress);
+      const wrappedDelta = Math.min(progressDelta, 1 - progressDelta); // Gérer wraparound
+      
+      // Si le changement est trop petit, utiliser le cache
+      if (wrappedDelta < this.ACTIVE_COMPONENTS_PROGRESS_THRESHOLD) {
+        return cached.result;
+      }
+    }
+    
+    // Recalculer si le changement est significatif
     const components = this.getAllComponents(isDesktop);
-    return components.filter(c => 
+    const result = components.filter(c => 
       isComponentActive(c.position.progress, currentProgress)
     );
+    
+    // Mettre à jour le cache
+    this.activeComponentsCache[cacheKey] = {
+      lastProgress: currentProgress,
+      result,
+    };
+    
+    return result;
   }
 
   calculateComponentPosition(

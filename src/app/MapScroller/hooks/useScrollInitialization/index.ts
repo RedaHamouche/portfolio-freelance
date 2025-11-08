@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
-import { ScrollInitializationService } from './domain/ScrollInitializationService';
+import { ProgressInitializationService } from './domain/ProgressInitializationService';
 import {
   calculateFakeScrollHeight,
   calculateMaxScroll,
@@ -29,7 +29,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
   
   // Créer les instances (mémoïsées)
   const pathDomain = useMemo(() => createPathDomain(), []);
-  const service = useMemo(() => new ScrollInitializationService(), []);
+  const service = useMemo(() => new ProgressInitializationService(), []);
 
   // ÉTAPE 1: Initialiser le progress IMMÉDIATEMENT (une seule fois)
   useEffect(() => {
@@ -38,47 +38,16 @@ export const useScrollInitialization = (globalPathLength: number) => {
     
     try {
       const hash = window.location.hash;
-      const defaultProgress = service.getDefaultProgress();
       
-      // Priorité: hash > localStorage > default
-      let progress: number;
-      
-      // CRITIQUE: Si le hash est présent mais invalide, utiliser localStorage au lieu de default
-      // Cela permet de restaurer la position même si l'URL a un hash invalide
-      if (hash && hash.replace('#', '').trim().length > 0) {
-        const anchorId = service.extractHash(hash);
-        const hashProgress = service.getProgressFromHash(anchorId, pathDomain, isDesktop);
-        if (hashProgress !== null) {
-          // Valider le progress du hash (doit être dans [0, 1])
-          if (hashProgress >= 0 && hashProgress <= 1) {
-            progress = hashProgress;
-          } else {
-            // Hash invalide : utiliser localStorage si disponible, sinon default
-            console.warn(`[useScrollInitialization] Progress invalide depuis hash "${anchorId}": ${hashProgress}, utilisation du fallback`);
-            const storedProgress = service.getProgressFromStorage();
-            progress = storedProgress !== null ? storedProgress : defaultProgress;
-          }
-        } else {
-          // Hash non trouvé : utiliser localStorage si disponible, sinon default
-          const storedProgress = service.getProgressFromStorage();
-          progress = storedProgress !== null ? storedProgress : defaultProgress;
-        }
-      } else {
-        // Pas de hash : utiliser localStorage si disponible, sinon default
-        const storedProgress = service.getProgressFromStorage();
-        progress = storedProgress !== null ? storedProgress : defaultProgress;
-      }
-      
-      // Validation finale du progress (sécurité supplémentaire)
-      if (progress < 0 || progress > 1 || isNaN(progress)) {
-        console.warn(`[useScrollInitialization] Progress invalide: ${progress}, utilisation du default`);
-        progress = defaultProgress;
-      }
+      // Utiliser le service centralisé pour initialiser le progress
+      // Règles: anchorID → progress → localStorage → default
+      // La logique est identique sur mobile et desktop
+      const result = service.initializeProgress(hash, pathDomain);
       
       // Stocker le progress initial dans une ref pour éviter qu'il change
-      initialProgressRef.current = progress;
+      initialProgressRef.current = result.progress;
       
-      dispatch({ type: 'scroll/setProgress', payload: progress });
+      dispatch({ type: 'scroll/setProgress', payload: result.progress });
       hasInitializedProgressRef.current = true;
       setIsScrollSynced(true); // RENDRE LE COMPOSANT IMMÉDIATEMENT
     } catch (error) {
@@ -90,7 +59,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
       hasInitializedProgressRef.current = true;
       setIsScrollSynced(true);
     }
-  }, [dispatch, pathDomain, isDesktop, service]);
+  }, [dispatch, pathDomain, service]);
 
   // ÉTAPE 2: Faire le window.scrollTo() quand le pathLength arrive
   useEffect(() => {

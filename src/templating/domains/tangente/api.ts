@@ -45,13 +45,25 @@ export interface TangenteDomainAPI {
  */
 export class TangenteDomain implements TangenteDomainAPI {
   private repository: TangenteRepository;
+  
+  // OPTIMISATION: Cache des composants chargés (une fois pour desktop, une fois pour mobile)
+  // Le JSON ne change pas après le chargement de la page
+  private componentsCache: {
+    desktop?: PathTangenteComponent[];
+    mobile?: PathTangenteComponent[];
+  } = {};
 
   constructor(repository: TangenteRepository) {
     this.repository = repository;
   }
 
   getAllComponents(isDesktop: boolean = true): PathTangenteComponent[] {
-    return this.repository.load(isDesktop);
+    // OPTIMISATION: Mettre en cache les composants (le JSON ne change pas après le chargement)
+    const cacheKey = isDesktop ? 'desktop' : 'mobile';
+    if (!this.componentsCache[cacheKey]) {
+      this.componentsCache[cacheKey] = this.repository.load(isDesktop);
+    }
+    return this.componentsCache[cacheKey];
   }
 
   getComponentById(id: string, isDesktop: boolean = true): PathTangenteComponent | undefined {

@@ -46,22 +46,19 @@ export default function Image({
   const [imageSrc, setImageSrc] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Détecter la taille d'écran et choisir la bonne image
+  // OPTIMISATION: Déterminer la source de l'image une seule fois au chargement (pas de resize)
+  // Personne ne resize son écran dans la vraie vie
   useEffect(() => {
-    const updateImageSrc = () => {
-      const isMobile = window.innerWidth <= imageConfig.responsive.mobileBreakpoint;
-      if (isMobile && mobileSrc) {
-        setImageSrc(mobileSrc);
-      } else if (!isMobile && desktopSrc) {
-        setImageSrc(desktopSrc);
-      } else {
-        setImageSrc(src);
-      }
-    };
-
-    updateImageSrc();
-    window.addEventListener('resize', updateImageSrc);
-    return () => window.removeEventListener('resize', updateImageSrc);
+    if (typeof window === 'undefined') return;
+    
+    const isMobile = window.innerWidth <= imageConfig.responsive.mobileBreakpoint;
+    if (isMobile && mobileSrc) {
+      setImageSrc(mobileSrc);
+    } else if (!isMobile && desktopSrc) {
+      setImageSrc(desktopSrc);
+    } else {
+      setImageSrc(src);
+    }
   }, [src, mobileSrc, desktopSrc]);
 
   // Intersection Observer pour le lazy loading

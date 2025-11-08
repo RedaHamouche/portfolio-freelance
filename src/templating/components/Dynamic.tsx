@@ -7,7 +7,6 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { getPointOnPath } from '@/utils/pathCalculations';
 import mappingComponent from '../mappingComponent';
 import { calculateMapPadding } from '@/utils/viewportCalculations';
@@ -23,7 +22,11 @@ interface DynamicProps {
 
 export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
   const { mapScale, svgSize, mapPaddingRatio } = useResponsivePath();
-  const isDesktop = useBreakpoint('>=desktop');
+  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
+  const isDesktop = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024; // Desktop breakpoint
+  }, []);
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   
   // Créer une instance du domaine Page

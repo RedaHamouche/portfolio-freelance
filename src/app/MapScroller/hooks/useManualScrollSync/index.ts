@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useMemo, useState } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { setProgress, setLastScrollDirection, setAutoPlaying, setAutoScrollDirection } from '@/store/scrollSlice';
@@ -7,7 +7,10 @@ import { ScrollEasingService, EasingFunctions } from './domain/ScrollEasingServi
 import { ScrollProgressCalculator } from './domain/ScrollProgressCalculator';
 import { ScrollStateDetector } from './domain/ScrollStateDetector';
 import { ScrollVelocityService } from './domain/ScrollVelocityService';
-import { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA, SCROLL_VELOCITY_CONFIG, BREAKPOINTS } from '@/config';
+import { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA, SCROLL_VELOCITY_CONFIG, SCROLL_CONFIG } from '@/config';
+import { createPathDomain } from '@/templating/domains/path';
+import { ProgressInitializationService } from '../useScrollInitialization/domain/ProgressInitializationService';
+import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress
@@ -23,21 +26,12 @@ export function useManualScrollSync(
   const currentProgress = useSelector((state: RootState) => state.scroll.progress);
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
 
-  // Détecter si on est sur mobile ou desktop
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.innerWidth >= BREAKPOINTS.desktop;
-  });
+  // CRITIQUE: Utiliser le même hook que useScrollInitialization pour garantir la cohérence
+  const isDesktop = useBreakpoint('>=desktop');
 
-  // Mettre à jour isDesktop lors du resize
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= BREAKPOINTS.desktop);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Services pour calculer le progress depuis le hash (service centralisé)
+  const pathDomain = useMemo(() => createPathDomain(), []);
+  const progressInitService = useMemo(() => new ProgressInitializationService(), []);
 
   // Configuration de vélocité selon mobile/desktop
   const velocityConfig = useMemo(() => {
@@ -96,13 +90,15 @@ export function useManualScrollSync(
   const isInitializedRef = useRef(false);
   const lastInitializedPathLengthRef = useRef<number>(0); // Track le pathLength utilisé lors de la dernière initialisation
   const scrollYRef = useRef(0);
-  const scrollEndRafIdRef = useRef<number | null>(null);
+  // OPTIMISATION: Remplacer RAF continu par setTimeout pour détecter l'arrêt du scroll
+  const scrollEndTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const pendingUpdateRef = useRef(false);
   const easingRafIdRef = useRef<number | null>(null);
   const isEasingActiveRef = useRef(false);
   const isAutoPlayingRef = useRef(isAutoPlaying);
   const prevIsAutoPlayingRef = useRef(isAutoPlaying);
+  const lastScrollDirectionRef = useRef<string | null>(null); // OPTIMISATION: Cache la dernière direction
 
   // Synchroniser isAutoPlayingRef et détecter les changements de pathLength
   useEffect(() => {
@@ -180,10 +176,11 @@ export function useManualScrollSync(
     const progressFromUseCase = useCase.getCurrentProgress();
     dispatch(setProgress(progressFromUseCase));
 
-    // Tracker la direction seulement si l'autoplay n'est pas actif
+    // Tracker la direction seulement si l'autoplay n'est pas actif et si elle a changé
     if (!isAutoPlayingRef.current) {
       const direction = useCase.getScrollDirection();
-      if (direction) {
+      if (direction && direction !== lastScrollDirectionRef.current) {
+        lastScrollDirectionRef.current = direction;
         dispatch(setLastScrollDirection(direction));
         const autoScrollDirection = direction === 'forward' ? 1 : -1;
         dispatch(setAutoScrollDirection(autoScrollDirection));
@@ -233,8 +230,10 @@ export function useManualScrollSync(
     scrollYRef.current = window.scrollY;
     const useCase = getUseCase();
     
-    // Mettre à jour la vélocité depuis la position de scroll
-    useCase.updateVelocity(scrollYRef.current);
+    // OPTIMISATION: Mettre à jour la vélocité seulement si activée
+    if (velocityConfig.enabled) {
+      useCase.updateVelocity(scrollYRef.current);
+    }
     
     const result = useCase.updateScrollPosition(scrollYRef.current, globalPathLength);
 
@@ -245,10 +244,11 @@ export function useManualScrollSync(
     const newProgress = useCase.getCurrentProgress();
     dispatch(setProgress(newProgress));
 
-    // Tracker la direction seulement si l'autoplay n'est pas actif
+    // Tracker la direction seulement si l'autoplay n'est pas actif et si elle a changé
     if (!isAutoPlayingRef.current) {
       const direction = useCase.getScrollDirection();
-      if (direction) {
+      if (direction && direction !== lastScrollDirectionRef.current) {
+        lastScrollDirectionRef.current = direction;
         dispatch(setLastScrollDirection(direction));
         const autoScrollDirection = direction === 'forward' ? 1 : -1;
         dispatch(setAutoScrollDirection(autoScrollDirection));
@@ -258,7 +258,7 @@ export function useManualScrollSync(
     startEasingLoop();
     rafIdRef.current = null;
     pendingUpdateRef.current = false;
-  }, [globalPathLength, isModalOpen, startEasingLoop, dispatch, getUseCase]);
+  }, [globalPathLength, isModalOpen, startEasingLoop, dispatch, getUseCase, velocityConfig]);
 
   // Handler pour les interactions utilisateur (wheel, touch)
   const handleUserInteraction = useCallback((event?: Event) => {
@@ -292,8 +292,8 @@ export function useManualScrollSync(
       }
     }
 
-    // Capturer la vélocité depuis l'événement wheel
-    if (event && event.type === 'wheel') {
+    // OPTIMISATION: Capturer la vélocité depuis l'événement wheel seulement si activée
+    if (event && event.type === 'wheel' && velocityConfig.enabled) {
       const wheelEvent = event as WheelEvent;
       getUseCase().updateVelocityFromWheel(wheelEvent.deltaY);
     }
@@ -320,8 +320,10 @@ export function useManualScrollSync(
     // Mettre à jour scrollYRef immédiatement
     scrollYRef.current = window.scrollY;
     
-    // Mettre à jour la vélocité depuis la position de scroll
-    getUseCase().updateVelocity(scrollYRef.current);
+    // OPTIMISATION: Mettre à jour la vélocité seulement si activée
+    if (velocityConfig.enabled) {
+      getUseCase().updateVelocity(scrollYRef.current);
+    }
 
     // Mettre en pause l'autoplay si actif
     if (isAutoPlayingRef.current) {
@@ -335,35 +337,30 @@ export function useManualScrollSync(
 
     getUseCase().updateLastScrollTime();
 
-    // Détecter l'arrêt du scroll
-    if (scrollEndRafIdRef.current !== null) {
-      cancelAnimationFrame(scrollEndRafIdRef.current);
-      scrollEndRafIdRef.current = null;
+    // OPTIMISATION: Détecter l'arrêt du scroll avec setTimeout au lieu d'un RAF continu
+    // Annuler le timeout précédent si présent
+    if (scrollEndTimeoutRef.current !== null) {
+      clearTimeout(scrollEndTimeoutRef.current);
+      scrollEndTimeoutRef.current = null;
     }
 
-    const checkScrollEnd = () => {
+    // Programmer la vérification après SCROLL_END_DELAY (150ms)
+    scrollEndTimeoutRef.current = setTimeout(() => {
       const isEnded = getUseCase().checkScrollEnd();
       if (isEnded) {
         if (onScrollState) {
           onScrollState(false);
         }
-        scrollEndRafIdRef.current = null;
-      } else {
-        scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
       }
-    };
-
-    scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
+      scrollEndTimeoutRef.current = null;
+    }, SCROLL_CONFIG.SCROLL_END_DELAY);
 
     // Programmer la mise à jour via RAF
     if (!pendingUpdateRef.current) {
       pendingUpdateRef.current = true;
       rafIdRef.current = requestAnimationFrame(() => {
         scrollYRef.current = window.scrollY;
-        requestAnimationFrame(() => {
-          scrollYRef.current = window.scrollY;
-          processScrollUpdate();
-        });
+        processScrollUpdate();
       });
     }
   }, [onScrollState, isModalOpen, processScrollUpdate, dispatch, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
@@ -401,8 +398,10 @@ export function useManualScrollSync(
 
     scrollYRef.current = window.scrollY;
     
-    // Mettre à jour la vélocité depuis la position de scroll
-    getUseCase().updateVelocity(scrollYRef.current);
+    // OPTIMISATION: Mettre à jour la vélocité seulement si activée
+    if (velocityConfig.enabled) {
+      getUseCase().updateVelocity(scrollYRef.current);
+    }
 
     // Programmer la mise à jour via RAF
     if (!pendingUpdateRef.current) {
@@ -420,25 +419,23 @@ export function useManualScrollSync(
 
     getUseCase().updateLastScrollTime();
 
-    // Détecter l'arrêt du scroll
-    if (scrollEndRafIdRef.current !== null) {
-      cancelAnimationFrame(scrollEndRafIdRef.current);
-      scrollEndRafIdRef.current = null;
+    // OPTIMISATION: Détecter l'arrêt du scroll avec setTimeout au lieu d'un RAF continu
+    // Annuler le timeout précédent si présent
+    if (scrollEndTimeoutRef.current !== null) {
+      clearTimeout(scrollEndTimeoutRef.current);
+      scrollEndTimeoutRef.current = null;
     }
 
-    const checkScrollEnd = () => {
+    // Programmer la vérification après SCROLL_END_DELAY (150ms)
+    scrollEndTimeoutRef.current = setTimeout(() => {
       const isEnded = getUseCase().checkScrollEnd();
       if (isEnded) {
         if (onScrollState) {
           onScrollState(false);
         }
-        scrollEndRafIdRef.current = null;
-      } else {
-        scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
       }
-    };
-
-    scrollEndRafIdRef.current = requestAnimationFrame(checkScrollEnd);
+      scrollEndTimeoutRef.current = null;
+    }, SCROLL_CONFIG.SCROLL_END_DELAY);
   }, [isModalOpen, processScrollUpdate, onScrollState, globalPathLength, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
 
   // Event listeners
@@ -464,8 +461,9 @@ export function useManualScrollSync(
       if (easingRafIdRef.current !== null) {
         cancelAnimationFrame(easingRafIdRef.current);
       }
-      if (scrollEndRafIdRef.current !== null) {
-        cancelAnimationFrame(scrollEndRafIdRef.current);
+      // OPTIMISATION: Nettoyer le timeout au lieu du RAF
+      if (scrollEndTimeoutRef.current !== null) {
+        clearTimeout(scrollEndTimeoutRef.current);
       }
     };
   }, [handleUserInteraction, handleScroll]);
@@ -479,6 +477,16 @@ export function useManualScrollSync(
     // Sinon on s'initialise avec le mauvais pathLength
     if (globalPathLength <= 0 || globalPathLength <= 2000) return;
 
+    // CRITIQUE: Ne pas réinitialiser si le progress a déjà été initialisé par useScrollInitialization
+    // Si currentProgress n'est pas le default (0.005), c'est qu'il a déjà été initialisé
+    if (currentProgress !== 0.005 && currentProgress > 0) {
+      // Le progress a déjà été initialisé, utiliser celui-ci
+      getUseCase().initialize(globalPathLength, currentProgress);
+      lastInitializedPathLengthRef.current = globalPathLength;
+      isInitializedRef.current = true;
+      return;
+    }
+
     isInitializedRef.current = true;
     scrollYRef.current = window.scrollY;
 
@@ -487,9 +495,18 @@ export function useManualScrollSync(
     
     try {
       if (hasHash) {
-        getUseCase().initialize(globalPathLength, currentProgress);
+        // CRITIQUE: Utiliser le service centralisé pour calculer le progress
+        // Règles: anchorID → progress → localStorage → default
+        // La logique est identique sur mobile et desktop
+        const result = progressInitService.initializeProgress(hash, pathDomain);
+        
+        // Utiliser le progress calculé (hash, localStorage, ou default)
+        const progressToUse = result.progress;
+        getUseCase().initialize(globalPathLength, progressToUse);
+        // Ne pas dispatcher ici car useScrollInitialization l'a déjà fait
       } else {
-        getUseCase().initialize(globalPathLength);
+        // Pas de hash : utiliser currentProgress qui a été initialisé par useScrollInitialization
+        getUseCase().initialize(globalPathLength, currentProgress);
         processScrollUpdate();
       }
       lastInitializedPathLengthRef.current = globalPathLength;
@@ -503,11 +520,16 @@ export function useManualScrollSync(
         velocityConfig
       );
       if (hasHash) {
-        useCaseRef.current.initialize(globalPathLength, currentProgress);
+        // CRITIQUE: Utiliser le service centralisé pour calculer le progress
+        // La logique est identique sur mobile et desktop
+        const result = progressInitService.initializeProgress(hash, pathDomain);
+        useCaseRef.current.initialize(globalPathLength, result.progress);
+        // Ne pas dispatcher ici car useScrollInitialization l'a déjà fait
       } else {
-        useCaseRef.current.initialize(globalPathLength);
+        // Utiliser currentProgress qui a été initialisé par useScrollInitialization
+        useCaseRef.current.initialize(globalPathLength, currentProgress);
       }
       lastInitializedPathLengthRef.current = globalPathLength;
     }
-  }, [isScrollSynced, globalPathLength, currentProgress, processScrollUpdate, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig]);
+  }, [isScrollSynced, globalPathLength, currentProgress, processScrollUpdate, getUseCase, easingService, progressCalculator, stateDetector, velocityService, velocityConfig, pathDomain, progressInitService, dispatch]);
 }

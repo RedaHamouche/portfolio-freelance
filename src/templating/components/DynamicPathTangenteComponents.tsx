@@ -5,13 +5,12 @@
  */
 
 "use client"
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import mappingComponent from '../mappingComponent';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { createTangenteDomain } from '../domains/tangente';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { getPointOnPath, getPathAngleAtProgress, calculateAdaptiveDelta } from '@/utils/pathCalculations';
 import { normalizeAngleForReadability, getPerpendicularOffset } from '@/utils/tangentUtils';
 
@@ -29,7 +28,11 @@ export default function DynamicPathTangenteComponents({
 }: DynamicPathTangenteComponentsProps) {
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const { mapScale } = useResponsivePath();
-  const isDesktop = useBreakpoint('>=desktop');
+  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
+  const isDesktop = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024; // Desktop breakpoint
+  }, []);
 
   // Créer une instance du domaine Tangente
   const tangenteDomain = useMemo(() => createTangenteDomain(), []);
@@ -40,9 +43,24 @@ export default function DynamicPathTangenteComponents({
   // Pré-calculer le delta adaptatif une seule fois (optimisation)
   const adaptiveDelta = useMemo(() => calculateAdaptiveDelta(pathLength), [pathLength]);
   
+  // OPTIMISATION: Cache pour les positions des composants tangente
+  // Les positions ne dépendent pas du progress (elles sont fixes dans le JSON)
+  // Mais on cache quand même pour éviter les recalculs si les dépendances n'ont pas changé
+  const lastCalculationKeyRef = useRef<string | null>(null);
+  const cachedPositionsRef = useRef<Array<{ x: number; y: number; angle: number }>>([]);
+  
   // Calculer les positions et angles pour chaque composant
   const componentPositions = useMemo(() => {
     if (!svgPath || pathLength <= 0) return [];
+
+    // Créer une clé de cache basée sur les dépendances
+    // Les positions ne changent que si ces valeurs changent
+    const calculationKey = `${svgPath ? 'path' : 'nopath'}-${pathLength}-${tangenteComponents.length}-${paddingX}-${paddingY}-${adaptiveDelta}`;
+    
+    // Si la clé n'a pas changé, utiliser le cache
+    if (lastCalculationKeyRef.current === calculationKey && cachedPositionsRef.current.length > 0) {
+      return cachedPositionsRef.current;
+    }
 
     // Pré-allouer le tableau pour de meilleures performances
     const positions = new Array(tangenteComponents.length);
@@ -76,6 +94,10 @@ export default function DynamicPathTangenteComponents({
         angle: normalizedAngle,
       };
     }
+    
+    // Mettre à jour le cache
+    cachedPositionsRef.current = positions;
+    lastCalculationKeyRef.current = calculationKey;
     
     return positions;
   }, [svgPath, pathLength, tangenteComponents, paddingX, paddingY, tangenteDomain, adaptiveDelta]);

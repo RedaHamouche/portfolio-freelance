@@ -6,16 +6,16 @@
 import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { ScrollInitializationService } from '../useScrollInitialization/domain/ScrollInitializationService';
+import { ProgressInitializationService } from '../useScrollInitialization/domain/ProgressInitializationService';
 
 export const useProgressPersistence = () => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
-  const serviceRef = useRef<ScrollInitializationService | null>(null);
+  const serviceRef = useRef<ProgressInitializationService | null>(null);
   const lastSavedProgressRef = useRef<number | null>(null);
 
   // Créer le service une seule fois
   if (!serviceRef.current) {
-    serviceRef.current = new ScrollInitializationService();
+    serviceRef.current = new ProgressInitializationService();
   }
 
   useEffect(() => {

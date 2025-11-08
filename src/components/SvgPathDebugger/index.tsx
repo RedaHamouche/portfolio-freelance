@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { getPointOnPath } from '@/utils/pathCalculations';
 import { createPathDomain } from '@/templating/domains/path';
 import styles from './index.module.scss';
@@ -23,7 +22,11 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { svgSize } = useResponsivePath();
-  const isDesktop = useBreakpoint('>=desktop');
+  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
+  const isDesktop = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024; // Desktop breakpoint
+  }, []);
   const [showDebug, setShowDebug] = useState(false);
   const [showPoints, setShowPoints] = useState(true);
   const [showAnchors, setShowAnchors] = useState(true);

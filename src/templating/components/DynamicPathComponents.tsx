@@ -4,12 +4,11 @@
  */
 
 "use client"
-import React, { useEffect, useMemo, memo } from 'react';
+import React, { useEffect, useMemo, useCallback, useRef, memo } from 'react';
 import mappingComponent from '../mappingComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { setProgress } from '../../store/scrollSlice';
 import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
 import { createPathDomain } from '../domains/path';
@@ -65,7 +64,11 @@ const MemoizedPathComponent = memo(function PathComponentMemo({
 export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { mapScale } = useResponsivePath();
-  const isDesktop = useBreakpoint('>=desktop');
+  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
+  const isDesktop = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024; // Desktop breakpoint
+  }, []);
   const dispatch = useDispatch();
 
   // Créer une instance du domaine Path
@@ -103,7 +106,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   const pathComponents = useMemo(() => pathDomain.getAllComponents(isDesktop), [pathDomain, isDesktop]);
 
   // Mémoïser la fonction getPositionOnPath pour éviter les re-créations
-  const getPointOnPath = React.useCallback((progressValue: number) => {
+  const getPointOnPath = useCallback((progressValue: number) => {
     if (!svgPath) return { x: 0, y: 0 };
     const point = getPointOnPathUtil(svgPath, progressValue, pathLength > 0 ? pathLength : undefined);
     return { x: point.x, y: point.y };
@@ -112,19 +115,45 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   // Refs supprimés - plus besoin d'IntersectionObserver pour l'opacity
   // activeAnchors et inViews supprimés - tous les composants sont toujours visibles
 
+  // OPTIMISATION: Cache pour getActiveComponents avec seuil de changement significatif
+  const lastProgressRef = useRef<number | null>(null);
+  const cachedActiveComponentsRef = useRef<typeof pathComponents>([]);
+  const PROGRESS_CHANGE_THRESHOLD = 0.001; // Seuil de changement significatif (0.1% du path)
+  
+  // OPTIMISATION: Cache pour les positions des composants
+  const lastPositionsProgressRef = useRef<number | null>(null);
+  const cachedPositionsRef = useRef<Array<{ x: number; y: number }>>([]);
+  const POSITION_PROGRESS_THRESHOLD = 0.0005; // Seuil plus strict pour les positions (0.05% du path)
+
   // Mise à jour du hash dans l'URL quand un composant anchor devient actif
-  // Utiliser useMemo pour calculer l'anchorId actif (évite les recalculs inutiles)
-  const activeAnchorId = React.useMemo(() => {
+  // OPTIMISATION: Ne recalculer que si le progress a changé significativement
+  const activeAnchorId = useMemo(() => {
+    // Vérifier si le progress a changé significativement
+    if (lastProgressRef.current !== null) {
+      const progressDelta = Math.abs(progress - lastProgressRef.current);
+      const wrappedDelta = Math.min(progressDelta, 1 - progressDelta); // Gérer wraparound
+      
+      // Si le changement est trop petit, utiliser le cache
+      if (wrappedDelta < PROGRESS_CHANGE_THRESHOLD) {
+        const firstActiveWithAnchor = cachedActiveComponentsRef.current.find(c => c.anchorId);
+        return firstActiveWithAnchor?.anchorId || null;
+      }
+    }
+    
+    // Recalculer si le changement est significatif
     const activeComponents = pathDomain.getActiveComponents(progress, isDesktop);
+    cachedActiveComponentsRef.current = activeComponents;
+    lastProgressRef.current = progress;
+    
     const firstActiveWithAnchor = activeComponents.find(c => c.anchorId);
     return firstActiveWithAnchor?.anchorId || null;
   }, [progress, pathDomain, isDesktop]);
   
   // Refs pour le throttling et le tracking
-  const lastUpdatedAnchorIdRef = React.useRef<string | null>(null);
-  const rafIdRef = React.useRef<number | null>(null);
-  const lastUpdateTimeRef = React.useRef<number>(0);
-  const pendingAnchorIdRef = React.useRef<string | null>(null);
+  const lastUpdatedAnchorIdRef = useRef<string | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const pendingAnchorIdRef = useRef<string | null>(null);
   const THROTTLE_MS = 200; // Throttle de 200ms pour limiter les appels à history.replaceState()
   
   // Mettre à jour le hash avec throttling basé sur requestAnimationFrame
@@ -145,7 +174,7 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
       
       // Throttle : ne mettre à jour que toutes les 200ms maximum
       if (timeSinceLastUpdate < THROTTLE_MS) {
-        // OPTIMISATION: Vérifier si l'anchorId a changé avant de reprogrammer
+        // Vérifier si l'anchorId a changé avant de reprogrammer
         // Si l'anchorId n'a pas changé, on n'a pas besoin de reprogrammer
         if (anchorId === lastUpdatedAnchorIdRef.current) {
           rafIdRef.current = null;
@@ -191,13 +220,31 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
     };
   }, [activeAnchorId]);
 
-  // Mémoïser toutes les positions d'un coup en utilisant l'API du domaine
-  const positions = useMemo(
-    () => pathComponents.map((component) => 
+  // OPTIMISATION: Cache pour les positions avec seuil de changement significatif
+  // Ne recalculer que si le progress a changé significativement
+  const positions = useMemo(() => {
+    // Vérifier si le progress a changé significativement
+    if (lastPositionsProgressRef.current !== null) {
+      const progressDelta = Math.abs(progress - lastPositionsProgressRef.current);
+      const wrappedDelta = Math.min(progressDelta, 1 - progressDelta); // Gérer wraparound
+      
+      // Si le changement est trop petit, utiliser le cache
+      if (wrappedDelta < POSITION_PROGRESS_THRESHOLD) {
+        return cachedPositionsRef.current;
+      }
+    }
+    
+    // Recalculer si le changement est significatif
+    const newPositions = pathComponents.map((component) => 
       pathDomain.calculateComponentPosition(component, getPointOnPath, paddingX, paddingY)
-    ),
-    [pathComponents, getPointOnPath, paddingX, paddingY, pathDomain]
-  );
+    );
+    
+    // Mettre à jour le cache
+    cachedPositionsRef.current = newPositions;
+    lastPositionsProgressRef.current = progress;
+    
+    return newPositions;
+  }, [pathComponents, getPointOnPath, paddingX, paddingY, pathDomain, progress]);
 
   if (!svgPath || pathComponents.length === 0) return null;
 

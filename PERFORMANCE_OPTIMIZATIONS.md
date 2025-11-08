@@ -1,5 +1,29 @@
 # Analyse des Optimisations de Performance
 
+## ✅ Optimisations Implémentées
+
+### P0 (Critiques) :
+
+- ✅ **checkScrollEnd RAF continu** → Remplacé par `setTimeout` avec `SCROLL_CONFIG.SCROLL_END_DELAY`
+- ✅ **Cache getScrollDirection()** → Cache avec `lastScrollDirectionRef` pour éviter recalculs inutiles
+- ✅ **Condition updateVelocity** → Ajout de `if (velocityConfig.enabled)` avant chaque appel
+
+### P1 (Importantes) :
+
+- ✅ **Cache getActiveComponents** → Cache dans `PathDomain` avec seuil `0.001` (0.1% du path)
+- ✅ **Cache DynamicPathComponents positions** → Cache avec seuil `0.0005` (0.05% du path)
+- ✅ **Cache DynamicPathTangenteComponents positions** → Cache avec clé de calcul basée sur les dépendances
+- ✅ **PieceOfArt gsap.quickTo** → Utilisation de `gsap.quickTo` au lieu de `gsap.to` pour meilleures performances
+- ✅ **Cache getAllComponents** → Cache dans `PathDomain` et `TangenteDomain` (une fois pour desktop, une fois pour mobile)
+- ✅ **Suppression événements resize** → Supprimés de `MapViewport`, `useResponsivePath`, `Image` component
+- ✅ **isDesktop déterminé une fois** → Utilisation de `useMemo(() => window.innerWidth >= 1024)` au lieu de `useBreakpoint`
+
+## ❌ Optimisations Skippées
+
+- ❌ **Throttle useProgressAnimation** → Risque de bugs avec animations complexes (`staggerFadeIn` nécessite précision fine, plage de 0.8%)
+
+---
+
 ## 🔴 CRITIQUES - À Optimiser Urgemment
 
 ### 1. **useDynamicZoom** - Zoom Dynamique
@@ -125,23 +149,25 @@ rafIdRef.current = requestAnimationFrame(() => {
 
 ### À Optimiser Immédiatement (P0):
 
-1. ✅ **useDynamicZoom** - Désactiver par défaut
-2. ✅ **Double RAF** - Supprimer dans `handleUserInteraction`
-3. ✅ **checkScrollEnd RAF continu** - Remplacer par timeout
-4. ✅ **Cacher getScrollDirection()** - Ne recalculer que si nécessaire
-5. ✅ **Condition updateVelocity** - Ne pas appeler si désactivé
+1. ⚠️ **useDynamicZoom** - Désactiver par défaut
+2. ⚠️ **Double RAF** - Supprimer dans `handleUserInteraction`
+3. ✅ **DONE** - **checkScrollEnd RAF continu** - Remplacer par timeout
+4. ✅ **DONE** - **Cacher getScrollDirection()** - Ne recalculer que si nécessaire
+5. ✅ **DONE** - **Condition updateVelocity** - Ne pas appeler si désactivé
 
 ### À Optimiser si Possible (P1):
 
 6. ⚠️ **Lazy loading DynamicPathComponents** - Calculer seulement les visibles
 7. ⚠️ **Lazy loading DynamicPathTangenteComponents** - Calculer seulement les visibles
-8. ⚠️ **Throttle PieceOfArt animations** - Utiliser `gsap.quickTo`
+8. ✅ **DONE** - **Throttle PieceOfArt animations** - Utiliser `gsap.quickTo`
 9. ⚠️ **Throttle updateViewport** - Seuil minimal de changement
-10. ⚠️ **Cache getActiveComponents** - Seuil de changement significatif
+10. ✅ **DONE** - **Cache getActiveComponents** - Seuil de changement significatif
+11. ✅ **DONE** - **Cache DynamicPathComponents positions** - Cache avec seuil de changement
+12. ✅ **DONE** - **Cache DynamicPathTangenteComponents positions** - Cache avec clé de calcul
 
 ### À Surveiller (P2):
 
-11. ⚠️ **Throttle useProgressAnimation** - Si plusieurs composants
+11. ❌ **SKIPPED** - **Throttle useProgressAnimation** - Risque de bugs avec animations complexes (staggerFadeIn, etc.)
 12. ⚠️ **Simplifier hash update** - Si possible
 
 ## 🎯 Impact Estimé

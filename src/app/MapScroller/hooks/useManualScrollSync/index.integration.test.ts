@@ -14,6 +14,7 @@ import scrollReducer from '@/store/scrollSlice';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Jest module resolution
 import type { RootState } from '@/store';
+import { DEFAULT_PATH_LENGTH } from '@/config';
 
 // Mock du modalSlice
 const modalReducer = (state = { isOpen: false }, action: { type: string; payload?: unknown }) => {
@@ -61,7 +62,7 @@ function createMockStore(initialState: Partial<RootState['scroll']> = {}) {
         direction: null,
         isAutoPlaying: false,
         progress: 0.005,
-        pathLength: 2000,
+        pathLength: DEFAULT_PATH_LENGTH,
         autoScrollDirection: 1,
         isAutoScrollTemporarilyPaused: false,
         lastScrollDirection: null,
@@ -87,7 +88,7 @@ describe('Use Case 1: Scroll Manuel', () => {
   it('devrait mettre à jour le progress lors d\'un scroll manuel (touch)', async () => {
     const store = createMockStore();
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -126,7 +127,7 @@ describe('Use Case 1: Scroll Manuel', () => {
   it('devrait mettre à jour la direction à "forward" lors d\'un scroll vers l\'avant', async () => {
     const store = createMockStore({ progress: 0.3 });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -148,7 +149,7 @@ describe('Use Case 1: Scroll Manuel', () => {
   it('devrait mettre à jour la direction à "backward" lors d\'un scroll vers l\'arrière', async () => {
     const store = createMockStore({ progress: 0.5 });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -172,7 +173,7 @@ describe('Use Case 2: Autoplay', () => {
   it('devrait mettre en pause l\'autoplay lors d\'un scroll manuel', async () => {
     const store = createMockStore({ isAutoPlaying: true });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -198,7 +199,7 @@ describe('Use Case 3: Transition Autoplay → Scroll Manuel', () => {
       progress: 0.3 
     });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -228,7 +229,7 @@ describe('Use Case 4: Interactions qui ne cancel pas l\'autoplay', () => {
   it('ne devrait pas cancel l\'autoplay lors d\'un touch sur un bouton', async () => {
     const store = createMockStore({ isAutoPlaying: true });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -264,7 +265,7 @@ describe('Use Case 5: Initialisation au Reload', () => {
   it('devrait fonctionner correctement après l\'initialisation', async () => {
     const store = createMockStore();
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -293,7 +294,7 @@ describe('Use Case 6: Boucle Infinie', () => {
   it('devrait gérer le wraparound vers l\'avant', async () => {
     const store = createMockStore({ progress: 0.99 });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -317,7 +318,7 @@ describe('Use Case 6: Boucle Infinie', () => {
   it('devrait gérer le wraparound vers l\'arrière', async () => {
     const store = createMockStore({ progress: 0.01 });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -342,7 +343,7 @@ describe('Use Case 7: Direction et Synchronisation', () => {
   it('devrait synchroniser autoScrollDirection avec lastScrollDirection', async () => {
     const store = createMockStore({ progress: 0.3 });
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -368,7 +369,7 @@ describe('Use Case 8: Gestion des Modals', () => {
     store.dispatch({ type: 'modal/setIsOpen', payload: true } as { type: string; payload: boolean });
 
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 
@@ -393,7 +394,7 @@ describe('Use Case 9: Performance et Optimisations', () => {
   it('ne devrait pas appeler processScrollUpdate plusieurs fois simultanément', async () => {
     const store = createMockStore();
     renderHook(
-      () => useManualScrollSync(2000, undefined, true),
+      () => useManualScrollSync(DEFAULT_PATH_LENGTH, undefined, true),
       { wrapper: createWrapper(store) }
     );
 

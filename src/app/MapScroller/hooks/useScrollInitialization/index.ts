@@ -8,6 +8,7 @@ import {
   calculateScrollYFromProgress,
 } from '@/utils/scrollCalculations';
 import { getViewportHeight } from '@/utils/viewportCalculations';
+import { DEFAULT_PATH_LENGTH } from '@/config';
 
 /**
  * Hook pour gérer l'initialisation du scroll et la synchronisation avec les hash/anchors
@@ -64,7 +65,7 @@ export const useScrollInitialization = (globalPathLength: number) => {
     if (!hasInitializedProgressRef.current) return; // Attendre que le progress soit initialisé
     if (hasScrolledRef.current) return; // Ne faire qu'une fois
     if (typeof window === 'undefined') return; // SSR safety
-    if (!globalPathLength || globalPathLength <= 2000) return; // Attendre le vrai pathLength
+    if (!globalPathLength || globalPathLength <= DEFAULT_PATH_LENGTH) return; // Attendre le vrai pathLength
     if (initialProgressRef.current === null) return; // Attendre que le progress initial soit défini
     
     // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt

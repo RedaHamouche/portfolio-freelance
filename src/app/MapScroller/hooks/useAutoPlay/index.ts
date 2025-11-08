@@ -18,6 +18,7 @@ import { AutoPlayProgressService } from './domain/AutoPlayProgressService';
 import { AutoPlayPauseService } from './domain/AutoPlayPauseService';
 import { AutoPlayAnchorDetector } from './domain/AutoPlayAnchorDetector';
 import { AutoPlayEasingService } from './domain/AutoPlayEasingService';
+import { useAutoPlayStateRefs } from './useAutoPlayStateRefs';
 
 /**
  * Hook pour gérer l'autoplay avec architecture DDD
@@ -49,34 +50,20 @@ export function useAutoPlay({
     useCaseRef.current = new AutoPlayUseCase(progressService, pauseService, anchorDetector, easingService);
   }
 
-  // Refs pour la gestion de l'état
-  const isPausedRef = useRef(false);
-  const lastPausedAnchorIdRef = useRef<string | null>(null);
-  const lastPausedTimeRef = useRef<Map<string, number>>(new Map()); // Map<anchorId, timestamp>
-  const progressRef = useRef(progress);
-  const globalPathLengthRef = useRef(globalPathLength);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutIdRef = useRef<number>(0); // ID unique pour chaque timeout (protection contre les redémarrages rapides)
-  const animateRef = useRef<FrameRequestCallback | null>(null);
-  const isAutoPlayingRef = useRef(isAutoPlaying);
-  const isModalOpenRef = useRef(isModalOpen);
-
-  // Synchronisation des refs
-  useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
-
-  useEffect(() => {
-    globalPathLengthRef.current = globalPathLength;
-  }, [globalPathLength]);
-
-  useEffect(() => {
-    isAutoPlayingRef.current = isAutoPlaying;
-  }, [isAutoPlaying]);
-
-  useEffect(() => {
-    isModalOpenRef.current = isModalOpen;
-  }, [isModalOpen]);
+  // REFACTORING: Regrouper toutes les refs dans un hook personnalisé pour améliorer l'organisation
+  // Le hook gère automatiquement la synchronisation des refs avec les valeurs actuelles
+  const {
+    isPausedRef,
+    lastPausedAnchorIdRef,
+    lastPausedTimeRef,
+    progressRef,
+    globalPathLengthRef,
+    timeoutRef,
+    timeoutIdRef,
+    animateRef,
+    isAutoPlayingRef,
+    isModalOpenRef,
+  } = useAutoPlayStateRefs(isAutoPlaying, isModalOpen, progress, globalPathLength);
 
   // CRITIQUE: Nettoyer le timeout de pause quand la direction change
   // Cela évite les conflits quand on change de direction et qu'on repasse par le même anchor
@@ -94,7 +81,15 @@ export function useAutoPlay({
     isPausedRef.current = false;
     lastPausedAnchorIdRef.current = null;
     dispatch(setAutoScrollTemporarilyPaused(false));
-  }, [autoScrollDirection, dispatch]);
+  }, [
+    autoScrollDirection,
+    dispatch,
+    // Les refs (isPausedRef, lastPausedAnchorIdRef, timeoutIdRef, timeoutRef) sont stables
+    isPausedRef,
+    lastPausedAnchorIdRef,
+    timeoutIdRef,
+    timeoutRef,
+  ]);
 
   // Fonction pour vérifier si on peut faire une pause sur un anchor (cooldown de 5 secondes)
   // Mémoïsée en dehors de animate pour éviter la recréation à chaque frame
@@ -104,7 +99,10 @@ export function useAutoPlay({
     if (!lastPausedTime) return true; // Jamais pausé sur cet anchor
     const timeSinceLastPause = performance.now() - lastPausedTime;
     return timeSinceLastPause >= 5000; // 5 secondes
-  }, []);
+  }, [
+    // La ref (lastPausedTimeRef) est stable
+    lastPausedTimeRef,
+  ]);
 
   // Fonction d'animation
   const animate = useCallback(() => {
@@ -228,7 +226,24 @@ export function useAutoPlay({
         console.warn('[useAutoPlay] Erreur lors du scroll:', error);
       }
     }
-  }, [autoScrollDirection, dispatch, start, isDesktop, canPauseOnAnchor]);
+  }, [
+    autoScrollDirection,
+    dispatch,
+    start,
+    isDesktop,
+    canPauseOnAnchor,
+    // Les refs (animateRef, globalPathLengthRef, isAutoPlayingRef, isModalOpenRef, isPausedRef, lastPausedAnchorIdRef, lastPausedTimeRef, progressRef, timeoutIdRef, timeoutRef) sont stables
+    animateRef,
+    globalPathLengthRef,
+    isAutoPlayingRef,
+    isModalOpenRef,
+    isPausedRef,
+    lastPausedAnchorIdRef,
+    lastPausedTimeRef,
+    progressRef,
+    timeoutIdRef,
+    timeoutRef,
+  ]);
 
   // Nettoyer le timeout de pause quand la modal s'ouvre
   useEffect(() => {
@@ -247,14 +262,19 @@ export function useAutoPlay({
       isPausedRef.current = false;
       dispatch(setAutoScrollTemporarilyPaused(false));
     }
-  }, [isModalOpen, dispatch]);
+  }, [
+    isModalOpen,
+    dispatch,
+    // Les refs (isPausedRef, timeoutIdRef, timeoutRef) sont stables
+    isPausedRef,
+    timeoutIdRef,
+    timeoutRef,
+  ]);
 
   // Stocker la référence de animate et mettre à jour useRafLoop si la boucle est active
   useEffect(() => {
     animateRef.current = animate;
-    // CRITIQUE: Mettre à jour isAutoPlayingRef AVANT de décider d'arrêter/démarrer
-    // Cela garantit que animate() utilise la bonne valeur même si elle change pendant l'exécution
-    isAutoPlayingRef.current = isAutoPlaying;
+    // Note: isAutoPlayingRef est synchronisé automatiquement par useAutoPlayStateRefs
     
     // Si l'autoplay est actif et la modal n'est pas ouverte, mettre à jour le callback dans useRafLoop
     // useRafLoop.start() met toujours à jour cbRef.current, même si la boucle est déjà en cours
@@ -266,7 +286,16 @@ export function useAutoPlay({
       // Cela évite les race conditions où animate() pourrait s'exécuter après l'annulation
       stop();
     }
-  }, [animate, isAutoPlaying, isModalOpen, start, stop]);
+  }, [
+    animate,
+    isAutoPlaying,
+    isModalOpen,
+    start,
+    stop,
+    // Les refs (animateRef, isAutoPlayingRef) sont stables et synchronisées automatiquement
+    animateRef,
+    isAutoPlayingRef,
+  ]);
 
   // Démarrer/arrêter l'autoplay
   const startAutoPlay = useCallback(() => {
@@ -293,7 +322,18 @@ export function useAutoPlay({
     }
     
     start(animate);
-  }, [start, stop, animate, dispatch]);
+  }, [
+    start,
+    stop,
+    animate,
+    dispatch,
+    // Les refs (isModalOpenRef, isPausedRef, lastPausedAnchorIdRef, timeoutIdRef, timeoutRef) sont stables
+    isModalOpenRef,
+    isPausedRef,
+    lastPausedAnchorIdRef,
+    timeoutIdRef,
+    timeoutRef,
+  ]);
 
   const stopAutoPlay = useCallback(() => {
     dispatch(setIsScrolling(false));
@@ -312,7 +352,15 @@ export function useAutoPlay({
     isPausedRef.current = false;
     lastPausedAnchorIdRef.current = null;
     dispatch(setAutoScrollTemporarilyPaused(false));
-  }, [stop, dispatch]);
+  }, [
+    stop,
+    dispatch,
+    // Les refs (isPausedRef, lastPausedAnchorIdRef, timeoutIdRef, timeoutRef) sont stables
+    isPausedRef,
+    lastPausedAnchorIdRef,
+    timeoutIdRef,
+    timeoutRef,
+  ]);
 
   // Cleanup des timeouts au démontage
   useEffect(() => {
@@ -322,7 +370,10 @@ export function useAutoPlay({
         timeoutRef.current = null;
       }
     };
-  }, []);
+  }, [
+    // La ref (timeoutRef) est stable
+    timeoutRef,
+  ]);
 
   return { startAutoPlay, stopAutoPlay };
 }

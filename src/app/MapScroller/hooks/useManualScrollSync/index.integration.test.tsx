@@ -14,6 +14,9 @@ import scrollReducer from '@/store/scrollSlice';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Jest module resolution
 import type { RootState } from '@/store';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - Jest module resolution
+import { DEFAULT_PATH_LENGTH } from '@/config';
 
 // Mock du modalSlice
 const modalReducer = (state = { isOpen: false }, action: { type: string; payload?: unknown }) => {
@@ -62,7 +65,7 @@ function createMockStore(initialState: Partial<RootState['scroll']> = {}) {
         direction: null,
         isAutoPlaying: false,
         progress: 0.005,
-        pathLength: 5000, // Utiliser une valeur > 2000 pour les tests (2000 est la valeur par défaut dans Redux)
+        pathLength: DEFAULT_PATH_LENGTH * 2.5, // Utiliser une valeur > DEFAULT_PATH_LENGTH pour les tests (DEFAULT_PATH_LENGTH est la valeur par défaut dans Redux)
         autoScrollDirection: 1,
         isAutoScrollTemporarilyPaused: false,
         lastScrollDirection: null,

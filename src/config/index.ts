@@ -74,6 +74,9 @@ export const SCROLL_CONFIG = {
   }
 } as const;
 
+// Valeur par défaut pour pathLength avant que le SVG soit chargé
+export const DEFAULT_PATH_LENGTH = 2000;
+
 export type ScrollDirection = 'haut' | 'bas' | null;
 export type AutoScrollDirection = 1 | -1;
 

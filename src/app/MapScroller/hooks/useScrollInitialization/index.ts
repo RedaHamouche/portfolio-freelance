@@ -71,34 +71,31 @@ export const useScrollInitialization = (globalPathLength: number) => {
     
     // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
     const rafId = requestAnimationFrame(() => {
-      // Double RAF pour garantir que le layout est complètement calculé
-      requestAnimationFrame(() => {
-        try {
-          // CRITIQUE: Utiliser le progress initial stocké dans la ref, pas currentProgress
-          // Cela évite que le scroll se fasse vers un mauvais endroit si le progress a changé
-          const progressToUse = initialProgressRef.current!;
-          
-          const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-          const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
-          const scrollY = calculateScrollYFromProgress(progressToUse, maxScroll);
-          
-          // Valider que scrollY est un nombre valide
-          if (isNaN(scrollY) || !isFinite(scrollY)) {
-            console.warn(`[useScrollInitialization] scrollY invalide: ${scrollY}, scroll ignoré`);
-            hasScrolledRef.current = true; // Marquer comme fait pour éviter les boucles
-            return;
-          }
-          
-          window.scrollTo({ top: scrollY, behavior: 'instant' });
-          hasScrolledRef.current = true;
-        } catch (error) {
-          // Gérer les erreurs de window.scrollTo() (mode privé, restrictions navigateur, etc.)
-          console.warn('[useScrollInitialization] Erreur lors du scroll initial:', error);
-          // Marquer comme fait pour éviter les tentatives répétées
-          hasScrolledRef.current = true;
-          // Le scroll manuel fonctionnera quand même
+      try {
+        // CRITIQUE: Utiliser le progress initial stocké dans la ref, pas currentProgress
+        // Cela évite que le scroll se fasse vers un mauvais endroit si le progress a changé
+        const progressToUse = initialProgressRef.current!;
+        
+        const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
+        const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
+        const scrollY = calculateScrollYFromProgress(progressToUse, maxScroll);
+        
+        // Valider que scrollY est un nombre valide
+        if (isNaN(scrollY) || !isFinite(scrollY)) {
+          console.warn(`[useScrollInitialization] scrollY invalide: ${scrollY}, scroll ignoré`);
+          hasScrolledRef.current = true; // Marquer comme fait pour éviter les boucles
+          return;
         }
-      });
+        
+        window.scrollTo({ top: scrollY, behavior: 'instant' });
+        hasScrolledRef.current = true;
+      } catch (error) {
+        // Gérer les erreurs de window.scrollTo() (mode privé, restrictions navigateur, etc.)
+        console.warn('[useScrollInitialization] Erreur lors du scroll initial:', error);
+        // Marquer comme fait pour éviter les tentatives répétées
+        hasScrolledRef.current = true;
+        // Le scroll manuel fonctionnera quand même
+      }
     });
     
     return () => {

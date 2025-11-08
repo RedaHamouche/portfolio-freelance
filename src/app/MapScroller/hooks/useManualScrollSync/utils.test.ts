@@ -3,42 +3,8 @@
  */
 
 import { DEFAULT_PATH_LENGTH } from '@/config';
-
-/**
- * Fonction utilitaire pour détecter si un élément est interactif
- * Extrait de useManualScrollSync pour les tests
- */
-function isInteractiveElement(target: HTMLElement | null): boolean {
-  if (!target) return false;
-  
-  return (
-    target.tagName === 'BUTTON' ||
-    target.tagName === 'INPUT' ||
-    target.tagName === 'SELECT' ||
-    target.tagName === 'TEXTAREA' ||
-    !!target.closest('button') ||
-    !!target.closest('input') ||
-    !!target.closest('select') ||
-    !!target.closest('textarea') ||
-    !!target.closest('[role="button"]')
-  );
-}
-
-/**
- * Fonction utilitaire pour détecter si on doit réinitialiser à cause d'un changement de pathLength
- * Extrait de useManualScrollSync pour les tests
- */
-function shouldReinitializeForPathLength(
-  currentPathLength: number,
-  lastInitializedPathLength: number,
-  isInitialized: boolean
-): boolean {
-  const pathLengthChanged = lastInitializedPathLength !== currentPathLength;
-  const wasDefaultValue = lastInitializedPathLength <= DEFAULT_PATH_LENGTH;
-  const isRealValue = currentPathLength > DEFAULT_PATH_LENGTH;
-  
-  return pathLengthChanged && wasDefaultValue && isRealValue && isInitialized;
-}
+import { isInteractiveElement } from './utils/isInteractiveElement';
+import { shouldReinitializeForPathLength } from './utils/shouldReinitializeForPathLength';
 
 describe('useManualScrollSync - Fonctions utilitaires', () => {
   describe('isInteractiveElement', () => {

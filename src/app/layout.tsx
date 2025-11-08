@@ -5,6 +5,7 @@ import '@/styles/reset.scss';
 import ReduxProvider from './ReduxProvider';
 import CursorProvider from './CursorProvider';
 import { ModalProvider } from '@/contexts/ModalContext';
+import { ScrollContextProvider } from './MapScroller/contexts/ScrollContext';
 import Header from './Header';
 
 const geistSans = Geist({
@@ -33,8 +34,10 @@ export default function RootLayout({
         <ReduxProvider>
           <CursorProvider>
             <ModalProvider>
-              <Header />
-              {children}
+              <ScrollContextProvider>
+                <Header />
+                {children}
+              </ScrollContextProvider>
             </ModalProvider>
           </CursorProvider>
         </ReduxProvider>

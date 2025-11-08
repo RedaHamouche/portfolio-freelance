@@ -15,6 +15,12 @@ import scrollReducer from '@/store/scrollSlice';
 // @ts-ignore - Jest module resolution
 import type { RootState } from '@/store';
 import { DEFAULT_PATH_LENGTH } from '@/config';
+import { ScrollContextProvider } from '../../contexts/ScrollContext';
+
+// Mock useBreakpoint
+jest.mock('@/hooks/useBreakpointValue', () => ({
+  useBreakpoint: jest.fn(() => true), // Retourne true (desktop) par défaut pour les tests
+}));
 
 // Mock du modalSlice
 const modalReducer = (state = { isOpen: false }, action: { type: string; payload?: unknown }) => {
@@ -77,8 +83,9 @@ function createMockStore(initialState: Partial<RootState['scroll']> = {}) {
 
 function createWrapper(store: MockStore) {
   function Wrapper({ children }: { children: React.ReactNode }) {
-    // eslint-disable-next-line react/no-children-prop
-    return React.createElement(Provider, { store, children }, children);
+    const scrollContextProvider = React.createElement(ScrollContextProvider, null, children);
+    // TypeScript nécessite children comme prop pour Provider, mais React.createElement accepte aussi les enfants comme argument
+    return React.createElement(Provider, { store, children: scrollContextProvider } as { store: typeof store; children: React.ReactNode });
   }
   Wrapper.displayName = 'TestWrapper';
   return Wrapper;

@@ -17,6 +17,12 @@ import type { RootState } from '@/store';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Jest module resolution
 import { DEFAULT_PATH_LENGTH } from '@/config';
+import { ScrollContextProvider } from '../../contexts/ScrollContext';
+
+// Mock useBreakpoint
+jest.mock('@/hooks/useBreakpointValue', () => ({
+  useBreakpoint: jest.fn(() => true), // Retourne true (desktop) par défaut pour les tests
+}));
 
 // Mock du modalSlice
 const modalReducer = (state = { isOpen: false }, action: { type: string; payload?: unknown }) => {
@@ -80,7 +86,13 @@ function createMockStore(initialState: Partial<RootState['scroll']> = {}) {
 
 function createWrapper(store: MockStore) {
   function Wrapper({ children }: { children: React.ReactNode }) {
-    return <Provider store={store}>{children}</Provider>;
+    return (
+      <Provider store={store}>
+        <ScrollContextProvider>
+          {children}
+        </ScrollContextProvider>
+      </Provider>
+    );
   }
   Wrapper.displayName = 'TestWrapper';
   return Wrapper;

@@ -39,6 +39,51 @@ jest.mock('@uidotdev/usehooks', () => ({
   useThrottle: jest.fn((value) => value) // Retourne la valeur directement pour les tests
 }));
 
+// Mock ScrollContext
+// Note: Dans les mocks Jest, require() est nécessaire car les imports ES6 ne fonctionnent pas dans ce contexte
+jest.mock('../../contexts/ScrollContext', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { ScrollEasingService, EasingFunctions } = require('./domain/ScrollEasingService');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { ScrollProgressCalculator } = require('./domain/ScrollProgressCalculator');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { ScrollStateDetector } = require('./domain/ScrollStateDetector');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { ScrollVelocityService } = require('./domain/ScrollVelocityService');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { createPathDomain } = require('@/templating/domains/path');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { ProgressInitializationService } = require('../useScrollInitialization/domain/ProgressInitializationService');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
+  const { SCROLL_INERTIA_FACTOR, SCROLL_EASING_TYPE, SCROLL_EASING_MIN_DELTA, SCROLL_VELOCITY_CONFIG } = require('@/config');
+
+  const easingFunction = EasingFunctions[SCROLL_EASING_TYPE] || EasingFunctions.linear;
+  const easingService = new ScrollEasingService(SCROLL_INERTIA_FACTOR, easingFunction, SCROLL_EASING_MIN_DELTA);
+  const progressCalculator = new ScrollProgressCalculator();
+  const stateDetector = new ScrollStateDetector(150);
+  const velocityConfig = SCROLL_VELOCITY_CONFIG.desktop;
+  const velocityService = new ScrollVelocityService(velocityConfig.friction, velocityConfig.maxVelocity);
+  const pathDomain = createPathDomain();
+  const progressInitService = new ProgressInitializationService();
+
+  return {
+    useScrollContext: () => ({
+      easingService,
+      progressCalculator,
+      stateDetector,
+      velocityService,
+      pathDomain,
+      progressInitService,
+      velocityConfig: {
+        enabled: SCROLL_VELOCITY_CONFIG.enabled,
+        ...velocityConfig,
+      },
+      easingFunction,
+      isDesktop: true,
+    }),
+  };
+});
+
 describe('useManualScrollSync', () => {
   beforeEach(() => {
     jest.clearAllMocks();

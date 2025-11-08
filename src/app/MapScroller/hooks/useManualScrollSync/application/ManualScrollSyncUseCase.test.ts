@@ -1,22 +1,34 @@
 import { ManualScrollSyncUseCase } from './ManualScrollSyncUseCase';
-import { ScrollEasingService } from '../domain/ScrollEasingService';
+import { ScrollEasingService, EasingFunctions } from '../domain/ScrollEasingService';
 import { ScrollProgressCalculator } from '../domain/ScrollProgressCalculator';
 import { ScrollStateDetector } from '../domain/ScrollStateDetector';
+import { ScrollVelocityService } from '../domain/ScrollVelocityService';
 
 describe('ManualScrollSyncUseCase', () => {
   let useCase: ManualScrollSyncUseCase;
   let easingService: ScrollEasingService;
   let progressCalculator: ScrollProgressCalculator;
   let stateDetector: ScrollStateDetector;
+  let velocityService: ScrollVelocityService;
+  const velocityConfig = {
+    enabled: false,
+    friction: 0.95,
+    maxVelocity: 10,
+    velocityToInertiaMultiplier: 0.1,
+    baseInertiaFactor: 0.12,
+  };
 
   beforeEach(() => {
-    easingService = new ScrollEasingService(0.12, 0.0001);
+    easingService = new ScrollEasingService(0.12, EasingFunctions.linear, 0.0001);
     progressCalculator = new ScrollProgressCalculator();
     stateDetector = new ScrollStateDetector(150);
+    velocityService = new ScrollVelocityService(velocityConfig.friction, velocityConfig.maxVelocity);
     useCase = new ManualScrollSyncUseCase(
       easingService,
       progressCalculator,
-      stateDetector
+      stateDetector,
+      velocityService,
+      velocityConfig
     );
   });
 
@@ -59,6 +71,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           currentProgress: 0.2,
           targetProgress: 0.5,
@@ -80,6 +94,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           currentProgress: 0.5,
           targetProgress: 0.50005, // Très proche
@@ -102,6 +118,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           lastScrollTime: performance.now() - 200, // 200ms dans le passé
         }
@@ -117,6 +135,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           prevProgress: null,
         }
@@ -130,6 +150,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           targetProgress: 0.6,
           prevProgress: 0.4,
@@ -144,6 +166,8 @@ describe('ManualScrollSyncUseCase', () => {
         easingService,
         progressCalculator,
         stateDetector,
+        velocityService,
+        velocityConfig,
         {
           targetProgress: 0.3,
           prevProgress: 0.5,

@@ -1,4 +1,4 @@
-@import '../../styles/abstract/index';
+@use '../../styles/abstract/index' as *;
 
 .controlPanel {
   position: fixed;

@@ -1,3 +1,5 @@
+@use 'sass:map';
+
 // LIST OF MIXINS:
 //        screen
 //        hocus
@@ -20,17 +22,17 @@ $breakpoints: (
 
 @mixin media($query) {
   @if $query == '>=desktop' {
-    @media (min-width: map-get($breakpoints, desktop)) {
+    @media (min-width: map.get($breakpoints, desktop)) {
       @content;
     }
   }
   @else if $query == '>=tablet' {
-    @media (min-width: map-get($breakpoints, tablet)) {
+    @media (min-width: map.get($breakpoints, tablet)) {
       @content;
     }
   }
   @else if $query == '<desktop' {
-    @media (max-width: map-get($breakpoints, desktop)) {
+    @media (max-width: map.get($breakpoints, desktop)) {
       @content;
     }
   }

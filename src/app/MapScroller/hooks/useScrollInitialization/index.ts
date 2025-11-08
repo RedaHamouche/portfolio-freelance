@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { createPathDomain } from '@/templating/domains/path';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { ProgressInitializationService } from './domain/ProgressInitializationService';
 import {
   calculateFakeScrollHeight,
@@ -25,7 +24,6 @@ export const useScrollInitialization = (globalPathLength: number) => {
   const hasScrolledRef = useRef(false);
   const initialProgressRef = useRef<number | null>(null); // Stocker le progress initial pour éviter qu'il change
   const dispatch = useDispatch();
-  const isDesktop = useBreakpoint('>=desktop');
   
   // Créer les instances (mémoïsées)
   const pathDomain = useMemo(() => createPathDomain(), []);

@@ -4,7 +4,12 @@
  */
 
 import { getPathAngleAtProgress, getPointOnPath, calculateAdaptiveDelta } from '../pathCalculations';
+import { globalPathPositionCache } from '../pathPositionCache';
 
+// Nettoyer le cache avant chaque test pour éviter les interférences
+beforeEach(() => {
+  globalPathPositionCache.clear();
+});
 
 /**
  * Crée un mock SVGPathElement pour un path horizontal (pour tester les angles simples)

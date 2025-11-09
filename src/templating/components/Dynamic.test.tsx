@@ -75,6 +75,37 @@ jest.mock('@/utils/viewportCalculations', () => ({
   calculateMapPadding: () => mockCalculateMapPadding(),
 }));
 
+// Mock createPageDomain
+const mockPageComponents = [
+  {
+    id: 'title-about-me',
+    type: 'TitleAboutMe',
+    displayName: 'À propos',
+    title: 'À propos',
+    description: 'Développeur freelance',
+    position: {
+      desktop: { top: 300, left: -20 },
+      mobile: { top: -200, left: -140 },
+    },
+  },
+];
+const mockGetComponents = jest.fn(() => mockPageComponents);
+const mockCalculatePosition = jest.fn((component: unknown, originPoint: { x: number; y: number }) => {
+  const isDesktop = mockUseBreakpoint();
+  const comp = component as { position: { desktop: { top: number; left: number }; mobile: { top: number; left: number } } };
+  const pos = isDesktop ? comp.position.desktop : comp.position.mobile;
+  return {
+    top: originPoint.y + pos.top,
+    left: originPoint.x + pos.left,
+  };
+});
+jest.mock('../domains/page', () => ({
+  createPageDomain: () => ({
+    getComponents: mockGetComponents,
+    calculatePosition: mockCalculatePosition,
+  }),
+}));
+
 // Mock mappingComponent
 jest.mock('../mappingComponent', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports

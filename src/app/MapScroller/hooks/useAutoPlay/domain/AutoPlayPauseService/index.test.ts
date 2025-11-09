@@ -1,4 +1,4 @@
-import { AutoPlayPauseService } from './AutoPlayPauseService';
+import { AutoPlayPauseService } from './index';
 
 describe('AutoPlayPauseService', () => {
   let service: AutoPlayPauseService;

@@ -1,7 +1,8 @@
-import { AutoPlayUseCase } from './AutoPlayUseCase';
-import { AutoPlayProgressService } from '../domain/AutoPlayProgressService';
-import { AutoPlayPauseService } from '../domain/AutoPlayPauseService';
-import { AutoPlayAnchorDetector } from '../domain/AutoPlayAnchorDetector';
+import { AutoPlayUseCase } from './index';
+import { AutoPlayProgressService } from '../../domain/AutoPlayProgressService';
+import { AutoPlayPauseService } from '../../domain/AutoPlayPauseService';
+import { AutoPlayAnchorDetector } from '../../domain/AutoPlayAnchorDetector';
+import { AutoPlayEasingService } from '../../domain/AutoPlayEasingService';
 import { SCROLL_CONFIG } from '@/config';
 import type { PathComponent } from '@/templating/domains/path/types';
 import type { PathDomainAPI } from '@/templating/domains/path/api';
@@ -34,7 +35,8 @@ describe('AutoPlayUseCase', () => {
       calculateComponentPosition: jest.fn(),
     };
     anchorDetector = new AutoPlayAnchorDetector(mockPathDomain as PathDomainAPI);
-    useCase = new AutoPlayUseCase(progressService, pauseService, anchorDetector);
+    const easingService = new AutoPlayEasingService(mockPathDomain as PathDomainAPI);
+    useCase = new AutoPlayUseCase(progressService, pauseService, anchorDetector, easingService);
   });
 
   describe('animate', () => {

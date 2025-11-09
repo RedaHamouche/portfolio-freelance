@@ -1,4 +1,4 @@
-import { AutoPlayAnchorDetector } from './AutoPlayAnchorDetector';
+import { AutoPlayAnchorDetector } from './index';
 import type { PathDomainAPI } from '@/templating/domains/path/api';
 import { SCROLL_CONFIG } from '@/config';
 import type { PathComponent } from '@/templating/domains/path/types';

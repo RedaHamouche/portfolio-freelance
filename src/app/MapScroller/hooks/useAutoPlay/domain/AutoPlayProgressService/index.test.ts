@@ -1,4 +1,4 @@
-import { AutoPlayProgressService } from './AutoPlayProgressService';
+import { AutoPlayProgressService } from './index';
 import { AUTO_SCROLL_CONFIG, SCROLL_CONFIG } from '@/config';
 
 describe('AutoPlayProgressService', () => {

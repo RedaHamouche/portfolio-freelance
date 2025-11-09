@@ -39,7 +39,7 @@ export const montrealRegular = localFont({
 
 /**
  * Font Playfair - Regular
- * Font non critique (utilisée dans les composants secondaires)
+ * Font critique (utilisée dans le Header, visible immédiatement)
  * Supporte font-style: normal et italic (via font-style CSS)
  * 
  * Note: Next.js exige des chemins littéraux (pas de variables ou template strings)
@@ -48,21 +48,21 @@ export const montrealRegular = localFont({
 export const playfairRegular = localFont({
   src: [
     {
-      // public/fonts/Playfair/Playfair.woff2
+      // public/fonts/Playfair/Playfair.woff2 (subset: 210KB)
       path: '../../../public/fonts/Playfair/Playfair.woff2',
       weight: '400',
       style: 'normal',
     },
     {
-      // public/fonts/Playfair/Playfair-Italic.woff2
+      // public/fonts/Playfair/Playfair-Italic.woff2 (subset: 244KB)
       path: '../../../public/fonts/Playfair/Playfair-Italic.woff2',
       weight: '400',
       style: 'italic',
     },
   ],
   variable: '--font-playfair',
-  display: 'optional', // N'affiche pas si pas chargée (non critique)
-  preload: false, // Ne précharge pas (non critique, très lourd ~615KB)
+  display: 'swap', // Affiche immédiatement avec fallback, puis remplace (garantit l'affichage)
+  preload: true, // Précharge la font (critique pour Header visible immédiatement, subset: ~454KB total)
   fallback: ['serif'],
 });
 

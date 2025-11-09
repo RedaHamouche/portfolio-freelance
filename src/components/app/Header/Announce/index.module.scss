@@ -34,7 +34,7 @@
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
-    @include playfair(12px, 500, 1);
+    @include playfair(12px, 500, normal, 1);
     letter-spacing: 1.2;
 }
 

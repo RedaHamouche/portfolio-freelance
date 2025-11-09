@@ -4,7 +4,6 @@
   transform-origin: center center;
   will-change: transform;
   max-width: 250px; // Largeur maximale
-  font-style: italic;
   letter-spacing: 0.02em;
   display: flex;
   flex-direction: column;
@@ -16,7 +15,7 @@
 }
 
 .title {
-  @include playfair(24px);
+  @include playfair(24px, normal, italic);
 }
 
 // Le wrapper de texte permet les retours à la ligne entre les mots
@@ -24,7 +23,7 @@
   display: inline;
   overflow-wrap: normal;
   word-break: normal;
-  @include playfair(12px);
+  @include playfair(12px, normal, italic);
 }
 
 // Chaque mot est dans un span avec white-space: nowrap pour éviter la coupure

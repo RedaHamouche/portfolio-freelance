@@ -1,5 +1,5 @@
 .main {
-    @include montreal(16px, bold);
+    @include montreal(16px, bold, normal);
     @include flex;
 
     padding: 8px 0;

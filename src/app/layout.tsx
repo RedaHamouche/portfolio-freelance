@@ -7,6 +7,7 @@ import { ModalProvider } from '@/contexts/ModalContext';
 import { TemplatingProvider } from '@/contexts/TemplatingContext';
 import { ScrollContextProvider } from '@/contexts/ScrollContext';
 import Header from '@/components/app/Header';
+import { montrealRegular, playfairRegular } from '@/utils/fonts';
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${montrealRegular.variable} ${playfairRegular.variable}`}>
       <body className="antialiased">
         <ReduxProvider>
           <CursorProvider>

@@ -1,48 +1,25 @@
 // @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+// NOTE: Les fonts sont maintenant chargées via next/font/local dans src/utils/fonts/index.ts
+// Les variables CSS sont injectées automatiquement par Next.js
+// Les @font-face sont générés automatiquement par next/font
 
-@font-face {
-    font-family: 'Montreal';
-    src: local('Montreal'), 
-         url('/fonts/Montreal/Montreal-Regular.woff2') format('woff2'),
-         url('/fonts/Montreal/Montreal-Regular.woff') format('woff');
-    font-display: swap; /* Évite les layout shifts lors du chargement */
-}
-@font-face {
-    font-family: 'Montreal-Bold';
-    src: local('Montreal-Bold'), 
-         url('/fonts/Montreal/Montreal-Bold.woff2') format('woff2'),
-         url('/fonts/Montreal/Montreal-Bold.woff') format('woff');
-    font-display: swap; /* Évite les layout shifts lors du chargement */
-}
-
-@font-face {
-    font-family: 'Playfair';
-    src: local('Playfair'), 
-         url('/fonts/Playfair/Playfair.woff2') format('woff2'),
-         url('/fonts/Playfair/Playfair.woff') format('woff');
-    font-display: swap; /* Évite les layout shifts lors du chargement */
-}
-@font-face {
-    font-family: 'Playfair';
-    src: local('Playfair'), 
-         url('/fonts/Playfair/Playfair-Italic.woff2') format('woff2'),
-         url('/fonts/Playfair/Playfair-Italic.woff') format('woff');
-    font-style: italic;
-    font-display: swap; /* Évite les layout shifts lors du chargement */
-}
+// Variables CSS pour utiliser les fonts (injectées par next/font)
+// Utilisation : font-family: var(--font-montreal);
 
 
-@mixin montreal($fontSize: 16px, $fontWeight: normal, $lineHeight: 1.4, $fontFamily: 'Montreal') {
-	font-family: $fontFamily;
+@mixin montreal($fontSize: 16px, $fontWeight: normal, $fontStyle: normal, $lineHeight: 1.4) {
+	font-family: var(--font-montreal), system-ui, arial, sans-serif;
 	font-size: $fontSize;
 	font-weight: $fontWeight;
+	font-style: $fontStyle;
 	line-height: $lineHeight;
 }
 
-@mixin playfair($fontSize: 16px, $fontStyle: normal, $lineHeight: 1.4) {
-	font-family: 'Playfair Display';
+@mixin playfair($fontSize: 16px, $fontWeight: normal, $fontStyle: normal, $lineHeight: 1.4) {
+	font-family: var(--font-playfair), serif;
 	font-size: $fontSize;
+	font-weight: $fontWeight;
 	font-style: $fontStyle;
 	line-height: $lineHeight;
 }

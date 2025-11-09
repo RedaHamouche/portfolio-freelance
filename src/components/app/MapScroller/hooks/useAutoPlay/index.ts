@@ -7,14 +7,14 @@ import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { AutoPlayUseCase } from './application/AutoPlayUseCase';
-import { useAutoPlayStateRefs } from './useAutoPlayStateRefs';
+import { useAutoPlayStateRefs } from './hooks/useAutoPlayStateRefs';
 import { createAutoPlayUseCase } from './utils/createAutoPlayUseCase';
 import { canPauseOnAnchor } from './utils/canPauseOnAnchor';
 import { handlePauseOnAnchor } from './actions/handlePauseOnAnchor';
 import { clearPauseTimeout } from './actions/clearPauseTimeout';
 import { resetPauseState } from './actions/resetPauseState';
 import { syncScrollPosition } from './actions/syncScrollPosition';
-import { ProgressUpdateService } from '../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 // ============================================================================
 // Hook principal

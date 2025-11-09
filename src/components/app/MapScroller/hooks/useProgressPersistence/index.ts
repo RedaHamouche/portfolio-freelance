@@ -3,20 +3,22 @@
  * Écoute les changements de progress et les persiste
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { ProgressInitializationService } from '../useScrollInitialization/domain/ProgressInitializationService';
+import { ProgressPersistenceService } from '@/components/app/MapScroller/hooks/useScrollInitialization/domain/ProgressPersistenceService';
 
+/**
+ * Hook pour sauvegarder automatiquement le progress dans le localStorage
+ * Écoute les changements de progress et les persiste
+ * Utilise ProgressPersistenceService directement pour éviter les dépendances croisées
+ */
 export const useProgressPersistence = () => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
-  const serviceRef = useRef<ProgressInitializationService | null>(null);
   const lastSavedProgressRef = useRef<number | null>(null);
 
-  // Créer le service une seule fois
-  if (!serviceRef.current) {
-    serviceRef.current = new ProgressInitializationService();
-  }
+  // Créer le service une seule fois (mémoïsé)
+  const persistenceService = useMemo(() => new ProgressPersistenceService(), []);
 
   useEffect(() => {
     // Ne pas sauvegarder si le progress n'a pas changé
@@ -25,8 +27,8 @@ export const useProgressPersistence = () => {
     }
 
     // Sauvegarder le progress dans le localStorage
-    serviceRef.current!.saveProgress(progress);
+    persistenceService.saveProgress(progress);
     lastSavedProgressRef.current = progress;
-  }, [progress]);
+  }, [progress, persistenceService]);
 };
 

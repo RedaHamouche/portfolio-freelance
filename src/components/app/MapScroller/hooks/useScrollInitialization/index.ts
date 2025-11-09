@@ -5,7 +5,7 @@ import { ProgressInitializationService } from './domain/ProgressInitializationSe
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
-import { ProgressUpdateService } from '../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
  * Hook pour gérer l'initialisation du scroll et la synchronisation avec les hash/anchors

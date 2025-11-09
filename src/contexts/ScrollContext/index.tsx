@@ -5,9 +5,10 @@ import { ScrollEasingService, EasingFunctions } from '@/components/app/MapScroll
 import { ScrollProgressCalculator } from '@/components/app/MapScroller/hooks/useManualScrollSync/domain/ScrollProgressCalculator';
 import { ScrollStateDetector } from '@/components/app/MapScroller/hooks/useManualScrollSync/domain/ScrollStateDetector';
 import { ScrollVelocityService } from '@/components/app/MapScroller/hooks/useManualScrollSync/domain/ScrollVelocityService';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { ProgressInitializationService } from '@/components/app/MapScroller/hooks/useScrollInitialization/domain/ProgressInitializationService';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
+import type { PathDomainAPI } from '@/templating/domains/path/api';
 import {
   SCROLL_INERTIA_FACTOR,
   SCROLL_EASING_TYPE,
@@ -25,7 +26,7 @@ export interface ScrollContextType {
   progressCalculator: ScrollProgressCalculator;
   stateDetector: ScrollStateDetector;
   velocityService: ScrollVelocityService;
-  pathDomain: ReturnType<typeof createPathDomain>;
+  pathDomain: PathDomainAPI;
   progressInitService: ProgressInitializationService;
 
   // Configuration
@@ -63,6 +64,7 @@ export const useScrollContext = (): ScrollContextType => {
  */
 export const ScrollContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const isDesktop = useBreakpoint('>=desktop');
+  const { pathDomain } = useTemplatingContext();
 
   // Configuration de vélocité selon mobile/desktop
   const velocityConfig = useMemo(() => {
@@ -92,8 +94,6 @@ export const ScrollContextProvider: React.FC<{ children: ReactNode }> = ({ child
     () => new ScrollVelocityService(velocityConfig.friction, velocityConfig.maxVelocity),
     [velocityConfig.friction, velocityConfig.maxVelocity]
   );
-
-  const pathDomain = useMemo(() => createPathDomain(), []);
 
   const progressInitService = useMemo(() => new ProgressInitializationService(), []);
 

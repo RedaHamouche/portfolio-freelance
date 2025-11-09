@@ -1,5 +1,5 @@
-import { DynamicZoomUseCase } from './DynamicZoomUseCase';
-import { ZoomService } from './domain/ZoomService';
+import { DynamicZoomUseCase } from './index';
+import { ZoomService } from '../../domain/ZoomService';
 
 describe('DynamicZoomUseCase', () => {
   let useCase: DynamicZoomUseCase;

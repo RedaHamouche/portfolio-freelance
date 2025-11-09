@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
+import { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
 import type { ScrollContextType } from '@/contexts/ScrollContext';
 
 /**

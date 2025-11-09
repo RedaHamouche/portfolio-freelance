@@ -10,7 +10,7 @@ import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath } from '@/utils/pathCalculations';
 import mappingComponent from '@/templating/mappingComponent';
 import { calculateMapPadding } from '@/utils/viewportCalculations';
-import { createPageDomain } from '@/templating/domains/page';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 
 // useMultipleInView supprimé - voir OPTIMIZATION_NOTES.md pour l'historique
 
@@ -29,8 +29,8 @@ export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
   }, []);
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   
-  // Créer une instance du domaine Page
-  const pageDomain = useMemo(() => createPageDomain(), []);
+  // Utiliser le domaine Page depuis le context (source unique de vérité)
+  const { pageDomain } = useTemplatingContext();
   
   // Calculer le padding si non fourni
   const calculatedPadding = useMemo(() => {

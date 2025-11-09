@@ -1,4 +1,4 @@
-import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 

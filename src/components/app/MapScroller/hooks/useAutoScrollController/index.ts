@@ -4,10 +4,10 @@ import { setAutoScrollTemporarilyPaused, setIsScrolling } from '@/store/scrollSl
 import { RootState } from '@/store';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { AUTO_SCROLL_CONFIG, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
-import { ProgressUpdateService } from '../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 export function useAutoScrollController({
   isAutoPlaying,
@@ -24,7 +24,7 @@ export function useAutoScrollController({
   const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const { start, stop } = useRafLoop();
   const isDesktop = useBreakpoint('>=desktop');
-  const pathDomain = useMemo(() => createPathDomain(), []);
+  const { pathDomain } = useTemplatingContext();
   const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
   const isPausedRef = useRef(false);
   const lastPausedAnchorIdRef = useRef<string | null>(null);

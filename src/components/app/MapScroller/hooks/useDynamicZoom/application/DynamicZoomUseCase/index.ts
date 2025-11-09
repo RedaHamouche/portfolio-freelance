@@ -1,4 +1,4 @@
-import { ZoomService } from './domain/ZoomService';
+import { ZoomService } from '../../domain/ZoomService';
 
 /**
  * Use case pour gérer le zoom dynamique selon l'état du scroll

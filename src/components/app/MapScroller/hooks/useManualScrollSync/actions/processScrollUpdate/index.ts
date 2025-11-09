@@ -1,6 +1,6 @@
-import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
 import type { ScrollContextType } from '@/contexts/ScrollContext';
-import { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 

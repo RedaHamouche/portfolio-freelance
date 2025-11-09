@@ -9,7 +9,7 @@ import React, { useMemo, useRef } from 'react';
 import mappingComponent from '@/templating/mappingComponent';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { createTangenteDomain } from '@/templating/domains/tangente';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath, getPathAngleAtProgress, calculateAdaptiveDelta } from '@/utils/pathCalculations';
 import { normalizeAngleForReadability, getPerpendicularOffset } from '@/utils/tangentUtils';
@@ -34,8 +34,8 @@ export default function DynamicPathTangenteComponents({
     return window.innerWidth >= 1024; // Desktop breakpoint
   }, []);
 
-  // Créer une instance du domaine Tangente
-  const tangenteDomain = useMemo(() => createTangenteDomain(), []);
+  // Utiliser le domaine Tangente depuis le context (source unique de vérité)
+  const { tangenteDomain } = useTemplatingContext();
 
   // Récupérer tous les composants via l'API du domaine selon le breakpoint
   const tangenteComponents = useMemo(() => tangenteDomain.getAllComponents(isDesktop), [tangenteDomain, isDesktop]);

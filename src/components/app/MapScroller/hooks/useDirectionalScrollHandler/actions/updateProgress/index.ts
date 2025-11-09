@@ -1,4 +1,4 @@
-import type { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
+import type { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
  * Met à jour le progress et la direction du scroll dans Redux

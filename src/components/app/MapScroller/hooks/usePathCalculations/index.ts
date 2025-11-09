@@ -7,7 +7,7 @@ import {
   calculateArrowPosition,
 } from '@/utils/pathCalculations';
 import type { PointPosition } from '@/utils/pathCalculations/types';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 
 export const usePathCalculations = (svgPath: SVGPathElement | null) => {
@@ -16,8 +16,8 @@ export const usePathCalculations = (svgPath: SVGPathElement | null) => {
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const isDesktop = useBreakpoint('>=desktop');
 
-  // Créer une instance du domaine Path
-  const pathDomain = useMemo(() => createPathDomain(), []);
+  // Utiliser le domaine Path depuis le context (source unique de vérité)
+  const { pathDomain } = useTemplatingContext();
 
   // Calculer le nextComponent via useMemo en fonction de la direction
   const nextComponent = useMemo(() => {

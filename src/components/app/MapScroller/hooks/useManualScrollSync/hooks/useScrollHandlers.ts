@@ -5,8 +5,8 @@ import { processScrollUpdate, type ProcessScrollUpdateRefs, type ProcessScrollUp
 import { handleUserInteraction, type HandleUserInteractionCallbacks, type HandleUserInteractionRefs } from '../actions/handleUserInteraction';
 import { handleScroll, type HandleScrollCallbacks, type HandleScrollRefs } from '../actions/handleScroll';
 import { scheduleScrollEndCheck } from './useScrollEndCheck';
-import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
-import type { ProgressUpdateService } from '../../../services/ProgressUpdateService';
+import type { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
+import type { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
  * Interface pour toutes les refs nécessaires aux handlers

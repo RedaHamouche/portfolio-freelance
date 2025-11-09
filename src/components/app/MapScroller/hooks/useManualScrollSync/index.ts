@@ -1,17 +1,17 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { ManualScrollSyncUseCase } from './ManualScrollSyncUseCase';
+import { ManualScrollSyncUseCase } from './application/ManualScrollSyncUseCase';
 import { DEFAULT_PATH_LENGTH } from '@/config';
-import { useScrollStateRefs } from './useScrollStateRefs';
+import { useScrollStateRefs } from './hooks/useScrollStateRefs';
 import { useScrollContext } from '@/contexts/ScrollContext';
 import { shouldReinitializeForPathLength } from './utils/shouldReinitializeForPathLength';
-import { updateScrollDirection } from './utils/updateScrollDirection';
+import { updateScrollDirection } from './actions/updateScrollDirection';
 import { useScrollHandlers } from './hooks/useScrollHandlers';
 import { useEasingLoop } from './hooks/useEasingLoop';
 import { useScrollEventListeners } from './hooks/useScrollEventListeners';
 import { useScrollInitialization } from './hooks/useScrollInitialization';
-import { ProgressUpdateService } from '../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress

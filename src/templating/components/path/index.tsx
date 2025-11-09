@@ -11,7 +11,7 @@ import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { setProgress } from '@/store/scrollSlice';
 import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import {
   calculateFakeScrollHeight,
   calculateMaxScroll,
@@ -71,8 +71,8 @@ export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: D
   }, []);
   const dispatch = useDispatch();
 
-  // Créer une instance du domaine Path
-  const pathDomain = useMemo(() => createPathDomain(), []);
+  // Utiliser le domaine Path depuis le context (source unique de vérité)
+  const { pathDomain } = useTemplatingContext();
 
   // Récupérer pathLength du store pour optimiser getPointOnPath
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);

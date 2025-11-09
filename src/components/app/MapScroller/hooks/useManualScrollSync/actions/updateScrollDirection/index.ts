@@ -1,8 +1,8 @@
-import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
-import type { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
+import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
+import type { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
- * Fonction utilitaire pour mettre à jour la direction du scroll dans Redux
+ * Action pour mettre à jour la direction du scroll dans Redux
  * Utilise ProgressUpdateService pour centraliser la mise à jour
  * 
  * @param useCase - Le use case pour obtenir la direction

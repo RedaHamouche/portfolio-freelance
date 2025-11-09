@@ -1,8 +1,8 @@
-import { ManualScrollSyncUseCase } from './ManualScrollSyncUseCase';
-import { ScrollEasingService, EasingFunctions } from './domain/ScrollEasingService';
-import { ScrollProgressCalculator } from './domain/ScrollProgressCalculator';
-import { ScrollStateDetector } from './domain/ScrollStateDetector';
-import { ScrollVelocityService } from './domain/ScrollVelocityService';
+import { ManualScrollSyncUseCase } from './index';
+import { ScrollEasingService, EasingFunctions } from '../../domain/ScrollEasingService';
+import { ScrollProgressCalculator } from '../../domain/ScrollProgressCalculator';
+import { ScrollStateDetector } from '../../domain/ScrollStateDetector';
+import { ScrollVelocityService } from '../../domain/ScrollVelocityService';
 
 describe('ManualScrollSyncUseCase', () => {
   let useCase: ManualScrollSyncUseCase;

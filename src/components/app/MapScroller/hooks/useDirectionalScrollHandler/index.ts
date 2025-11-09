@@ -3,11 +3,11 @@ import { useDispatch } from 'react-redux';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { type ScrollDirection } from '@/config';
 import { DirectionalScrollUseCase } from './application/DirectionalScrollUseCase';
-import { useDirectionalScrollStateRefs } from './useDirectionalScrollStateRefs';
+import { useDirectionalScrollStateRefs } from './hooks/useDirectionalScrollStateRefs';
 import { updateProgress } from './actions/updateProgress';
 import { startDirectionalScroll as startDirectionalScrollAction } from './actions/startDirectionalScroll';
 import { stopDirectionalScroll as stopDirectionalScrollAction } from './actions/stopDirectionalScroll';
-import { ProgressUpdateService } from '../../services/ProgressUpdateService';
+import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 
 /**
  * Hook pour gérer le scroll directionnel (clavier/boutons)

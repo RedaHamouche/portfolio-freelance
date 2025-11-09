@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
-import { updateScrollDirection } from '../utils/updateScrollDirection';
+import type { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
+import { updateScrollDirection } from '../actions/updateScrollDirection';
 import type { ScrollContextType } from '@/contexts/ScrollContext';
-import type { ProgressUpdateService } from '../../../services/ProgressUpdateService';
+import type { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 
 /**

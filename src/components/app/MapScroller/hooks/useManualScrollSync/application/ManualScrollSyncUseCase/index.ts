@@ -1,7 +1,7 @@
-import { ScrollEasingService } from './domain/ScrollEasingService';
-import { ScrollProgressCalculator } from './domain/ScrollProgressCalculator';
-import { ScrollStateDetector } from './domain/ScrollStateDetector';
-import { ScrollVelocityService } from './domain/ScrollVelocityService';
+import { ScrollEasingService } from '../../domain/ScrollEasingService';
+import { ScrollProgressCalculator } from '../../domain/ScrollProgressCalculator';
+import { ScrollStateDetector } from '../../domain/ScrollStateDetector';
+import { ScrollVelocityService } from '../../domain/ScrollVelocityService';
 
 export type ScrollDirection = 'forward' | 'backward' | null;
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { DynamicZoomUseCase } from './DynamicZoomUseCase';
+import { DynamicZoomUseCase } from './application/DynamicZoomUseCase';
 import { ZoomService } from './domain/ZoomService';
 import { DYNAMIC_ZOOM_CONFIG } from '@/config';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';

@@ -5,6 +5,7 @@ import ReduxProvider from '@/contexts/ReduxContext';
 import CursorProvider from '@/contexts/CursorContext';
 import { ModalProvider } from '@/contexts/ModalContext';
 import { ScrollContextProvider } from '@/contexts/ScrollContext';
+import { TemplatingProvider } from '@/contexts/TemplatingContext';
 import Header from '@/components/app/Header';
 
 export const metadata: Metadata = {
@@ -23,10 +24,12 @@ export default function RootLayout({
         <ReduxProvider>
           <CursorProvider>
             <ModalProvider>
-              <ScrollContextProvider>
-                <Header />
-                {children}
-              </ScrollContextProvider>
+              <TemplatingProvider>
+                <ScrollContextProvider>
+                  <Header />
+                  {children}
+                </ScrollContextProvider>
+              </TemplatingProvider>
             </ModalProvider>
           </CursorProvider>
         </ReduxProvider>

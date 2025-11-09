@@ -1,5 +1,5 @@
 import { SCROLL_CONFIG } from '@/config';
-import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
 
 /**
  * Fonction utilitaire pour programmer la vérification de fin de scroll

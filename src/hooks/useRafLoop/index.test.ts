@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useRafLoop } from './useRafLoop';
+import { useRafLoop } from './index';
 
 jest.useFakeTimers();
 

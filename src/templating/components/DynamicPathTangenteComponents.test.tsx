@@ -59,6 +59,7 @@ jest.mock('@/hooks/useBreakpointValue', () => ({
 jest.mock('@/utils/pathCalculations', () => ({
   getPointOnPath: jest.fn(() => ({ x: 100, y: 200 })),
   getPathAngleAtProgress: jest.fn(() => 0),
+  calculateAdaptiveDelta: jest.fn((pathLength: number) => Math.max(2, pathLength * 0.001)),
 }));
 
 // Mock createTangenteDomain

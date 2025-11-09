@@ -1,7 +1,7 @@
 import type { ViewportTransform, ViewportBounds } from '@/utils/viewportCalculations';
 import type { PointPosition } from '@/utils/pathCalculations/types';
 import type { MapViewportConfig } from '../../application/MapViewportUseCase';
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 
 export interface UpdateViewportParams {
   svgRef: React.RefObject<SVGSVGElement | null>;
@@ -25,8 +25,9 @@ export interface UpdateViewportParams {
 /**
  * Action pour mettre à jour la vue du viewport avec GSAP (optimisé GPU)
  * Fonction pure, testable individuellement
+ * GSAP est lazy loadé pour réduire le bundle initial
  */
-export function updateViewport(params: UpdateViewportParams): void {
+export async function updateViewport(params: UpdateViewportParams): Promise<void> {
   const {
     svgRef,
     svgPath,
@@ -57,6 +58,9 @@ export function updateViewport(params: UpdateViewportParams): void {
   );
 
   if (!transform) return;
+
+  // Lazy load GSAP
+  const gsap = await loadGSAP();
 
   // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
   // GSAP gère automatiquement will-change et l'accélération GPU

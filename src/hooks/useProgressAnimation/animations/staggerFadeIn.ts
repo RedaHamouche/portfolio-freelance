@@ -2,7 +2,7 @@
  * Animation d'apparition de lettres avec stagger
  */
 
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 import { AnimationState } from '../types';
 import { AnimationContext, AnimationResult, ComplexAnimation } from './base';
 import { StaggerFadeInAnimationConfig } from '../types';
@@ -84,13 +84,17 @@ function setup(
 
 /**
  * Met à jour l'animation des lettres basé sur le progress
+ * GSAP est lazy loadé pour réduire le bundle initial
  */
-function update(
+async function update(
   elementRef: React.RefObject<HTMLElement>,
   context: AnimationContext,
   config: StaggerFadeInAnimationConfig
-): void {
+): Promise<void> {
   if (!elementRef.current) return;
+
+  // Lazy load GSAP
+  const gsap = await loadGSAP();
 
   const { progress } = context;
   const { 

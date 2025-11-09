@@ -113,8 +113,8 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
 
   // Fonction pour mettre à jour la vue avec GSAP (optimisé GPU)
-  const updateViewportCallback = useCallback(() => {
-    updateViewport({
+  const updateViewportCallback = useCallback(async () => {
+    await updateViewport({
       svgRef,
       svgPath,
       mapWrapperRef,

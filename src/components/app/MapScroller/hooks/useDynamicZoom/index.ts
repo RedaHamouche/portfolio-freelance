@@ -5,7 +5,7 @@ import { DynamicZoomUseCase } from './application/DynamicZoomUseCase';
 import { ZoomService } from './domain/ZoomService';
 import { DYNAMIC_ZOOM_CONFIG } from '@/config';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 
 interface UseDynamicZoomOptions {
   baseScale: number;
@@ -80,7 +80,15 @@ export function useDynamicZoom({
 
   // State pour le scale actuel (nécessaire pour déclencher les re-renders du parent)
   const [currentScale, setCurrentScale] = useState(baseScale);
-  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const [gsap, setGSAP] = useState<typeof import('gsap')['default'] | null>(null);
+  const animationRef = useRef<ReturnType<typeof import('gsap')['default']['to']> | null>(null);
+
+  // Lazy load GSAP
+  useEffect(() => {
+    loadGSAP().then((loadedGSAP) => {
+      setGSAP(loadedGSAP);
+    });
+  }, []);
 
   // Mettre à jour l'état du scroll dans le use case
   useEffect(() => {
@@ -90,6 +98,9 @@ export function useDynamicZoom({
 
   // Animer le zoom de manière fluide
   useEffect(() => {
+    // Attendre que GSAP soit chargé
+    if (!gsap) return;
+
     // Si le zoom dynamique est désactivé, retourner le scale de base
     if (!config.enabled) {
       if (currentScale !== baseScale) {
@@ -135,7 +146,7 @@ export function useDynamicZoom({
         animationRef.current = null;
       }
     };
-  }, [baseScale, isScrolling, config.animationDuration, config.ease, config.enabled, currentScale]);
+  }, [gsap, baseScale, isScrolling, config.animationDuration, config.ease, config.enabled, currentScale]);
 
   // Initialiser le scale au baseScale si jamais il change significativement
   useEffect(() => {

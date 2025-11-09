@@ -2,10 +2,10 @@
  * Hook pour animer des composants basé sur le progress du scroll
  */
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 import { UseProgressAnimationConfig, AnimationState, AnimationConfig } from './types';
 import { createInitialAnimationState } from './utils';
 import { getAnimation } from './animations';
@@ -19,6 +19,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
 ) {
   const elementRef = useRef<T>(null);
   const animationStateRef = useRef<AnimationState>(createInitialAnimationState());
+  const [gsap, setGSAP] = useState<typeof import('gsap')['default'] | null>(null);
   const quickSettersRef = useRef<{
     x?: (value: number) => void;
     y?: (value: number) => void;
@@ -30,6 +31,13 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
 
   // Référence pour tracker les animations complexes initialisées
   const complexAnimationsSetupRef = useRef<Set<string>>(new Set());
+
+  // Lazy load GSAP
+  useEffect(() => {
+    loadGSAP().then((loadedGSAP) => {
+      setGSAP(loadedGSAP);
+    });
+  }, []);
 
   // Récupérer le progress et la direction depuis Redux
   const progress = useSelector((state: RootState) => state.scroll.progress);
@@ -44,7 +52,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
 
   // Initialiser les quickSetters GSAP une seule fois
   useEffect(() => {
-    if (!elementRef.current) return;
+    if (!elementRef.current || !gsap) return;
 
     // Créer les quickSetters pour des performances optimales
     // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
@@ -85,7 +93,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
       scaleY: 1,
       rotation: 0,
     });
-  }, []);
+  }, [gsap]);
 
   // Calculer les valeurs d'animation
   const animationValues = useMemo(() => {
@@ -140,7 +148,7 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
   useEffect(() => {
     if (!elementRef.current) return;
 
-    config.animations.forEach((animationConfig) => {
+    config.animations.forEach(async (animationConfig) => {
       if (animationConfig.enabled === false) return;
 
       const animation = getAnimation(animationConfig.type);
@@ -148,7 +156,11 @@ export function useProgressAnimation<T extends HTMLElement = HTMLDivElement>(
 
       if (!complexAnimationsSetupRef.current.has(animationConfig.type)) return;
 
-      animation.update(elementRef as React.RefObject<HTMLElement>, animationContext, animationConfig as AnimationConfig);
+      // Support des fonctions update asynchrones (pour lazy load GSAP)
+      const result = animation.update(elementRef as React.RefObject<HTMLElement>, animationContext, animationConfig as AnimationConfig);
+      if (result instanceof Promise) {
+        await result;
+      }
     });
   }, [progress, config, animationContext]);
 

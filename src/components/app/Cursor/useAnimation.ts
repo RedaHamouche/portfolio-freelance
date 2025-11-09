@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 
 interface CursorAnimationRefs {
   cursorElement: HTMLDivElement;
@@ -20,9 +20,13 @@ interface CursorAnimationControls {
 /**
  * Initialise toutes les animations GSAP pour le curseur personnalisé
  * @param refs - Les références aux éléments DOM nécessaires
+ * @param gsap - Instance GSAP chargée
  * @returns Les contrôles d'animation (moveTo, animateClick, etc.)
  */
-export function initCursorAnimations(refs: CursorAnimationRefs): CursorAnimationControls {
+export function initCursorAnimations(
+  refs: CursorAnimationRefs,
+  gsap: typeof import('gsap')['default']
+): CursorAnimationControls {
   const { cursorElement, outerSvg, innerSvgContainer } = refs;
 
   // Récupérer le circle du outerSvg pour animer strokeDashoffset
@@ -214,20 +218,31 @@ export function useCursorAnimations(refs: {
   innerSvgContainer: React.RefObject<HTMLDivElement | null>;
 }) {
   const animationControlsRef = useRef<ReturnType<typeof initCursorAnimations> | null>(null);
+  const [gsap, setGSAP] = useState<typeof import('gsap')['default'] | null>(null);
 
   // Utiliser l'état global Redux
   const { isClickable } = useSelector((state: RootState) => state.cursor);
   const { isScrolling } = useSelector((state: RootState) => state.scroll);
 
+  // Lazy load GSAP
+  useEffect(() => {
+    loadGSAP().then((loadedGSAP) => {
+      setGSAP(loadedGSAP);
+    });
+  }, []);
+
   // Initialiser les animations GSAP
   useEffect(() => {
-    if (!refs.cursorElement.current || !refs.outerSvg.current || !refs.innerSvgContainer.current) return;
+    if (!refs.cursorElement.current || !refs.outerSvg.current || !refs.innerSvgContainer.current || !gsap) return;
 
-    animationControlsRef.current = initCursorAnimations({
-      cursorElement: refs.cursorElement.current,
-      outerSvg: refs.outerSvg.current,
-      innerSvgContainer: refs.innerSvgContainer.current,
-    });
+    animationControlsRef.current = initCursorAnimations(
+      {
+        cursorElement: refs.cursorElement.current,
+        outerSvg: refs.outerSvg.current,
+        innerSvgContainer: refs.innerSvgContainer.current,
+      },
+      gsap
+    );
 
     return () => {
       if (animationControlsRef.current) {
@@ -235,7 +250,7 @@ export function useCursorAnimations(refs: {
         animationControlsRef.current = null;
       }
     };
-  }, [refs.cursorElement, refs.outerSvg, refs.innerSvgContainer]);
+  }, [refs.cursorElement, refs.outerSvg, refs.innerSvgContainer, gsap]);
 
   // Gérer les animations de scroll
   useEffect(() => {

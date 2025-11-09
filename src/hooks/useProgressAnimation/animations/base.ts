@@ -47,7 +47,7 @@ export interface ComplexAnimation<TConfig> {
     elementRef: React.RefObject<HTMLElement>,
     context: AnimationContext,
     config: TConfig
-  ) => void;
+  ) => void | Promise<void>;
 }
 
 export type Animation<TConfig = unknown> = SimpleAnimation<TConfig> | ComplexAnimation<TConfig>;

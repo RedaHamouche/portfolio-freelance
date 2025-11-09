@@ -50,10 +50,7 @@ jest.mock('react-redux', () => ({
   }
 }));
 
-// Mock useThrottle
-jest.mock('@uidotdev/usehooks', () => ({
-  useThrottle: jest.fn((value) => value) // Retourne la valeur directement pour les tests
-}));
+// Note: @uidotdev/usehooks n'est plus utilisé, mock supprimé
 
 // Mock ScrollContext
 // Note: Dans les mocks Jest, require() est nécessaire car les imports ES6 ne fonctionnent pas dans ce contexte

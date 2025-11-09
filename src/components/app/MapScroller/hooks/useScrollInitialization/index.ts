@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { ProgressInitializationService } from './domain/ProgressInitializationService';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
@@ -22,9 +22,9 @@ export const useScrollInitialization = (globalPathLength: number) => {
   const hasScrolledRef = useRef(false);
   const initialProgressRef = useRef<number | null>(null); // Stocker le progress initial pour éviter qu'il change
   const dispatch = useDispatch();
+  const { pathDomain } = useTemplatingContext();
   
   // Créer les instances (mémoïsées)
-  const pathDomain = useMemo(() => createPathDomain(), []);
   const service = useMemo(() => new ProgressInitializationService(), []);
   const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
 

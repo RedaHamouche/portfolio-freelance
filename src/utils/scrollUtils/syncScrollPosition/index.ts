@@ -1,6 +1,6 @@
-import { isBrowser } from '../ssr/isBrowser';
-import { isValidScrollY } from '../validation/isValidScrollY';
-import { calculateScrollY } from './calculateScrollY';
+import { isBrowser } from '@/utils/ssr/isBrowser';
+import { isValidScrollY } from '@/utils/validation/isValidScrollY';
+import { calculateScrollY } from '@/utils/scrollUtils/calculateScrollY';
 
 export interface SyncScrollPositionOptions {
   behavior?: ScrollBehavior;

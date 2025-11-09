@@ -1,4 +1,4 @@
-import { calculateScrollY } from './calculateScrollY';
+import { calculateScrollY } from './index';
 import * as scrollCalculations from '@/utils/scrollCalculations';
 import * as viewportCalculations from '@/utils/viewportCalculations';
 

@@ -1,4 +1,4 @@
-import { isBrowser } from './isBrowser';
+import { isBrowser } from './index';
 
 describe('isBrowser', () => {
   it('devrait retourner true dans un environnement navigateur', () => {

@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath } from '@/utils/pathCalculations';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import styles from './index.module.scss';
 
 interface SvgPathDebuggerProps {
@@ -33,8 +33,8 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
   const [showInfo, setShowInfo] = useState(true);
   const [mounted, setMounted] = useState(false);
   
-  // Créer une instance du domaine Path
-  const pathDomain = useMemo(() => createPathDomain(), []);
+  // Utiliser le domaine Path depuis le context (source unique de vérité)
+  const { pathDomain } = useTemplatingContext();
 
   // Vérifier si le mode debug est activé
   useEffect(() => {

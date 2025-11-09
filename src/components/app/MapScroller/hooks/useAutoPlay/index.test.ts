@@ -27,10 +27,14 @@ jest.mock('@/hooks/useBreakpointValue', () => ({
   useBreakpoint: () => true, // Desktop par défaut
 }));
 
-// Mock createPathDomain
-jest.mock('@/templating/domains/path', () => ({
-  createPathDomain: () => ({
-    getNextAnchor: jest.fn(() => null),
+// Mock TemplatingContext
+jest.mock('@/contexts/TemplatingContext', () => ({
+  useTemplatingContext: () => ({
+    pathDomain: {
+      getNextAnchor: jest.fn(() => null),
+    },
+    pageDomain: {},
+    tangenteDomain: {},
   }),
 }));
 
@@ -99,9 +103,15 @@ describe('useAutoPlay', () => {
       autoScrollPauseTime: 1000,
     }));
 
-    jest.doMock('@/templating/domains/path', () => ({
-      createPathDomain: () => ({
-        getNextAnchor: mockGetNextAnchor,
+    // Le mock de TemplatingContext est déjà configuré en haut du fichier
+    // On peut le mettre à jour dynamiquement si nécessaire
+    jest.doMock('@/contexts/TemplatingContext', () => ({
+      useTemplatingContext: () => ({
+        pathDomain: {
+          getNextAnchor: mockGetNextAnchor,
+        },
+        pageDomain: {},
+        tangenteDomain: {},
       }),
     }));
 

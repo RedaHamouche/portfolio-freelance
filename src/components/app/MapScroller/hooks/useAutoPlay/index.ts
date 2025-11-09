@@ -4,7 +4,7 @@ import { RootState } from '@/store';
 import { setIsScrolling } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
-import { createPathDomain } from '@/templating/domains/path';
+import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import { AutoPlayUseCase } from './application/AutoPlayUseCase';
 import { useAutoPlayStateRefs } from './hooks/useAutoPlayStateRefs';
@@ -38,7 +38,7 @@ export function useAutoPlay({
 
   const { start, stop } = useRafLoop();
   const isDesktop = useBreakpoint('>=desktop');
-  const pathDomain = useMemo(() => createPathDomain(), []);
+  const { pathDomain } = useTemplatingContext();
 
   // Service pour mettre à jour le progress (source unique de vérité)
   const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);

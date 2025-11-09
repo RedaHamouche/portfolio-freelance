@@ -1,9 +1,9 @@
-import { syncScrollPosition } from './syncScrollPosition';
-import { calculateScrollY } from './calculateScrollY';
-import { isValidScrollY } from '../validation/isValidScrollY';
+import { syncScrollPosition } from './index';
+import { calculateScrollY } from '@/utils/scrollUtils/calculateScrollY';
+import { isValidScrollY } from '@/utils/validation/isValidScrollY';
 
-jest.mock('./calculateScrollY');
-jest.mock('../validation/isValidScrollY');
+jest.mock('@/utils/scrollUtils/calculateScrollY');
+jest.mock('@/utils/validation/isValidScrollY');
 
 describe('syncScrollPosition', () => {
   const mockScrollTo = jest.fn();

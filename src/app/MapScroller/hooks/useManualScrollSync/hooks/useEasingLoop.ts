@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
-import { setProgress } from '@/store/scrollSlice';
 import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
 import { updateScrollDirection } from '../utils/updateScrollDirection';
 import type { ScrollContextType } from '../../../contexts/ScrollContext';
+import type { ProgressUpdateService } from '../../../services/ProgressUpdateService';
+import { isBrowser } from '@/utils/ssr/isBrowser';
 
 /**
  * Interface pour les refs nécessaires à useEasingLoop
@@ -22,13 +22,13 @@ export interface UseEasingLoopRefs {
 export function useEasingLoop(
   scrollContext: ScrollContextType,
   refs: UseEasingLoopRefs,
-  dispatch: ReturnType<typeof useDispatch>,
+  progressUpdateService: ProgressUpdateService,
   isModalOpen: boolean,
   getUseCase: () => ManualScrollSyncUseCase
 ) {
   // Boucle d'easing
   const easingLoop = useCallback(() => {
-    if (typeof window === 'undefined') return;
+    if (!isBrowser()) return;
     if (isModalOpen) {
       refs.isEasingActiveRef.current = false;
       refs.easingRafIdRef.current = null;
@@ -38,10 +38,10 @@ export function useEasingLoop(
     const useCase = getUseCase();
     const shouldContinue = useCase.animateEasing();
     const progressFromUseCase = useCase.getCurrentProgress();
-    dispatch(setProgress(progressFromUseCase));
+    progressUpdateService.updateProgressOnly(progressFromUseCase);
 
     // Tracker la direction seulement si l'autoplay n'est pas actif et si elle a changé
-    updateScrollDirection(useCase, dispatch, refs.isAutoPlayingRef, refs.lastScrollDirectionRef);
+    updateScrollDirection(useCase, progressUpdateService, refs.isAutoPlayingRef, refs.lastScrollDirectionRef);
 
     if (shouldContinue) {
       refs.easingRafIdRef.current = requestAnimationFrame(easingLoop);
@@ -50,7 +50,7 @@ export function useEasingLoop(
       refs.easingRafIdRef.current = null;
     }
   }, [
-    dispatch,
+    progressUpdateService,
     isModalOpen,
     getUseCase,
     refs.isEasingActiveRef,

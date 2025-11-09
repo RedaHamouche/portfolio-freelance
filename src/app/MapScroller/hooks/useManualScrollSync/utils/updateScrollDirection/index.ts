@@ -1,18 +1,18 @@
-import { setLastScrollDirection, setAutoScrollDirection } from '@/store/scrollSlice';
-import type { AppDispatch } from '@/store';
 import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
+import type { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
 
 /**
  * Fonction utilitaire pour mettre à jour la direction du scroll dans Redux
+ * Utilise ProgressUpdateService pour centraliser la mise à jour
  * 
  * @param useCase - Le use case pour obtenir la direction
- * @param dispatch - La fonction dispatch de Redux
+ * @param progressUpdateService - Le service pour mettre à jour le progress et la direction
  * @param isAutoPlayingRef - Ref pour vérifier si l'autoplay est actif
  * @param lastScrollDirectionRef - Ref pour stocker la dernière direction
  */
 export function updateScrollDirection(
   useCase: ManualScrollSyncUseCase,
-  dispatch: AppDispatch,
+  progressUpdateService: ProgressUpdateService,
   isAutoPlayingRef: { current: boolean },
   lastScrollDirectionRef: { current: string | null }
 ): void {
@@ -21,9 +21,10 @@ export function updateScrollDirection(
   const direction = useCase.getScrollDirection();
   if (direction && direction !== lastScrollDirectionRef.current) {
     lastScrollDirectionRef.current = direction;
-    dispatch(setLastScrollDirection(direction));
-    const autoScrollDirection = direction === 'forward' ? 1 : -1;
-    dispatch(setAutoScrollDirection(autoScrollDirection));
+    // Utiliser le service pour mettre à jour la direction (mais pas le progress ici)
+    // Le service gère setLastScrollDirection et setAutoScrollDirection
+    const currentProgress = useCase.getCurrentProgress();
+    progressUpdateService.updateProgressWithDirection(currentProgress, direction);
   }
 }
 

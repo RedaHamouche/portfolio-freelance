@@ -6,18 +6,17 @@ import Dynamic from '@/templating/components/Dynamic';
 import DynamicPathComponents from '@/templating/components/DynamicPathComponents';
 import DynamicPathTangenteComponents from '@/templating/components/DynamicPathTangenteComponents';
 import { SvgPath } from '@/app/MapScroller/components/SvgPath';
-import PointTrail from '@/app/MapScroller/PointTrail';
+import PointTrail from './PointTrail';
 import { SvgPathDebugger } from '@/components/SvgPathDebugger';
 import { usePathCalculations } from '@/app/MapScroller/hooks/usePathCalculations';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useDynamicZoom } from '@/app/MapScroller/hooks/useDynamicZoom';
-import gsap from 'gsap';
-import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll, calculateAdjustedTargetProgress } from '@/utils/scrollCalculations';
-import { getViewportHeight } from '@/utils/viewportCalculations';
-import { MapViewportUseCase } from './application/MapViewportUseCase';
+import { MapViewportUseCase, type MapViewportConfig } from './application/MapViewportUseCase';
 import { ViewportBoundsService } from './domain/ViewportBoundsService';
 import { ViewportTransformService } from './domain/ViewportTransformService';
 import { ViewportDimensionsService } from './domain/ViewportDimensionsService';
+import { updateViewport } from './actions/updateViewport';
+import { handleGoToNext } from './actions/handleGoToNext';
 import type { ViewportBounds } from '@/utils/viewportCalculations';
 
 interface MapViewportProps {
@@ -34,6 +33,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const lastScrollDirection = useSelector((state: RootState) => state.scroll.lastScrollDirection);
   const isAutoPlaying = useSelector((state: RootState) => state.scroll.isAutoPlaying);
+  const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const dispatch = useDispatch();
   const [svgPath, setSvgPath] = useState<SVGPathElement | null>(null);
   const { svgSize, mapScale, mapPaddingRatio } = useResponsivePath();
@@ -54,7 +54,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
   }
 
   // Config mémoïsée pour le use case (utilise le scale dynamique)
-  const viewportConfig = useMemo(
+  const viewportConfig: MapViewportConfig = useMemo(
     () => ({
       svgSize,
       scale: dynamicScale, // Utiliser le scale dynamique au lieu de mapScale
@@ -113,83 +113,40 @@ export const MapViewport: React.FC<MapViewportProps> = ({
 
 
   // Fonction pour mettre à jour la vue avec GSAP (optimisé GPU)
-  const updateViewport = useCallback(() => {
-    if (!svgRef.current || !svgPath || !mapWrapperRef.current || !viewportBounds) return;
-    if (typeof window === 'undefined') return;
-
-    const pointPosition = getCurrentPointPosition();
-    const viewportDims = useCaseRef.current!.isValidDimensions(windowSize)
-      ? windowSize
-      : useCaseRef.current!.getViewportDimensions();
-
-    const transform = useCaseRef.current!.calculateTransform(
-      pointPosition,
-      viewportDims.width,
-      viewportDims.height,
+  const updateViewportCallback = useCallback(() => {
+    updateViewport({
+      svgRef,
+      svgPath,
+      mapWrapperRef,
+      viewportBounds,
+      getCurrentPointPosition,
+      windowSize,
+      calculateTransform: useCaseRef.current!.calculateTransform.bind(useCaseRef.current!),
       viewportConfig,
-      viewportBounds
-    );
-
-    if (!transform) return;
-
-    // Utiliser gsap.set avec les propriétés transform natives pour optimiser GPU
-    // GSAP gère automatiquement will-change et l'accélération GPU
-    // Utiliser scaleX et scaleY au lieu de scale pour éviter l'erreur "scale not eligible for reset"
-    gsap.set(mapWrapperRef.current, {
-      x: transform.translateX,
-      y: transform.translateY,
-      scaleX: transform.scale,
-      scaleY: transform.scale,
-      transformOrigin: 'top left',
+      isValidDimensions: useCaseRef.current!.isValidDimensions.bind(useCaseRef.current!),
+      getViewportDimensions: useCaseRef.current!.getViewportDimensions.bind(useCaseRef.current!),
     });
   }, [svgRef, svgPath, mapWrapperRef, getCurrentPointPosition, viewportConfig, viewportBounds, windowSize]);
 
   // Gérer le positionnement de la vue
   useLayoutEffect(() => {
-    updateViewport();
-  }, [updateViewport, progress]);
+    updateViewportCallback();
+  }, [updateViewportCallback, progress]);
 
   // OPTIMISATION: Supprimé tous les événements resize
   // Personne ne resize son écran dans la vraie vie
 
-  const handleGoToNext = useCallback(() => {
-    if (!nextComponent) return;
-    if (typeof window === 'undefined') return;
-
-    // CRITIQUE: Annuler l'autoplay si actif (même si on clique sur PointTrail pendant l'autoplay)
-    // Cela permet à l'utilisateur de reprendre le contrôle en cliquant sur PointTrail
-    if (isAutoPlaying) {
-      dispatch(setAutoPlaying(false));
-    }
-
-    // Utiliser requestAnimationFrame pour s'assurer que les dimensions sont stables
-    // Cela évite les problèmes sur iOS où window.innerHeight peut changer
-    requestAnimationFrame(() => {
-      // Utiliser getViewportHeight() pour être cohérent avec le reste de l'application
-      // Cette fonction utilise window.innerHeight de manière stable
-      const viewportHeight = getViewportHeight();
-      const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-      const maxScroll = calculateMaxScroll(fakeScrollHeight, viewportHeight);
-      
-      // Calculer le target progress en respectant toujours la direction du PointTrail
-      // Le PointTrail pointe déjà dans la bonne direction grâce à findNextComponentInDirection
-      const adjustedTargetProgress = calculateAdjustedTargetProgress(
-        progress,
-        nextComponent.position.progress,
-        lastScrollDirection
-      );
-      
-      // Calculer le scrollY à partir du progress ajusté
-      const targetScrollY = calculateScrollYFromProgress(adjustedTargetProgress, maxScroll);
-
-      // Utiliser window.scrollTo directement au lieu de GSAP pour éviter les problèmes sur iOS
-      // GSAP ScrollToPlugin peut avoir des problèmes avec les animations sur iOS Safari
-      window.scrollTo({
-        top: targetScrollY,
-        behavior: 'smooth'
-      });
+  const handleGoToNextCallback = useCallback(() => {
+    handleGoToNext({
+      nextComponent,
+      globalPathLength,
+      progress,
+      lastScrollDirection,
+      isAutoPlaying,
+      isModalOpen,
+      setAutoPlaying: (isPlaying: boolean) => dispatch(setAutoPlaying(isPlaying)),
     });
-  }, [nextComponent, globalPathLength, progress, lastScrollDirection, dispatch, isAutoPlaying]);
+  }, [nextComponent, globalPathLength, progress, lastScrollDirection, dispatch, isAutoPlaying, isModalOpen]);
 
   // Mémoïser les calculs de position/angle/arrow pour éviter les recalculs inutiles
   // Ces valeurs ne sont utilisées que si nextComponent existe, donc on les calcule conditionnellement
@@ -255,7 +212,7 @@ export const MapViewport: React.FC<MapViewportProps> = ({
             ...nextComponent,
             anchorId: nextComponent.anchorId, // TypeScript sait maintenant que anchorId existe
           }}
-          onGoToNext={handleGoToNext}
+          onGoToNext={handleGoToNextCallback}
           angle={pointAngle}
           arrowPosition={arrowPosition}
         />

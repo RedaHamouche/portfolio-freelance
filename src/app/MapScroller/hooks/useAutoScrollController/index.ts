@@ -1,12 +1,13 @@
 import { useRef, useCallback, useEffect, useMemo } from 'react';
-import { useDispatch } from 'react-redux';
-import { setProgress, setAutoScrollTemporarilyPaused, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAutoScrollTemporarilyPaused, setIsScrolling } from '@/store/scrollSlice';
+import { RootState } from '@/store';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { AUTO_SCROLL_CONFIG, SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
-import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll } from '@/utils/scrollCalculations';
-import { getViewportHeight } from '@/utils/viewportCalculations';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
+import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
+import { ProgressUpdateService } from '../../services/ProgressUpdateService';
 
 export function useAutoScrollController({
   isAutoPlaying,
@@ -20,9 +21,11 @@ export function useAutoScrollController({
   progress: number
 }) {
   const dispatch = useDispatch();
+  const isModalOpen = useSelector((state: RootState) => state.modal.isOpen);
   const { start, stop } = useRafLoop();
   const isDesktop = useBreakpoint('>=desktop');
   const pathDomain = useMemo(() => createPathDomain(), []);
+  const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
   const isPausedRef = useRef(false);
   const lastPausedAnchorIdRef = useRef<string | null>(null);
   const prevProgressRef = useRef(progress);
@@ -54,11 +57,9 @@ export function useAutoScrollController({
     const speed = isDesktop ? AUTO_SCROLL_CONFIG.desktop.speed : AUTO_SCROLL_CONFIG.mobile.speed;
     const newProgress = (currentProgress + autoScrollDirection * speed * dt + 1) % 1;
     
-    // Tracker la direction du scroll
+    // Tracker la direction du scroll et mettre à jour le progress (source unique de vérité)
     const direction = autoScrollDirection > 0 ? 'forward' : 'backward';
-    dispatch(setLastScrollDirection(direction));
-    
-    dispatch(setProgress(newProgress));
+    progressUpdateService.updateProgressWithDirection(newProgress, direction);
     
     // Pause sur anchor
     const anchor = pathDomain.getNextAnchor(prevProgressRef.current, newProgress, SCROLL_CONFIG.ANCHOR_TOLERANCE, isDesktop);
@@ -75,7 +76,7 @@ export function useAutoScrollController({
         // Avancer légèrement pour sortir de la zone de l'anchor
         const bump = SCROLL_CONFIG.ANCHOR_BUMP * autoScrollDirection;
         const newProgressAfterPause = (progressRef.current + bump + 1) % 1;
-        dispatch(setProgress(newProgressAfterPause));
+        progressUpdateService.updateProgressOnly(newProgressAfterPause);
         
         if (animateRef.current) {
           start(animateRef.current);
@@ -93,11 +94,11 @@ export function useAutoScrollController({
     
     prevProgressRef.current = newProgress;
     
-    // Synchroniser la position de scroll
-    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLengthRef.current);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
-    const targetScrollY = calculateScrollYFromProgress(newProgress, maxScroll);
-    window.scrollTo({ top: targetScrollY, behavior: 'auto' });
+    // Synchroniser la position de scroll (source unique de vérité)
+    syncScrollPosition(newProgress, globalPathLengthRef.current, isModalOpen, {
+      behavior: 'auto',
+      logPrefix: '[useAutoScrollController]',
+    });
   }, [isAutoPlaying, autoScrollDirection, dispatch, start, pathDomain, isDesktop]);
 
   // Stocker la référence de animate

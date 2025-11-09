@@ -129,4 +129,5 @@ const PointTrail = memo(function PointTrail({
   );
 });
 
-export default PointTrail; 
+export default PointTrail;
+

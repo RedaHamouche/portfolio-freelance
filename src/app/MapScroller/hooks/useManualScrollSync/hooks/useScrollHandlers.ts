@@ -6,6 +6,7 @@ import { handleUserInteraction, type HandleUserInteractionCallbacks, type Handle
 import { handleScroll, type HandleScrollCallbacks, type HandleScrollRefs } from '../actions/handleScroll';
 import { scheduleScrollEndCheck } from './useScrollEndCheck';
 import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
+import type { ProgressUpdateService } from '../../../services/ProgressUpdateService';
 
 /**
  * Interface pour toutes les refs nécessaires aux handlers
@@ -23,6 +24,7 @@ export interface ScrollHandlersRefs
  */
 export function useScrollHandlers(
   scrollContext: ScrollContextType,
+  progressUpdateService: ProgressUpdateService,
   dispatch: AppDispatch,
   refs: ScrollHandlersRefs,
   callbacks: {
@@ -97,7 +99,7 @@ export function useScrollHandlers(
   const processScrollUpdateCallback = useCallback(() => {
     processScrollUpdate(
       scrollContext,
-      dispatch,
+      progressUpdateService,
       refs,
       processScrollUpdateCallbacks,
       globalPathLength,
@@ -106,7 +108,7 @@ export function useScrollHandlers(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     scrollContext,
-    dispatch,
+    progressUpdateService,
     processScrollUpdateCallbacks,
     globalPathLength,
     isModalOpen,
@@ -173,9 +175,9 @@ export function useScrollHandlers(
 
   // Handler handleScroll
   const handleScrollCallback = useCallback(() => {
-    handleScroll(dispatch, refs, handleScrollCallbacks, globalPathLength, isModalOpen);
+    handleScroll(refs, handleScrollCallbacks, globalPathLength, isModalOpen);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, handleScrollCallbacks, globalPathLength, isModalOpen]);
+  }, [handleScrollCallbacks, globalPathLength, isModalOpen]);
   // refs sont stables, pas besoin de les inclure dans les dépendances
 
   return {

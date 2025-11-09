@@ -1,5 +1,6 @@
-import type { AppDispatch } from '@/store';
 import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
+import { isBrowser } from '@/utils/ssr/isBrowser';
+import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 
 /**
  * Interface pour les refs nécessaires à handleScroll
@@ -24,25 +25,23 @@ export interface HandleScrollCallbacks {
  * Handler pour l'événement scroll
  * Fonction pure, testable individuellement
  * 
- * @param dispatch - La fonction dispatch de Redux
  * @param refs - Les refs nécessaires
  * @param callbacks - Les callbacks nécessaires
  * @param globalPathLength - La longueur globale du path
  * @param isModalOpen - Si la modal est ouverte
  */
 export function handleScroll(
-  dispatch: AppDispatch,
   refs: HandleScrollRefs,
   callbacks: HandleScrollCallbacks,
   globalPathLength: number,
   isModalOpen: boolean
 ): void {
-  if (typeof window === 'undefined') return;
+  if (!isBrowser()) return;
   if (isModalOpen) return;
 
   // Accepter globalPathLength même s'il est à DEFAULT_PATH_LENGTH (valeur par défaut)
   // mais bloquer si vraiment invalide (<= 0)
-  if (globalPathLength <= 0) return;
+  if (!isValidPathLength(globalPathLength, true)) return;
 
   // Gérer l'initialisation et la mise à jour de la vélocité de manière centralisée
   callbacks.handleInitializationAndVelocity();

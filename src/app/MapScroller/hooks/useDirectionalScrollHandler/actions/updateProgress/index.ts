@@ -1,15 +1,14 @@
-import { useDispatch } from 'react-redux';
-import { setProgress, setLastScrollDirection } from '@/store/scrollSlice';
+import type { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
 
 /**
  * Met à jour le progress et la direction du scroll dans Redux
+ * Utilise ProgressUpdateService pour centraliser la mise à jour
  */
 export function updateProgress(
   newProgress: number,
   scrollDirection: 'forward' | 'backward',
-  dispatch: ReturnType<typeof useDispatch>
+  progressUpdateService: ProgressUpdateService
 ): void {
-  dispatch(setLastScrollDirection(scrollDirection));
-  dispatch(setProgress(newProgress));
+  progressUpdateService.updateProgressWithDirection(newProgress, scrollDirection);
 }
 

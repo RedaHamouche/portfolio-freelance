@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { type ScrollDirection } from '@/config';
@@ -7,6 +7,7 @@ import { useDirectionalScrollStateRefs } from './useDirectionalScrollStateRefs';
 import { updateProgress } from './actions/updateProgress';
 import { startDirectionalScroll as startDirectionalScrollAction } from './actions/startDirectionalScroll';
 import { stopDirectionalScroll as stopDirectionalScrollAction } from './actions/stopDirectionalScroll';
+import { ProgressUpdateService } from '../../services/ProgressUpdateService';
 
 /**
  * Hook pour gérer le scroll directionnel (clavier/boutons)
@@ -25,6 +26,9 @@ export function useDirectionalScrollHandler({
 }) {
   const dispatch = useDispatch();
   const { start, stop } = useRafLoop();
+  
+  // Service pour mettre à jour le progress (source unique de vérité)
+  const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
   
   // Use case (créé une seule fois)
   const useCaseRef = useRef<DirectionalScrollUseCase | null>(null);
@@ -48,9 +52,9 @@ export function useDirectionalScrollHandler({
 
     if (!result) return;
 
-    // Mettre à jour le progress et la direction
-    updateProgress(result.newProgress, result.scrollDirection, dispatch);
-  }, [direction, speed, dispatch, progressRef, globalPathLengthRef]);
+    // Mettre à jour le progress et la direction (source unique de vérité)
+    updateProgress(result.newProgress, result.scrollDirection, progressUpdateService);
+  }, [direction, speed, progressUpdateService, progressRef, globalPathLengthRef]);
 
   // Stocker la référence de animate
   const animateRef = useRef<FrameRequestCallback | null>(null);

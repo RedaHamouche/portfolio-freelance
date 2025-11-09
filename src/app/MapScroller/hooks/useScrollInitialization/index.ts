@@ -2,13 +2,11 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { createPathDomain } from '@/templating/domains/path';
 import { ProgressInitializationService } from './domain/ProgressInitializationService';
-import {
-  calculateFakeScrollHeight,
-  calculateMaxScroll,
-  calculateScrollYFromProgress,
-} from '@/utils/scrollCalculations';
-import { getViewportHeight } from '@/utils/viewportCalculations';
 import { DEFAULT_PATH_LENGTH } from '@/config';
+import { isBrowser } from '@/utils/ssr/isBrowser';
+import { isValidPathLength } from '@/utils/validation/isValidPathLength';
+import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
+import { ProgressUpdateService } from '../../services/ProgressUpdateService';
 
 /**
  * Hook pour gérer l'initialisation du scroll et la synchronisation avec les hash/anchors
@@ -29,11 +27,12 @@ export const useScrollInitialization = (globalPathLength: number) => {
   // Créer les instances (mémoïsées)
   const pathDomain = useMemo(() => createPathDomain(), []);
   const service = useMemo(() => new ProgressInitializationService(), []);
+  const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
 
   // ÉTAPE 1: Initialiser le progress IMMÉDIATEMENT (une seule fois)
   useEffect(() => {
     if (hasInitializedProgressRef.current) return;
-    if (typeof window === 'undefined') return; // SSR safety
+    if (!isBrowser()) return; // SSR safety
     
     try {
       const hash = window.location.hash;
@@ -46,7 +45,8 @@ export const useScrollInitialization = (globalPathLength: number) => {
       // Stocker le progress initial dans une ref pour éviter qu'il change
       initialProgressRef.current = result.progress;
       
-      dispatch({ type: 'scroll/setProgress', payload: result.progress });
+      // Utiliser le service centralisé pour mettre à jour le progress (source unique de vérité)
+      progressUpdateService.updateProgressOnly(result.progress);
       hasInitializedProgressRef.current = true;
       setIsScrollSynced(true); // RENDRE LE COMPOSANT IMMÉDIATEMENT
     } catch (error) {
@@ -54,46 +54,37 @@ export const useScrollInitialization = (globalPathLength: number) => {
       // En cas d'erreur, utiliser le default progress
       const defaultProgress = service.getDefaultProgress();
       initialProgressRef.current = defaultProgress;
-      dispatch({ type: 'scroll/setProgress', payload: defaultProgress });
+      progressUpdateService.updateProgressOnly(defaultProgress);
       hasInitializedProgressRef.current = true;
       setIsScrollSynced(true);
     }
-  }, [dispatch, pathDomain, service]);
+  }, [pathDomain, service, progressUpdateService]);
 
   // ÉTAPE 2: Faire le window.scrollTo() quand le pathLength arrive
   useEffect(() => {
     if (!hasInitializedProgressRef.current) return; // Attendre que le progress soit initialisé
     if (hasScrolledRef.current) return; // Ne faire qu'une fois
-    if (typeof window === 'undefined') return; // SSR safety
-    if (!globalPathLength || globalPathLength <= DEFAULT_PATH_LENGTH) return; // Attendre le vrai pathLength
+    if (!isBrowser()) return; // SSR safety
+    if (!isValidPathLength(globalPathLength)) return; // Attendre le vrai pathLength
     if (initialProgressRef.current === null) return; // Attendre que le progress initial soit défini
     
     // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
     const rafId = requestAnimationFrame(() => {
-      try {
-        // CRITIQUE: Utiliser le progress initial stocké dans la ref, pas currentProgress
-        // Cela évite que le scroll se fasse vers un mauvais endroit si le progress a changé
-        const progressToUse = initialProgressRef.current!;
-        
-        const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-        const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
-        const scrollY = calculateScrollYFromProgress(progressToUse, maxScroll);
-        
-        // Valider que scrollY est un nombre valide
-        if (isNaN(scrollY) || !isFinite(scrollY)) {
-          console.warn(`[useScrollInitialization] scrollY invalide: ${scrollY}, scroll ignoré`);
-          hasScrolledRef.current = true; // Marquer comme fait pour éviter les boucles
-          return;
-        }
-        
-        window.scrollTo({ top: scrollY, behavior: 'instant' });
+      // CRITIQUE: Utiliser le progress initial stocké dans la ref, pas currentProgress
+      // Cela évite que le scroll se fasse vers un mauvais endroit si le progress a changé
+      const progressToUse = initialProgressRef.current!;
+      
+      // Utiliser l'utilitaire centralisé pour synchroniser le scroll (source unique de vérité)
+      const success = syncScrollPosition(progressToUse, globalPathLength, false, {
+        behavior: 'instant',
+        logPrefix: '[useScrollInitialization]',
+      });
+      
+      if (success) {
         hasScrolledRef.current = true;
-      } catch (error) {
-        // Gérer les erreurs de window.scrollTo() (mode privé, restrictions navigateur, etc.)
-        console.warn('[useScrollInitialization] Erreur lors du scroll initial:', error);
-        // Marquer comme fait pour éviter les tentatives répétées
+      } else {
+        // Marquer comme fait même en cas d'échec pour éviter les tentatives répétées
         hasScrolledRef.current = true;
-        // Le scroll manuel fonctionnera quand même
       }
     });
     

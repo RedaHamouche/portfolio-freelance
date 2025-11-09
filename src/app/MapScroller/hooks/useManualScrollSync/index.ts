@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setProgress } from '@/store/scrollSlice';
 import { ManualScrollSyncUseCase } from './ManualScrollSyncUseCase';
 import { DEFAULT_PATH_LENGTH } from '@/config';
 import { useScrollStateRefs } from './useScrollStateRefs';
@@ -12,6 +11,7 @@ import { useScrollHandlers } from './hooks/useScrollHandlers';
 import { useEasingLoop } from './hooks/useEasingLoop';
 import { useScrollEventListeners } from './hooks/useScrollEventListeners';
 import { useScrollInitialization } from './hooks/useScrollInitialization';
+import { ProgressUpdateService } from '../../services/ProgressUpdateService';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress
@@ -30,6 +30,9 @@ export function useManualScrollSync(
   // REFACTORING: Utiliser le contexte de scroll au lieu de créer les services localement
   const scrollContext = useScrollContext();
   const { easingService, progressCalculator, stateDetector, velocityService, velocityConfig, pathDomain, progressInitService } = scrollContext;
+
+  // Service pour mettre à jour le progress (source unique de vérité)
+  const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
 
   // Use case (créé une seule fois, jamais null après création)
   const useCaseRef = useRef<ManualScrollSyncUseCase | null>(null);
@@ -66,13 +69,13 @@ export function useManualScrollSync(
   // REFACTORING: Fonction pour mettre à jour la direction du scroll
   const updateScrollDirectionCallback = useCallback(
     (useCase: ManualScrollSyncUseCase) => {
-      updateScrollDirection(useCase, dispatch, refs.isAutoPlayingRef, refs.lastScrollDirectionRef);
+      updateScrollDirection(useCase, progressUpdateService, refs.isAutoPlayingRef, refs.lastScrollDirectionRef);
     },
-    [dispatch, refs.isAutoPlayingRef, refs.lastScrollDirectionRef]
+    [progressUpdateService, refs.isAutoPlayingRef, refs.lastScrollDirectionRef]
   );
 
   // REFACTORING: Utiliser le sous-hook pour la boucle d'easing
-  const { startEasingLoop } = useEasingLoop(scrollContext, refs, dispatch, isModalOpen, getUseCase);
+  const { startEasingLoop } = useEasingLoop(scrollContext, refs, progressUpdateService, isModalOpen, getUseCase);
 
   // REFACTORING: Mémoïser les callbacks pour éviter les recréations
   const scrollHandlersCallbacks = useMemo(
@@ -89,6 +92,7 @@ export function useManualScrollSync(
   // REFACTORING: Utiliser le sous-hook pour créer les handlers
   const { handleUserInteraction, handleScroll, processScrollUpdate } = useScrollHandlers(
     scrollContext,
+    progressUpdateService,
     dispatch,
     refs,
     scrollHandlersCallbacks,
@@ -119,7 +123,7 @@ export function useManualScrollSync(
       refs.scrollYRef.current = window.scrollY;
       initializeUseCase(globalPathLength);
       const progressResult = progressCalculator.calculateProgress(window.scrollY, globalPathLength);
-      dispatch(setProgress(progressResult.progress));
+      progressUpdateService.updateProgressOnly(progressResult.progress);
       return;
     }
 
@@ -128,12 +132,12 @@ export function useManualScrollSync(
       refs.scrollYRef.current = window.scrollY;
       initializeUseCase(globalPathLength);
       const progressResult = progressCalculator.calculateProgress(window.scrollY, globalPathLength);
-      dispatch(setProgress(progressResult.progress));
+      progressUpdateService.updateProgressOnly(progressResult.progress);
     }
   }, [
     isAutoPlaying,
     globalPathLength,
-    dispatch,
+    progressUpdateService,
     initializeUseCase,
     progressCalculator,
     refs.isAutoPlayingRef,

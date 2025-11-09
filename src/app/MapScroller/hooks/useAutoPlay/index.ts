@@ -1,11 +1,7 @@
 import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import {
-  setProgress,
-  setIsScrolling,
-  setLastScrollDirection,
-} from '@/store/scrollSlice';
+import { setIsScrolling } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { createPathDomain } from '@/templating/domains/path';
@@ -18,6 +14,7 @@ import { handlePauseOnAnchor } from './actions/handlePauseOnAnchor';
 import { clearPauseTimeout } from './actions/clearPauseTimeout';
 import { resetPauseState } from './actions/resetPauseState';
 import { syncScrollPosition } from './actions/syncScrollPosition';
+import { ProgressUpdateService } from '../../services/ProgressUpdateService';
 
 // ============================================================================
 // Hook principal
@@ -42,6 +39,9 @@ export function useAutoPlay({
   const { start, stop } = useRafLoop();
   const isDesktop = useBreakpoint('>=desktop');
   const pathDomain = useMemo(() => createPathDomain(), []);
+
+  // Service pour mettre à jour le progress (source unique de vérité)
+  const progressUpdateService = useMemo(() => new ProgressUpdateService(dispatch), [dispatch]);
 
   // Créer les services de domaine et le use case (mémoïsés)
   const useCaseRef = useRef<AutoPlayUseCase | null>(null);
@@ -110,12 +110,9 @@ export function useAutoPlay({
 
     if (!result) return;
 
-    // Tracker la direction du scroll
+    // Tracker la direction du scroll et mettre à jour le progress (source unique de vérité)
     const direction = autoScrollDirection > 0 ? 'forward' : 'backward';
-    dispatch(setLastScrollDirection(direction));
-
-    // Mettre à jour le progress
-    dispatch(setProgress(result.newProgress));
+    progressUpdateService.updateProgressWithDirection(result.newProgress, direction);
 
     // Gérer la pause si nécessaire (seulement si le cooldown de 5 secondes est passé)
     if (result.shouldPause && result.anchorId && result.pauseDuration && canPauseOnAnchorCallback(result.anchorId)) {

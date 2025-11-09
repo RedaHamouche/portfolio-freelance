@@ -2,6 +2,8 @@ import type { AppDispatch } from '@/store';
 import { setAutoPlaying } from '@/store/scrollSlice';
 import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
 import { isInteractiveElement } from '../../utils/isInteractiveElement';
+import { isBrowser } from '@/utils/ssr/isBrowser';
+import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 
 /**
  * Interface pour les refs nécessaires à handleUserInteraction
@@ -43,7 +45,7 @@ export function handleUserInteraction(
   globalPathLength: number,
   isModalOpen: boolean
 ): void {
-  if (typeof window === 'undefined') return;
+  if (!isBrowser()) return;
   if (isModalOpen) {
     if (process.env.NODE_ENV !== 'production') {
       console.log('[handleUserInteraction] Modal ouverte, ignoré');
@@ -53,7 +55,7 @@ export function handleUserInteraction(
 
   // Accepter globalPathLength même s'il est à DEFAULT_PATH_LENGTH (valeur par défaut)
   // mais bloquer si vraiment invalide (<= 0)
-  if (globalPathLength <= 0) {
+  if (!isValidPathLength(globalPathLength, true)) {
     if (process.env.NODE_ENV !== 'production') {
       console.log('[handleUserInteraction] globalPathLength invalide:', globalPathLength);
     }

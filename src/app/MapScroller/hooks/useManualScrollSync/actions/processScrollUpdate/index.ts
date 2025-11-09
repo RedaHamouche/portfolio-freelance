@@ -1,7 +1,9 @@
-import { setProgress } from '@/store/scrollSlice';
 import type { AppDispatch } from '@/store';
 import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
 import type { ScrollContextType } from '../../../../contexts/ScrollContext';
+import { ProgressUpdateService } from '../../../../services/ProgressUpdateService';
+import { isBrowser } from '@/utils/ssr/isBrowser';
+import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 
 /**
  * Interface pour les refs nécessaires à processScrollUpdate
@@ -39,13 +41,13 @@ export interface ProcessScrollUpdateCallbacks {
  */
 export function processScrollUpdate(
   context: ScrollContextType,
-  dispatch: AppDispatch,
+  progressUpdateService: ProgressUpdateService,
   refs: ProcessScrollUpdateRefs,
   callbacks: ProcessScrollUpdateCallbacks,
   globalPathLength: number,
   isModalOpen: boolean
 ): void {
-  if (typeof window === 'undefined') return;
+  if (!isBrowser()) return;
   if (isModalOpen) {
     refs.rafIdRef.current = null;
     refs.pendingUpdateRef.current = false;
@@ -54,7 +56,7 @@ export function processScrollUpdate(
 
   // Accepter globalPathLength même s'il est à DEFAULT_PATH_LENGTH (valeur par défaut)
   // mais bloquer si vraiment invalide (<= 0)
-  if (globalPathLength <= 0) {
+  if (!isValidPathLength(globalPathLength, true)) {
     refs.rafIdRef.current = null;
     refs.pendingUpdateRef.current = false;
     return;
@@ -81,7 +83,7 @@ export function processScrollUpdate(
   }
 
   const newProgress = useCase.getCurrentProgress();
-  dispatch(setProgress(newProgress));
+  progressUpdateService.updateProgressOnly(newProgress);
 
   // Tracker la direction seulement si l'autoplay n'est pas actif et si elle a changé
   callbacks.updateScrollDirectionCallback(useCase);

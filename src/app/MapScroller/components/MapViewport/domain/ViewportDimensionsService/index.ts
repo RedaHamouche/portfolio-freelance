@@ -1,0 +1,2 @@
+export { ViewportDimensionsService } from './ViewportDimensionsService';
+

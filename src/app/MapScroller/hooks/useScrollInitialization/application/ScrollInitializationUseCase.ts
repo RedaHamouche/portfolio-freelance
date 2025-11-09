@@ -4,12 +4,8 @@
  */
 
 import { ScrollInitializationService, type PathDomainLike } from '../domain/ScrollInitializationService';
-import {
-  calculateFakeScrollHeight,
-  calculateMaxScroll,
-  calculateScrollYFromProgress,
-} from '@/utils/scrollCalculations';
-import { getViewportHeight } from '@/utils/viewportCalculations';
+import { calculateScrollY } from '@/utils/scrollUtils/calculateScrollY';
+import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
 
 export interface ScrollInitializationResult {
   progress: number;
@@ -45,8 +41,8 @@ export class ScrollInitializationUseCase {
       if (hashProgress !== null) {
         // Hash trouvé : utiliser le progress du hash (priorité la plus haute)
         dispatch({ type: 'scroll/setProgress', payload: hashProgress });
-        const scrollY = this.calculateScrollY(hashProgress, globalPathLength);
-        this.scrollToPosition(scrollY);
+        const scrollY = calculateScrollY(hashProgress, globalPathLength);
+        syncScrollPosition(hashProgress, globalPathLength, false, { behavior: 'instant' });
         return { progress: hashProgress, source: 'hash', scrollY };
       }
     }
@@ -56,16 +52,16 @@ export class ScrollInitializationUseCase {
     if (storedProgress !== null) {
       // Progress sauvegardé trouvé : utiliser le progress du localStorage
       dispatch({ type: 'scroll/setProgress', payload: storedProgress });
-      const scrollY = this.calculateScrollY(storedProgress, globalPathLength);
-      this.scrollToPosition(scrollY);
+      const scrollY = calculateScrollY(storedProgress, globalPathLength);
+      syncScrollPosition(storedProgress, globalPathLength, false, { behavior: 'instant' });
       return { progress: storedProgress, source: 'storage', scrollY };
     }
 
     // 3. Priorité : Début par défaut
     const defaultProgress = this.service.getDefaultProgress();
     dispatch({ type: 'scroll/setProgress', payload: defaultProgress });
-    const scrollY = this.calculateScrollY(defaultProgress, globalPathLength);
-    this.scrollToPosition(scrollY);
+    const scrollY = calculateScrollY(defaultProgress, globalPathLength);
+    syncScrollPosition(defaultProgress, globalPathLength, false, { behavior: 'instant' });
     return { progress: defaultProgress, source: 'default', scrollY };
   }
 
@@ -75,22 +71,6 @@ export class ScrollInitializationUseCase {
    */
   shouldSkipManualScrollInitialization(hash: string | undefined): boolean {
     return this.service.shouldUseHashProgress(hash);
-  }
-
-  /**
-   * Calcule la position de scroll Y à partir d'un progress
-   */
-  private calculateScrollY(progress: number, globalPathLength: number): number {
-    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, getViewportHeight());
-    return calculateScrollYFromProgress(progress, maxScroll);
-  }
-
-  /**
-   * Scroll vers une position
-   */
-  private scrollToPosition(scrollY: number): void {
-    window.scrollTo({ top: scrollY, behavior: 'instant' });
   }
 }
 

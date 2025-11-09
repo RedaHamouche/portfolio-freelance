@@ -1,9 +1,17 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProgress, setIsScrolling, setLastScrollDirection } from '@/store/scrollSlice';
 import { useRafLoop } from '@/hooks/useRafLoop';
-import { SCROLL_CONFIG, type ScrollDirection } from '@/config';
+import { type ScrollDirection } from '@/config';
+import { DirectionalScrollUseCase } from './application/DirectionalScrollUseCase';
+import { useDirectionalScrollStateRefs } from './useDirectionalScrollStateRefs';
+import { updateProgress } from './actions/updateProgress';
+import { startDirectionalScroll as startDirectionalScrollAction } from './actions/startDirectionalScroll';
+import { stopDirectionalScroll as stopDirectionalScrollAction } from './actions/stopDirectionalScroll';
 
+/**
+ * Hook pour gérer le scroll directionnel (clavier/boutons)
+ * Architecture DDD alignée avec useAutoPlay
+ */
 export function useDirectionalScrollHandler({
   direction,
   speed,
@@ -16,41 +24,45 @@ export function useDirectionalScrollHandler({
   progress: number
 }) {
   const dispatch = useDispatch();
-  const progressRef = useRef(progress);
-  const globalPathLengthRef = useRef(globalPathLength);
   const { start, stop } = useRafLoop();
+  
+  // Use case (créé une seule fois)
+  const useCaseRef = useRef<DirectionalScrollUseCase | null>(null);
+  if (!useCaseRef.current) {
+    useCaseRef.current = new DirectionalScrollUseCase();
+  }
 
-  // Synchronisation optimisée des refs
-  useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
+  // REFACTORING: Regrouper toutes les refs dans un hook personnalisé
+  const { progressRef, globalPathLengthRef } = useDirectionalScrollStateRefs(progress, globalPathLength);
 
-  useEffect(() => {
-    globalPathLengthRef.current = globalPathLength;
-  }, [globalPathLength]);
-
+  // Fonction d'animation
   const animate = useCallback(() => {
     if (!direction) return;
-    const pxPerMs = speed / 1000;
-    const scrollDelta = direction === 'bas' ? 1 : -1;
-    const newProgress = (progressRef.current + scrollDelta * (pxPerMs * SCROLL_CONFIG.FRAME_DELAY / globalPathLengthRef.current) + 1) % 1;
-    
-    // Tracker la direction du scroll (bas = forward, haut = backward avec le sens inversé)
-    const scrollDirection = direction === 'bas' ? 'forward' : 'backward';
-    dispatch(setLastScrollDirection(scrollDirection));
-    
-    dispatch(setProgress(newProgress));
-  }, [direction, speed, dispatch]);
+
+    const result = useCaseRef.current!.animate({
+      direction,
+      speed,
+      currentProgress: progressRef.current,
+      globalPathLength: globalPathLengthRef.current,
+    });
+
+    if (!result) return;
+
+    // Mettre à jour le progress et la direction
+    updateProgress(result.newProgress, result.scrollDirection, dispatch);
+  }, [direction, speed, dispatch, progressRef, globalPathLengthRef]);
+
+  // Stocker la référence de animate
+  const animateRef = useRef<FrameRequestCallback | null>(null);
+  animateRef.current = animate;
 
   const startDirectionalScroll = useCallback(() => {
     if (!direction) return;
-    dispatch(setIsScrolling(true));
-    start(animate);
+    startDirectionalScrollAction(dispatch, start, animate);
   }, [direction, start, animate, dispatch]);
 
   const stopDirectionalScroll = useCallback(() => {
-    dispatch(setIsScrolling(false));
-    stop();
+    stopDirectionalScrollAction(dispatch, stop);
   }, [stop, dispatch]);
 
   return { startDirectionalScroll, stopDirectionalScroll };

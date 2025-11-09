@@ -2,17 +2,16 @@ import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { setProgress } from '@/store/scrollSlice';
-import { ManualScrollSyncUseCase } from './application/ManualScrollSyncUseCase';
+import { ManualScrollSyncUseCase } from './ManualScrollSyncUseCase';
 import { DEFAULT_PATH_LENGTH } from '@/config';
 import { useScrollStateRefs } from './useScrollStateRefs';
 import { useScrollContext } from '../../contexts/ScrollContext';
-import { shouldReinitializeForPathLength, updateScrollDirection } from './utils';
-import {
-  useScrollHandlers,
-  useEasingLoop,
-  useScrollEventListeners,
-  useScrollInitialization,
-} from './hooks';
+import { shouldReinitializeForPathLength } from './utils/shouldReinitializeForPathLength';
+import { updateScrollDirection } from './utils/updateScrollDirection';
+import { useScrollHandlers } from './hooks/useScrollHandlers';
+import { useEasingLoop } from './hooks/useEasingLoop';
+import { useScrollEventListeners } from './hooks/useScrollEventListeners';
+import { useScrollInitialization } from './hooks/useScrollInitialization';
 
 /**
  * Hook pour synchroniser le scroll manuel avec le progress

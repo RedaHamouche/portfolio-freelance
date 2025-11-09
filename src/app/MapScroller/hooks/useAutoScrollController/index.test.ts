@@ -20,23 +20,36 @@ jest.mock('@/hooks/useRafLoop', () => ({
   })
 }));
 
-// Mock pathComponents
-jest.mock('@/templating/config/pathComponents.json', () => [
-  {
-    anchorId: 'test-anchor',
-    position: { progress: 0.5 },
-    autoScrollPauseTime: 1000
-  }
-]);
+// Mock useBreakpoint
+jest.mock('@/hooks/useBreakpointValue', () => ({
+  useBreakpoint: () => false // mobile par défaut
+}));
 
-// Mock AUTO_SCROLL_SPEED
+// Mock pathDomain
+jest.mock('@/templating/domains/path', () => ({
+  createPathDomain: () => ({
+    getComponentByAnchorId: jest.fn(() => ({
+      anchorId: 'test-anchor',
+      position: { progress: 0.5 },
+      autoScrollPauseTime: 1000
+    })),
+    getAllComponents: jest.fn(() => [])
+  })
+}));
+
+// Mock config
 jest.mock('@/config', () => ({
-  AUTO_SCROLL_SPEED: 0.001,
+  AUTO_SCROLL_CONFIG: {
+    speed: {
+      mobile: 0.001,
+      desktop: 0.001,
+    },
+  },
   SCROLL_CONFIG: {
     FRAME_DELAY: 16,
     ANCHOR_TOLERANCE: 0.002,
     ANCHOR_BUMP: 0.002,
-  }
+  },
 }));
 
 describe('useAutoScrollController', () => {

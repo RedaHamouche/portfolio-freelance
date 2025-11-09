@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react';
 import type { AppDispatch } from '@/store';
 import type { ScrollContextType } from '../../../contexts/ScrollContext';
-import { processScrollUpdate, type ProcessScrollUpdateRefs, type ProcessScrollUpdateCallbacks } from '../handlers/processScrollUpdate';
-import { handleUserInteraction, type HandleUserInteractionCallbacks, type HandleUserInteractionRefs } from '../handlers/handleUserInteraction';
-import { handleScroll, type HandleScrollCallbacks, type HandleScrollRefs } from '../handlers/handleScroll';
+import { processScrollUpdate, type ProcessScrollUpdateRefs, type ProcessScrollUpdateCallbacks } from '../actions/processScrollUpdate';
+import { handleUserInteraction, type HandleUserInteractionCallbacks, type HandleUserInteractionRefs } from '../actions/handleUserInteraction';
+import { handleScroll, type HandleScrollCallbacks, type HandleScrollRefs } from '../actions/handleScroll';
 import { scheduleScrollEndCheck } from './useScrollEndCheck';
-import type { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
 
 /**
  * Interface pour toutes les refs nécessaires aux handlers

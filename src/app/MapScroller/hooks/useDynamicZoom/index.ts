@@ -1,8 +1,8 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { DynamicZoomUseCase } from './application';
-import { ZoomService } from './domain';
+import { DynamicZoomUseCase } from './DynamicZoomUseCase';
+import { ZoomService } from './domain/ZoomService';
 import { DYNAMIC_ZOOM_CONFIG } from '@/config';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
 import gsap from 'gsap';

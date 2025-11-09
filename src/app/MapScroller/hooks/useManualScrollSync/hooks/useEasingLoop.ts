@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { setProgress } from '@/store/scrollSlice';
-import type { ManualScrollSyncUseCase } from '../application/ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '../ManualScrollSyncUseCase';
 import { updateScrollDirection } from '../utils/updateScrollDirection';
 import type { ScrollContextType } from '../../../contexts/ScrollContext';
 

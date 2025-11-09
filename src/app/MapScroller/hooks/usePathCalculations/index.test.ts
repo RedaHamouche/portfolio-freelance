@@ -1,6 +1,21 @@
 import { renderHook } from '@testing-library/react';
 import { usePathCalculations } from './index';
 
+// Mock window.matchMedia pour useBreakpoint
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
 // Mock Redux
 const mockProgress = 0.5;
 jest.mock('react-redux', () => ({
@@ -9,6 +24,7 @@ jest.mock('react-redux', () => ({
       scroll: {
         progress: mockProgress,
         lastScrollDirection: null,
+        pathLength: 1000,
       },
     };
     return selector(mockState);

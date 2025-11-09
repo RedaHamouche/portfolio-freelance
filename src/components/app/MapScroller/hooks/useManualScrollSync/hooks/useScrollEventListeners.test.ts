@@ -39,13 +39,19 @@ describe('useScrollEventListeners', () => {
     clearTimeoutSpy.mockRestore();
   });
 
-  it('devrait ajouter tous les event listeners au montage', () => {
-    renderHook(() => useScrollEventListeners(handleUserInteraction, handleScroll, refs));
+  it('devrait ajouter tous les event listeners au montage si isReady est true', () => {
+    renderHook(() => useScrollEventListeners(handleUserInteraction, handleScroll, refs, true));
 
     expect(addEventListenerSpy).toHaveBeenCalledWith('wheel', handleUserInteraction, { passive: true });
     expect(addEventListenerSpy).toHaveBeenCalledWith('touchstart', expect.any(Function), { passive: true });
     expect(addEventListenerSpy).toHaveBeenCalledWith('touchmove', expect.any(Function), { passive: true });
     expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', handleScroll, { passive: true });
+  });
+
+  it('ne devrait pas attacher les event listeners si isReady est false', () => {
+    renderHook(() => useScrollEventListeners(handleUserInteraction, handleScroll, refs, false));
+
+    expect(addEventListenerSpy).not.toHaveBeenCalled();
   });
 
   it('devrait nettoyer tous les event listeners au démontage', () => {

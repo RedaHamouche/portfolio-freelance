@@ -47,9 +47,11 @@ export function useScrollHandlers(
   }, [callbacks.getUseCase, callbacks.onScrollState, refs.scrollEndTimeoutRef]);
 
   // Fonction pour gérer l'initialisation et la mise à jour de la vélocité
+  // FIX: Permettre l'initialisation même si isScrollSynced est false (initialisation anticipée)
   const handleInitializationAndVelocity = useCallback(
     (event?: Event) => {
-      // Initialiser si nécessaire
+      // Initialiser si nécessaire (même si isScrollSynced est false)
+      // Cela permet au scroll de fonctionner si l'utilisateur scroll pendant le chargement
       if (!refs.isInitializedRef.current || refs.lastInitializedPathLengthRef.current !== globalPathLength) {
         refs.scrollYRef.current = window.scrollY;
         callbacks.initializeUseCase(globalPathLength);

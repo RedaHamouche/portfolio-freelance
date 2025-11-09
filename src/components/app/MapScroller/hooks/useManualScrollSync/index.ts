@@ -100,8 +100,12 @@ export function useManualScrollSync(
     isModalOpen
   );
 
+  // FIX: Ne pas attacher les event listeners tant que le système n'est pas prêt
+  // Le système est prêt si : isScrollSynced ET globalPathLength valide
+  const isSystemReady = isScrollSynced && globalPathLength > DEFAULT_PATH_LENGTH;
+
   // REFACTORING: Utiliser le sous-hook pour les event listeners
-  useScrollEventListeners(handleUserInteraction, handleScroll, refs);
+  useScrollEventListeners(handleUserInteraction, handleScroll, refs, isSystemReady);
 
   // Synchroniser isAutoPlayingRef et détecter les changements de pathLength
   useEffect(() => {
@@ -148,14 +152,16 @@ export function useManualScrollSync(
   ]);
 
   // Initialisation (seulement si pas déjà initialisé par une interaction utilisateur)
+  // FIX: Permettre l'initialisation même si isScrollSynced est false (si globalPathLength est valide)
+  // Cela évite le blocage du scroll si l'utilisateur scroll pendant le chargement
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!isScrollSynced) return;
     if (refs.isInitializedRef.current) return; // Déjà initialisé
     // Attendre que la VRAIE longueur du path soit connue (> DEFAULT_PATH_LENGTH)
     if (globalPathLength <= 0 || globalPathLength <= DEFAULT_PATH_LENGTH) return;
 
-    // Ne pas réinitialiser si le progress a déjà été initialisé par useScrollInitialization
+    // FIX: Initialiser même si isScrollSynced est false (initialisation anticipée)
+    // Cela permet au scroll de fonctionner si l'utilisateur scroll pendant le chargement
     refs.scrollYRef.current = window.scrollY;
     const hash = window.location.hash;
     const hasHash = hash && hash.replace('#', '').trim().length > 0;
@@ -165,17 +171,19 @@ export function useManualScrollSync(
       const result = progressInitService.initializeProgress(hash, pathDomain);
       const progressToUse = result.progress;
       initializeUseCase(globalPathLength, progressToUse);
-      // Ne pas dispatcher ici car useScrollInitialization l'a déjà fait
+      // Ne pas dispatcher ici car useScrollInitialization l'a déjà fait (si isScrollSynced est true)
     } else {
       // Pas de hash : utiliser currentProgress qui a été initialisé par useScrollInitialization
+      // Si isScrollSynced est false, currentProgress peut être 0, donc on initialise sans progress
       const progressToUse = currentProgress !== 0.005 && currentProgress > 0 ? currentProgress : undefined;
       initializeUseCase(globalPathLength, progressToUse);
       if (!progressToUse) {
+        // Si pas de progress, calculer depuis window.scrollY
         processScrollUpdate();
       }
     }
   }, [
-    isScrollSynced,
+    isScrollSynced, // Garder dans les dépendances pour réinitialiser si isScrollSynced devient true
     globalPathLength,
     currentProgress,
     processScrollUpdate,

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 /**
  * Hook pour gérer les event listeners de scroll
  * Gère l'ajout et le nettoyage des listeners (wheel, touch, scroll)
+ * FIX: N'attache les listeners que si le système est prêt (isScrollSynced && globalPathLength valide)
  */
 export function useScrollEventListeners(
   handleUserInteraction: (event?: Event) => void,
@@ -11,10 +12,13 @@ export function useScrollEventListeners(
     rafIdRef: { current: number | null };
     easingRafIdRef: { current: number | null };
     scrollEndTimeoutRef: { current: NodeJS.Timeout | null };
-  }
+  },
+  isReady: boolean = true
 ) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // FIX: Ne pas attacher les listeners tant que le système n'est pas prêt
+    if (!isReady) return;
 
     const touchStartHandler = (e: TouchEvent) => handleUserInteraction(e);
     const touchMoveHandler = (e: TouchEvent) => handleUserInteraction(e);
@@ -41,7 +45,7 @@ export function useScrollEventListeners(
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleUserInteraction, handleScroll]);
+  }, [handleUserInteraction, handleScroll, isReady]);
   // Note: refs sont stables, pas besoin de les inclure dans les dépendances
 }
 

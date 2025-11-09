@@ -1,8 +1,8 @@
 "use client"
 import styles from './index.module.scss';
-import HourDisplay from '@/components/apiComponents/HourDisplay';
-import DisplayName from '@/components/apiComponents/DisplayName';
-import LanguageManager from '@/components/apiComponents/LanguageManager';
+import HourDisplay from '@/components/templatingComponents/page/HourDisplay';
+import DisplayName from '@/components/templatingComponents/page/DisplayName';
+import LanguageManager from '@/components/templatingComponents/page/LanguageManager';
 
 function Header() {
   return (

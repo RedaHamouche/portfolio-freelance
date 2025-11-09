@@ -1,6 +1,7 @@
 import { ProgressUpdateService } from './ProgressUpdateService';
 import { setProgress, setLastScrollDirection } from '@/store/scrollSlice';
 import { isValidProgress } from '@/utils/validation/isValidProgress';
+import type { AppDispatch } from '@/store';
 
 jest.mock('@/utils/validation/isValidProgress');
 
@@ -10,7 +11,7 @@ describe('ProgressUpdateService', () => {
 
   beforeEach(() => {
     dispatch = jest.fn();
-    service = new ProgressUpdateService(dispatch as any);
+    service = new ProgressUpdateService(dispatch as unknown as AppDispatch);
     (isValidProgress as jest.Mock).mockReturnValue(true);
   });
 

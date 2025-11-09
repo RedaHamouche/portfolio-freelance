@@ -1,13 +1,13 @@
-import { useLayoutEffect, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setPathLength, setAutoPlaying } from '@/store/scrollSlice';
-import Dynamic from '@/templating/components/Dynamic';
-import DynamicPathComponents from '@/templating/components/DynamicPathComponents';
-import DynamicPathTangenteComponents from '@/templating/components/DynamicPathTangenteComponents';
+import Page from '@/templating/components/page';
+import Path from '@/templating/components/path';
+import PathTangente from '@/templating/components/pathTangente';
 import { SvgPath } from '@/components/app/MapScroller/components/SvgPath';
 import PointTrail from './PointTrail';
-import { SvgPathDebugger } from '@/components/apiComponents/SvgPathDebugger';
+import { SvgPathDebugger } from '@/components/templatingComponents/page/SvgPathDebugger';
 import { usePathCalculations } from '@/components/app/MapScroller/hooks/usePathCalculations';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { useDynamicZoom } from '@/components/app/MapScroller/hooks/useDynamicZoom';
@@ -179,17 +179,17 @@ export const MapViewport: React.FC<MapViewportProps> = ({
         zIndex: 2,
       }}
     >
-      <Dynamic 
+      <Page 
         svgPath={svgPath}
         paddingX={paddingX}
         paddingY={paddingY}
       />
-      <DynamicPathComponents 
+      <Path 
         svgPath={svgPath}
         paddingX={paddingX}
         paddingY={paddingY}
       />
-      <DynamicPathTangenteComponents
+      <PathTangente
         svgPath={svgPath}
         paddingX={paddingX}
         paddingY={paddingY}

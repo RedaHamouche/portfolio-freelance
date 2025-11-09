@@ -16,7 +16,7 @@ import { useScrollInitialization } from './hooks/useScrollInitialization';
 import { useProgressPersistence } from './hooks/useProgressPersistence';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
-import AutoPlayButton from '@/components/apiComponents/AutoPlayButton';
+import AutoPlayButton from '@/components/templatingComponents/page/AutoPlayButton';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {

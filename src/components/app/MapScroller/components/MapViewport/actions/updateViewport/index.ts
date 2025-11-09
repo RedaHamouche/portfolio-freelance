@@ -1,22 +1,23 @@
-import type { ViewportTransform } from '@/utils/viewportCalculations';
-import type { PointPosition } from '@/types/path';
+import type { ViewportTransform, ViewportBounds } from '@/utils/viewportCalculations';
+import type { PointPosition } from '@/utils/pathCalculations/types';
+import type { MapViewportConfig } from '../../application/MapViewportUseCase';
 import gsap from 'gsap';
 
 export interface UpdateViewportParams {
   svgRef: React.RefObject<SVGSVGElement | null>;
   svgPath: SVGPathElement | null;
   mapWrapperRef: React.RefObject<HTMLDivElement | null>;
-  viewportBounds: any;
+  viewportBounds: ViewportBounds | null;
   getCurrentPointPosition: () => PointPosition | null;
   windowSize: { width: number; height: number };
   calculateTransform: (
     point: PointPosition | null,
     windowWidth: number,
     windowHeight: number,
-    config: any,
-    viewportBounds?: any
+    config: MapViewportConfig,
+    viewportBounds?: ViewportBounds | null
   ) => ViewportTransform | null;
-  viewportConfig: any;
+  viewportConfig: MapViewportConfig;
   isValidDimensions: (dimensions: { width: number; height: number }) => boolean;
   getViewportDimensions: () => { width: number; height: number };
 }

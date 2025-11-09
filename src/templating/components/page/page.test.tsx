@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Dynamic from './index';
+import Page from './index';
 
 // Mock des dépendances
 jest.mock('react-redux', () => ({
@@ -31,9 +31,9 @@ jest.mock('../domains/page', () => ({
   })),
 }));
 
-describe('Dynamic', () => {
+describe('Page', () => {
   it('devrait rendre les composants', () => {
-    const { container } = render(<Dynamic />);
+    const { container } = render(<Page />);
     expect(container).toBeTruthy();
   });
 });

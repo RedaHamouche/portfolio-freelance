@@ -2,7 +2,7 @@ import { MapViewportUseCase } from './MapViewportUseCase';
 import { ViewportBoundsService } from '../domain/ViewportBoundsService';
 import { ViewportTransformService } from '../domain/ViewportTransformService';
 import { ViewportDimensionsService } from '../domain/ViewportDimensionsService';
-import type { PointPosition } from '@/types/path';
+import type { PointPosition } from '@/utils/pathCalculations/types';
 
 describe('MapViewportUseCase', () => {
   let useCase: MapViewportUseCase;

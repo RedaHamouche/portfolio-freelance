@@ -1,5 +1,5 @@
 import Image from '@/components/commons/Image';
-import { ResponsiveImage as ResponsiveImageType } from '@/types/image';
+import { ResponsiveImage as ResponsiveImageType } from '../types';
 
 interface ResponsiveImageProps extends ResponsiveImageType, Record<string, unknown> {
   className?: string;

@@ -8,7 +8,7 @@
  * pour équilibrer la précision et la taille du cache.
  */
 
-import type { PointPosition } from '@/types/path';
+import type { PointPosition } from '@/utils/pathCalculations/types';
 
 interface CacheEntry<T> {
   value: T;

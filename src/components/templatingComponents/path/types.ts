@@ -1,3 +1,7 @@
+/**
+ * Types pour les composants d'image du domaine path
+ */
+
 export interface ResponsiveImage {
   src: {
     mobile: string;
@@ -20,4 +24,5 @@ export interface SimpleImage {
 }
 
 // Type union pour supporter les deux formats
-export type ImageConfig = ResponsiveImage | SimpleImage; 
+export type ImageConfig = ResponsiveImage | SimpleImage;
+

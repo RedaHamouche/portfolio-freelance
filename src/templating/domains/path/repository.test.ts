@@ -1,7 +1,7 @@
 import { PathRepository } from './repository';
 
 // Mock des fichiers JSON
-jest.mock('../../config/desktop/pathComponents.json', () => [
+jest.mock('../../config/desktop/path.json', () => [
   {
     id: 'comp1',
     type: 'ProjectCard',
@@ -26,7 +26,7 @@ jest.mock('../../config/desktop/pathComponents.json', () => [
   },
 ], { virtual: true });
 
-jest.mock('../../config/mobile/pathComponents.json', () => [
+jest.mock('../../config/mobile/path.json', () => [
   {
     id: 'comp1-mobile',
     type: 'ProjectCard',

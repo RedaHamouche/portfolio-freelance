@@ -144,6 +144,7 @@ export function useAutoPlay({
     start,
     isDesktop,
     canPauseOnAnchorCallback,
+    progressUpdateService,
     // Les refs (animateRef, globalPathLengthRef, isAutoPlayingRef, isModalOpenRef, isPausedRef, lastPausedAnchorIdRef, lastPausedTimeRef, progressRef, timeoutIdRef, timeoutRef) sont stables
     animateRef,
     globalPathLengthRef,

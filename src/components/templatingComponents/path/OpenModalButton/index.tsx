@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useModal } from '@/contexts/ModalContext';
-import TitleText from '@/components/apiComponents/TitleText';
+import TitleText from '@/components/templatingComponents/path/TitleText';
 import styles from './index.module.scss';
 
 const OpenModalButton: React.FC = () => {

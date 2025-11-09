@@ -99,7 +99,7 @@ export function useAutoScrollController({
       behavior: 'auto',
       logPrefix: '[useAutoScrollController]',
     });
-  }, [isAutoPlaying, autoScrollDirection, dispatch, start, pathDomain, isDesktop]);
+  }, [isAutoPlaying, autoScrollDirection, dispatch, start, pathDomain, isDesktop, isModalOpen, progressUpdateService]);
 
   // Stocker la référence de animate
   useEffect(() => {

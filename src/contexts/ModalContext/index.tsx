@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { openModal as openModalAction, closeModal as closeModalAction } from '@/store/modalSlice';
 import { createPortal } from 'react-dom';
-import Modal from '@/components/apiComponents/Modal';
+import Modal from '@/components/templatingComponents/page/Modal';
 
 interface ModalContextType {
   openModal: (content: ReactNode, options?: ModalOptions) => void;

@@ -2,7 +2,7 @@ import { ViewportBoundsService } from '../domain/ViewportBoundsService';
 import { ViewportTransformService } from '../domain/ViewportTransformService';
 import { ViewportDimensionsService } from '../domain/ViewportDimensionsService';
 import type { ViewportBounds, ViewportTransform } from '@/utils/viewportCalculations';
-import type { PointPosition } from '@/types/path';
+import type { PointPosition } from '@/utils/pathCalculations/types';
 
 export interface MapViewportConfig {
   svgSize: { width: number; height: number };

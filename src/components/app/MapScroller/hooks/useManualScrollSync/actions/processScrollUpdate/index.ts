@@ -1,4 +1,3 @@
-import type { AppDispatch } from '@/store';
 import type { ManualScrollSyncUseCase } from '../../ManualScrollSyncUseCase';
 import type { ScrollContextType } from '@/contexts/ScrollContext';
 import { ProgressUpdateService } from '../../../../services/ProgressUpdateService';

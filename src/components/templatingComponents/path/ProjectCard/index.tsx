@@ -1,6 +1,6 @@
 import React from 'react';
-import ResponsiveImage from '@/components/apiComponents/ResponsiveImage';
-import { ResponsiveImage as ResponsiveImageType } from '@/types/image';
+import ResponsiveImage from '@/components/templatingComponents/path/ResponsiveImage';
+import { ResponsiveImage as ResponsiveImageType } from '../types';
 import styles from './index.module.scss';
 
 interface ProjectCardProps extends Record<string, unknown> {

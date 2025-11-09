@@ -1,5 +1,5 @@
 import { PathPositionCache, globalPathPositionCache } from './index';
-import type { PointPosition } from '@/types/path';
+import type { PointPosition } from '@/utils/pathCalculations/types';
 
 describe('PathPositionCache', () => {
   let cache: PathPositionCache;

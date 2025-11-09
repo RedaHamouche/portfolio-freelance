@@ -1,6 +1,6 @@
 import { ANCHOR_RANGE } from '@/config';
 import { globalPathPositionCache } from '../pathPositionCache';
-import type { PointPosition } from '@/types/path';
+import type { PointPosition } from './types';
 import { binarySearchForward, binarySearchBackward } from './binarySearch';
 
 export interface PathComponentData {

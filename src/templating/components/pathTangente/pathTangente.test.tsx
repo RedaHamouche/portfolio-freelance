@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import DynamicPathTangenteComponents from './index';
+import PathTangente from './index';
 
 // Mock des dépendances
 jest.mock('react-redux', () => ({
@@ -38,10 +38,10 @@ jest.mock('../domains/tangente', () => ({
   })),
 }));
 
-describe('DynamicPathTangenteComponents', () => {
+describe('PathTangente', () => {
   it('devrait rendre les composants', () => {
     const mockSvgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const { container } = render(<DynamicPathTangenteComponents svgPath={mockSvgPath} paddingX={0} paddingY={0} />);
+    const { container } = render(<PathTangente svgPath={mockSvgPath} paddingX={0} paddingY={0} />);
     expect(container).toBeTruthy();
   });
 });

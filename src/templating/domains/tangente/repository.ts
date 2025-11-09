@@ -4,8 +4,8 @@
  */
 
 import { PathTangenteComponentsConfig } from './types';
-import pathTangenteComponentsDesktop from '../../config/desktop/pathTangenteComponents.json';
-import pathTangenteComponentsMobile from '../../config/mobile/pathTangenteComponents.json';
+import pathTangenteComponentsDesktop from '../../config/desktop/pathTangente.json';
+import pathTangenteComponentsMobile from '../../config/mobile/pathTangente.json';
 
 export class TangenteRepository {
   private desktopConfig: PathTangenteComponentsConfig | null = null;

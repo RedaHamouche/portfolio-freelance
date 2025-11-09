@@ -1,5 +1,4 @@
-import { calculateScrollYFromProgress, calculateFakeScrollHeight, calculateMaxScroll, calculateAdjustedTargetProgress } from '@/utils/scrollCalculations';
-import { getViewportHeight } from '@/utils/viewportCalculations';
+import { calculateAdjustedTargetProgress } from '@/utils/scrollCalculations';
 import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';
 
 export interface HandleGoToNextParams {
@@ -10,7 +9,7 @@ export interface HandleGoToNextParams {
   } | null;
   globalPathLength: number;
   progress: number;
-  lastScrollDirection: string | null;
+  lastScrollDirection: 'forward' | 'backward' | null;
   isAutoPlaying: boolean;
   isModalOpen: boolean;
   setAutoPlaying: (isPlaying: boolean) => void;
@@ -43,12 +42,6 @@ export function handleGoToNext(params: HandleGoToNextParams): void {
   // Utiliser requestAnimationFrame pour s'assurer que les dimensions sont stables
   // Cela évite les problèmes sur iOS où window.innerHeight peut changer
   requestAnimationFrame(() => {
-    // Utiliser getViewportHeight() pour être cohérent avec le reste de l'application
-    // Cette fonction utilise window.innerHeight de manière stable
-    const viewportHeight = getViewportHeight();
-    const fakeScrollHeight = calculateFakeScrollHeight(globalPathLength);
-    const maxScroll = calculateMaxScroll(fakeScrollHeight, viewportHeight);
-    
     // Calculer le target progress en respectant toujours la direction du PointTrail
     // Le PointTrail pointe déjà dans la bonne direction grâce à findNextComponentInDirection
     const adjustedTargetProgress = calculateAdjustedTargetProgress(

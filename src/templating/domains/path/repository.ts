@@ -5,8 +5,8 @@
  */
 
 import { PathComponentsConfig, PathComponent } from './types';
-import pathComponentsConfigDesktop from '../../config/desktop/pathComponents.json';
-import pathComponentsConfigMobile from '../../config/mobile/pathComponents.json';
+import pathComponentsConfigDesktop from '../../config/desktop/path.json';
+import pathComponentsConfigMobile from '../../config/mobile/path.json';
 
 interface Indexes {
   idIndex: Map<string, PathComponent>;

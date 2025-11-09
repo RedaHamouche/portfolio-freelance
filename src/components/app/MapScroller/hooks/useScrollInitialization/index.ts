@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { createPathDomain } from '@/templating/domains/path';
 import { ProgressInitializationService } from './domain/ProgressInitializationService';
-import { DEFAULT_PATH_LENGTH } from '@/config';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 import { syncScrollPosition } from '@/utils/scrollUtils/syncScrollPosition';

@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import Page from './index';
 import { TemplatingProvider } from '@/contexts/TemplatingContext';
+import { DeviceProvider } from '@/contexts/DeviceContext';
 
 // Mock des dépendances
 jest.mock('react-redux', () => ({
@@ -35,9 +36,11 @@ jest.mock('@/templating/domains/page', () => ({
 describe('Page', () => {
   it('devrait rendre les composants', () => {
     const { container } = render(
-      <TemplatingProvider>
-        <Page />
-      </TemplatingProvider>
+      <DeviceProvider isDesktop={true}>
+        <TemplatingProvider>
+          <Page />
+        </TemplatingProvider>
+      </DeviceProvider>
     );
     expect(container).toBeTruthy();
   });

@@ -1,10 +1,8 @@
 "use client"
 
 import React, { useRef, useEffect, useMemo } from 'react';
-import gsap from 'gsap';
 import styles from './index.module.scss';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import { loadAndRegisterGSAP } from '@/utils/gsap/lazyLoadGSAP';
 import Cursor from '@/components/app/Cursor';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -17,15 +15,6 @@ import { useProgressPersistence } from './hooks/useProgressPersistence';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { calculateFakeScrollHeight } from '@/utils/scrollCalculations';
 import AutoPlayButton from '@/components/templatingComponents/page/AutoPlayButton';
-
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
-  
-  // Configurer ScrollTrigger pour ignorer les changements de taille causés par la barre Safari
-  // Cela évite les recalculs qui causent le path de disparaître quand la barre Safari bouge
-  ScrollTrigger.config({ ignoreMobileResize: true });
-}
 
 interface MapScrollerProps {
   /**
@@ -44,6 +33,13 @@ const MapScroller: React.FC<MapScrollerProps> = ({ isScrollSynced: isScrollSynce
   const direction = useSelector((state: RootState) => state.scroll.direction);
   const dispatch = useDispatch();
   const { svgSize } = useResponsivePath();
+
+  // Lazy load GSAP et ses plugins (chargé en arrière-plan pour les composants qui en ont besoin)
+  useEffect(() => {
+    loadAndRegisterGSAP().catch((error) => {
+      console.error('[MapScroller] Erreur lors du chargement de GSAP:', error);
+    });
+  }, []);
 
   // Initialisation du scroll et synchronisation avec hash
   // Si isScrollSyncedProp est fourni (SSR), l'utiliser, sinon utiliser useScrollInitialization

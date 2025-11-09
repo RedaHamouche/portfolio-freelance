@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import PathTangente from './index';
 import { TemplatingProvider } from '@/contexts/TemplatingContext';
+import { DeviceProvider } from '@/contexts/DeviceContext';
 
 // Mock des dépendances
 jest.mock('react-redux', () => ({
@@ -58,9 +59,11 @@ describe('PathTangente', () => {
     });
     
     const { container } = render(
-      <TemplatingProvider>
-        <PathTangente svgPath={mockSvgPath} paddingX={0} paddingY={0} />
-      </TemplatingProvider>
+      <DeviceProvider isDesktop={true}>
+        <TemplatingProvider>
+          <PathTangente svgPath={mockSvgPath} paddingX={0} paddingY={0} />
+        </TemplatingProvider>
+      </DeviceProvider>
     );
     expect(container).toBeTruthy();
   });

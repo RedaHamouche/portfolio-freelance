@@ -1,7 +1,7 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import gsap from 'gsap';
+import { loadGSAP } from '@/utils/gsap/lazyLoadGSAP';
 import Image from '@/components/commons/Image';
 import { useImagePlaceholdersSafe } from '@/contexts/ImagePlaceholdersContext';
 import { useDeviceSafe } from '@/contexts/DeviceContext';
@@ -35,6 +35,7 @@ export default function PieceOfArt({
 }: PieceOfArtType) {
   const animatedRef = useRef<HTMLDivElement>(null);
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  const [gsap, setGSAP] = useState<typeof import('gsap')['default'] | null>(null);
   
   // Récupérer les placeholders blur pré-générés côté serveur
   const { getPlaceholder } = useImagePlaceholdersSafe();
@@ -58,6 +59,13 @@ export default function PieceOfArt({
   const defaultMobileSrc = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=300&fit=crop&q=80';
   const defaultSrc = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=450&fit=crop&q=80';
 
+  // Lazy load GSAP
+  useEffect(() => {
+    loadGSAP().then((loadedGSAP) => {
+      setGSAP(loadedGSAP);
+    });
+  }, []);
+
   // OPTIMISATION: Utiliser gsap.quickTo pour de meilleures performances
   const quickSettersRef = useRef<{
     xPercent?: (value: number) => void;
@@ -69,7 +77,7 @@ export default function PieceOfArt({
   const isInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (!animatedRef.current || isInitializedRef.current) return;
+    if (!animatedRef.current || isInitializedRef.current || !gsap) return;
     
     // Initialiser la position de départ avec GSAP (centré)
     // Initialiser avec scaleX et scaleY pour éviter l'erreur "scale not eligible for reset"
@@ -90,7 +98,7 @@ export default function PieceOfArt({
     };
     
     isInitializedRef.current = true;
-  }, []);
+  }, [gsap]);
 
   // Calculer tous les effets d'animation basés sur le progress (cyclique et fluide)
   const animationValues = useMemo(() => {

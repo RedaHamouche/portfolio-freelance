@@ -4,6 +4,7 @@ import { ResponsiveImage as ResponsiveImageType } from '../types';
 import styles from './index.module.scss';
 
 interface ProjectCardProps extends Record<string, unknown> {
+  id?: string; // ID du composant pour récupérer le placeholder
   title: string;
   description: string;
   image: ResponsiveImageType;
@@ -15,6 +16,7 @@ interface ProjectCardProps extends Record<string, unknown> {
 
 
 export default function ProjectCard({
+  id,
   title,
   description,
   image,
@@ -36,6 +38,7 @@ export default function ProjectCard({
       <div className={styles.imageWrapper}>
         <ResponsiveImage
           {...image}
+          componentId={id}
           width={400}
           height={300}
           className={styles.projectImage}

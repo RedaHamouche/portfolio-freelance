@@ -61,6 +61,17 @@ export interface ServerConfigs {
 }
 
 /**
+ * Placeholders blur pour les images
+ */
+export interface ImagePlaceholders {
+  [componentId: string]: {
+    blurDataURL?: string;
+    mobileBlurDataURL?: string;
+    desktopBlurDataURL?: string;
+  };
+}
+
+/**
  * Charge toutes les configurations côté serveur
  * Pré-construit les index pour éviter les calculs côté client
  */

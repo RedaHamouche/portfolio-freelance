@@ -12,20 +12,23 @@ import { DeviceProvider } from '@/contexts/DeviceContext';
 import { createPageDomainWithPreloadedData } from '@/templating/domains/page/indexWithPreloadedData';
 import { createPathDomainWithPreloadedData } from '@/templating/domains/path/indexWithPreloadedData';
 import { createTangenteDomainWithPreloadedData } from '@/templating/domains/tangente/indexWithPreloadedData';
-import type { ServerConfigs } from '@/utils/ssr/loadServerConfigs';
+import type { ServerConfigs, ImagePlaceholders } from '@/utils/ssr/loadServerConfigs';
 import type { InitialProgressResult } from '@/utils/ssr/calculateInitialProgress';
 import { useScrollInitializationWithPreloadedProgress } from './hooks/useScrollInitialization/useScrollInitializationWithPreloadedProgress';
+import { ImagePlaceholdersProvider } from '@/contexts/ImagePlaceholdersContext';
 
 interface MapScrollerWrapperProps {
   serverConfigs: ServerConfigs;
   initialProgress: InitialProgressResult;
   isDesktop: boolean;
+  imagePlaceholders: ImagePlaceholders;
 }
 
 export default function MapScrollerWrapper({
   serverConfigs,
   initialProgress,
   isDesktop,
+  imagePlaceholders,
 }: MapScrollerWrapperProps) {
   // Créer les domaines avec les données pré-chargées (mémoïsés)
   // Ces domaines utilisent les JSONs et index pré-construits côté serveur
@@ -74,15 +77,17 @@ export default function MapScrollerWrapper({
   // Les composants enfants utiliseront les domaines pré-chargés au lieu de créer de nouveaux domaines
   return (
     <DeviceProvider isDesktop={isDesktop}>
-      <TemplatingProvider
-        preloadedDomains={{
-          pageDomain,
-          pathDomain,
-          tangenteDomain,
-        }}
-      >
-        <MapScroller isScrollSynced={isScrollSynced} />
-      </TemplatingProvider>
+      <ImagePlaceholdersProvider placeholders={imagePlaceholders}>
+        <TemplatingProvider
+          preloadedDomains={{
+            pageDomain,
+            pathDomain,
+            tangenteDomain,
+          }}
+        >
+          <MapScroller isScrollSynced={isScrollSynced} />
+        </TemplatingProvider>
+      </ImagePlaceholdersProvider>
     </DeviceProvider>
   );
 }

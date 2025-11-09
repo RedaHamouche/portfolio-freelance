@@ -3,6 +3,7 @@ import MapScrollerWrapper from '@/components/app/MapScroller/MapScrollerWrapper'
 import { loadServerConfigs } from '@/utils/ssr/loadServerConfigs';
 import { calculateInitialProgress } from '@/utils/ssr/calculateInitialProgress';
 import { detectDeviceFromUserAgent } from '@/utils/ssr/detectDevice';
+import { generateAllImagePlaceholders } from '@/utils/ssr/generateAllImagePlaceholders';
 
 /**
  * Page principale - Server Component
@@ -12,6 +13,10 @@ import { detectDeviceFromUserAgent } from '@/utils/ssr/detectDevice';
 export default async function Home() {
   // Charger les configurations côté serveur (avec index pré-construits)
   const serverConfigs = await loadServerConfigs();
+
+  // Générer les placeholders blur pour les images locales
+  // Cela améliore le LCP (Largest Contentful Paint)
+  const imagePlaceholders = await generateAllImagePlaceholders(serverConfigs);
 
   // Détecter le device côté serveur pour éviter le FOUC
   const headersList = await headers();
@@ -33,6 +38,7 @@ export default async function Home() {
       serverConfigs={serverConfigs}
       initialProgress={initialProgress}
       isDesktop={isDesktop}
+      imagePlaceholders={imagePlaceholders}
     />
   );
 }

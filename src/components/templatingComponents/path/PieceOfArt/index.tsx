@@ -3,9 +3,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import gsap from 'gsap';
 import Image from '@/components/commons/Image';
+import { useImagePlaceholdersSafe } from '@/contexts/ImagePlaceholdersContext';
+import { useDeviceSafe } from '@/contexts/DeviceContext';
 import styles from './index.module.scss';
 
 export type PieceOfArtType = {
+  id?: string; // ID du composant pour récupérer le placeholder
   src?: string;
   mobileSrc?: string;
   desktopSrc?: string;
@@ -19,6 +22,7 @@ export type PieceOfArtType = {
 }
 
 export default function PieceOfArt({
+  id,
   src,
   mobileSrc,
   desktopSrc,
@@ -31,6 +35,23 @@ export default function PieceOfArt({
 }: PieceOfArtType) {
   const animatedRef = useRef<HTMLDivElement>(null);
   const progress = useSelector((state: RootState) => state.scroll.progress);
+  
+  // Récupérer les placeholders blur pré-générés côté serveur
+  const { getPlaceholder } = useImagePlaceholdersSafe();
+  const { isDesktop } = useDeviceSafe();
+  
+  // Récupérer le placeholder si disponible
+  let blurDataURL: string | undefined;
+  if (id) {
+    const placeholder = getPlaceholder(id);
+    
+    if (placeholder) {
+      // Utiliser le placeholder approprié selon le device
+      blurDataURL = isDesktop
+        ? placeholder.desktopBlurDataURL || placeholder.blurDataURL
+        : placeholder.mobileBlurDataURL || placeholder.blurDataURL;
+    }
+  }
   
   // Utiliser les sources du JSON, ou fallback vers des images Unsplash par défaut
   const defaultDesktopSrc = 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=600&fit=crop&q=80';
@@ -132,6 +153,8 @@ export default function PieceOfArt({
               height={height}
               className={styles.image}
               fill={false}
+              placeholder={blurDataURL ? 'blur' : 'empty'}
+              blurDataURL={blurDataURL}
             />
           </div>
         </div>

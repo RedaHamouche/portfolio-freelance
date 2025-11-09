@@ -7,7 +7,16 @@ import { PathTangenteComponentsConfig } from './types';
 import pathTangenteComponentsDesktop from '../../config/desktop/pathTangente.json';
 import pathTangenteComponentsMobile from '../../config/mobile/pathTangente.json';
 
-export class TangenteRepository {
+/**
+ * Interface commune pour les repositories Tangente
+ * Permet d'utiliser TangenteRepository ou TangenteRepositoryWithPreloadedData
+ */
+export interface TangenteRepositoryLike {
+  load(isDesktop?: boolean): PathTangenteComponentsConfig;
+  reload(isDesktop?: boolean): PathTangenteComponentsConfig;
+}
+
+export class TangenteRepository implements TangenteRepositoryLike {
   private desktopConfig: PathTangenteComponentsConfig | null = null;
   private mobileConfig: PathTangenteComponentsConfig | null = null;
 

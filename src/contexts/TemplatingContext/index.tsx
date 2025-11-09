@@ -36,12 +36,35 @@ export const useTemplatingContext = (): TemplatingContextType => {
  * Provider pour le contexte de templating
  * Centralise tous les domaines templating pour éviter les duplications
  * Pattern identique à ScrollContext pour la cohérence
+ * 
+ * Peut accepter des domaines pré-chargés (pour SSR) ou les créer normalement
  */
-export const TemplatingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Domaines templating (mémoïsés, créés une seule fois)
-  const pageDomain = useMemo(() => createPageDomain(), []);
-  const pathDomain = useMemo(() => createPathDomain(), []);
-  const tangenteDomain = useMemo(() => createTangenteDomain(), []);
+interface TemplatingProviderProps {
+  children: ReactNode;
+  preloadedDomains?: {
+    pageDomain: PageDomainAPI;
+    pathDomain: PathDomainAPI;
+    tangenteDomain: TangenteDomainAPI;
+  };
+}
+
+export const TemplatingProvider: React.FC<TemplatingProviderProps> = ({
+  children,
+  preloadedDomains,
+}) => {
+  // Utiliser les domaines pré-chargés si fournis, sinon créer normalement
+  const pageDomain = useMemo(
+    () => preloadedDomains?.pageDomain ?? createPageDomain(),
+    [preloadedDomains?.pageDomain]
+  );
+  const pathDomain = useMemo(
+    () => preloadedDomains?.pathDomain ?? createPathDomain(),
+    [preloadedDomains?.pathDomain]
+  );
+  const tangenteDomain = useMemo(
+    () => preloadedDomains?.tangenteDomain ?? createTangenteDomain(),
+    [preloadedDomains?.tangenteDomain]
+  );
 
   const value: TemplatingContextType = useMemo(
     () => ({

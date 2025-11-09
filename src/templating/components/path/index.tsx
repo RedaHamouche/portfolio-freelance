@@ -12,6 +12,7 @@ import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { setProgress } from '@/store/scrollSlice';
 import { getPointOnPath as getPointOnPathUtil } from '@/utils/pathCalculations';
 import { useTemplatingContext } from '@/contexts/TemplatingContext';
+import { useDevice } from '@/contexts/DeviceContext';
 import {
   calculateFakeScrollHeight,
   calculateMaxScroll,
@@ -64,11 +65,8 @@ const MemoizedPathComponent = memo(function PathComponentMemo({
 export default function DynamicPathComponents({ svgPath, paddingX, paddingY }: DynamicPathComponentsProps) {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { mapScale } = useResponsivePath();
-  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
-  const isDesktop = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 1024; // Desktop breakpoint
-  }, []);
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  const { isDesktop } = useDevice();
   const dispatch = useDispatch();
 
   // Utiliser le domaine Path depuis le context (source unique de vérité)

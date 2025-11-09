@@ -4,7 +4,7 @@
  */
 
 import { PageConfig, PageComponent } from './types';
-import { PageRepository } from './repository';
+import type { PageRepositoryLike } from './repository';
 
 export interface PageDomainAPI {
   /**
@@ -39,9 +39,9 @@ export interface PageDomainAPI {
  * Implémentation de l'API du domaine Page
  */
 export class PageDomain implements PageDomainAPI {
-  private repository: PageRepository;
+  private repository: PageRepositoryLike;
 
-  constructor(repository: PageRepository) {
+  constructor(repository: PageRepositoryLike) {
     this.repository = repository;
   }
 

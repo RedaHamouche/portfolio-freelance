@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import NextImage from 'next/image';
 import classnames from 'classnames';
 import { imageConfig } from '@/config';
+import { useDeviceSafe } from '@/contexts/DeviceContext';
 import styles from './index.module.scss';
 
 interface ImageProps {
@@ -45,13 +46,15 @@ export default function Image({
   const [isInView, setIsInView] = useState(false);
   const [imageSrc, setImageSrc] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  // Fallback automatique sur window.innerWidth si le contexte n'est pas disponible
+  const { isDesktop } = useDeviceSafe();
 
   // OPTIMISATION: Déterminer la source de l'image une seule fois au chargement (pas de resize)
-  // Personne ne resize son écran dans la vraie vie
+  // Utilise isDesktop pré-détecté côté serveur pour éviter le FOUC
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const isMobile = window.innerWidth <= imageConfig.responsive.mobileBreakpoint;
+    const isMobile = !isDesktop;
     if (isMobile && mobileSrc) {
       setImageSrc(mobileSrc);
     } else if (!isMobile && desktopSrc) {
@@ -59,7 +62,7 @@ export default function Image({
     } else {
       setImageSrc(src);
     }
-  }, [src, mobileSrc, desktopSrc]);
+  }, [src, mobileSrc, desktopSrc, isDesktop]);
 
   // Intersection Observer pour le lazy loading
   useEffect(() => {

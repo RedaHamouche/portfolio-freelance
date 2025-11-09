@@ -11,6 +11,7 @@ import { getPointOnPath } from '@/utils/pathCalculations';
 import mappingComponent from '@/templating/mappingComponent';
 import { calculateMapPadding } from '@/utils/viewportCalculations';
 import { useTemplatingContext } from '@/contexts/TemplatingContext';
+import { useDevice } from '@/contexts/DeviceContext';
 
 // useMultipleInView supprimé - voir OPTIMIZATION_NOTES.md pour l'historique
 
@@ -22,11 +23,8 @@ interface DynamicProps {
 
 export default function Dynamic({ svgPath, paddingX, paddingY }: DynamicProps) {
   const { mapScale, svgSize, mapPaddingRatio } = useResponsivePath();
-  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
-  const isDesktop = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 1024; // Desktop breakpoint
-  }, []);
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  const { isDesktop } = useDevice();
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   
   // Utiliser le domaine Page depuis le context (source unique de vérité)

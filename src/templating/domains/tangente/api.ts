@@ -4,7 +4,7 @@
  */
 
 import { PathTangenteComponent } from './types';
-import { TangenteRepository } from './repository';
+import type { TangenteRepositoryLike } from './repository';
 
 export interface TangenteDomainAPI {
   /**
@@ -44,7 +44,7 @@ export interface TangenteDomainAPI {
  * Implémentation de l'API du domaine Tangente
  */
 export class TangenteDomain implements TangenteDomainAPI {
-  private repository: TangenteRepository;
+  private repository: TangenteRepositoryLike;
   
   // OPTIMISATION: Cache des composants chargés (une fois pour desktop, une fois pour mobile)
   // Le JSON ne change pas après le chargement de la page
@@ -53,7 +53,7 @@ export class TangenteDomain implements TangenteDomainAPI {
     mobile?: PathTangenteComponent[];
   } = {};
 
-  constructor(repository: TangenteRepository) {
+  constructor(repository: TangenteRepositoryLike) {
     this.repository = repository;
   }
 

@@ -13,7 +13,18 @@ interface Indexes {
   anchorIdIndex: Map<string, PathComponent>;
 }
 
-export class PathRepository {
+/**
+ * Interface commune pour les repositories Path
+ * Permet d'utiliser PathRepository ou PathRepositoryWithPreloadedData
+ */
+export interface PathRepositoryLike {
+  load(isDesktop?: boolean): PathComponentsConfig;
+  getComponentById(id: string, isDesktop?: boolean): PathComponent | undefined;
+  getComponentByAnchorId(anchorId: string, isDesktop?: boolean): PathComponent | undefined;
+  reload(isDesktop?: boolean): PathComponentsConfig;
+}
+
+export class PathRepository implements PathRepositoryLike {
   private desktopConfig: PathComponentsConfig | null = null;
   private mobileConfig: PathComponentsConfig | null = null;
 

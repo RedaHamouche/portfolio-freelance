@@ -4,8 +4,8 @@ import '@/styles/reset.scss';
 import ReduxProvider from '@/contexts/ReduxContext';
 import CursorProvider from '@/contexts/CursorContext';
 import { ModalProvider } from '@/contexts/ModalContext';
-import { ScrollContextProvider } from '@/contexts/ScrollContext';
 import { TemplatingProvider } from '@/contexts/TemplatingContext';
+import { ScrollContextProvider } from '@/contexts/ScrollContext';
 import Header from '@/components/app/Header';
 
 export const metadata: Metadata = {

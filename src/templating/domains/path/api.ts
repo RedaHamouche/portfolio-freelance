@@ -4,7 +4,7 @@
  */
 
 import { PathComponent } from './types';
-import { PathRepository } from './repository';
+import type { PathRepositoryLike } from './repository';
 import { isComponentActive, findNextComponentInDirection, getNextAnchor, type PathComponentData } from '@/utils/pathCalculations';
 
 export interface PathDomainAPI {
@@ -74,7 +74,7 @@ export interface PathDomainAPI {
  * Optimisé avec cache des arrays triés pour éviter les tris répétés
  */
 export class PathDomain implements PathDomainAPI {
-  private repository: PathRepository;
+  private repository: PathRepositoryLike;
   
   // Cache des composants chargés (une fois pour desktop, une fois pour mobile)
   private componentsCache: {
@@ -109,7 +109,7 @@ export class PathDomain implements PathDomainAPI {
   } = {};
   private readonly ACTIVE_COMPONENTS_PROGRESS_THRESHOLD = 0.001; // Seuil de changement significatif (0.1% du path)
 
-  constructor(repository: PathRepository) {
+  constructor(repository: PathRepositoryLike) {
     this.repository = repository;
   }
 

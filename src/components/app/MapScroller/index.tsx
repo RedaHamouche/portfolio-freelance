@@ -27,7 +27,15 @@ if (typeof window !== 'undefined') {
   ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
-const MapScroller: React.FC = () => {
+interface MapScrollerProps {
+  /**
+   * Si fourni, utilise cette valeur pour isScrollSynced au lieu d'utiliser useScrollInitialization
+   * Utile pour SSR où l'initialisation est gérée par le wrapper
+   */
+  isScrollSynced?: boolean;
+}
+
+const MapScroller: React.FC<MapScrollerProps> = ({ isScrollSynced: isScrollSyncedProp }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +46,9 @@ const MapScroller: React.FC = () => {
   const { svgSize } = useResponsivePath();
 
   // Initialisation du scroll et synchronisation avec hash
-  const isScrollSynced = useScrollInitialization(globalPathLength);
+  // Si isScrollSyncedProp est fourni (SSR), l'utiliser, sinon utiliser useScrollInitialization
+  const isScrollSyncedFromHook = useScrollInitialization(globalPathLength);
+  const isScrollSynced = isScrollSyncedProp ?? isScrollSyncedFromHook;
 
   // Sauvegarder automatiquement le progress dans le localStorage
   useProgressPersistence();

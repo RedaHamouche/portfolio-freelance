@@ -10,6 +10,7 @@ import mappingComponent from '@/templating/mappingComponent';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useTemplatingContext } from '@/contexts/TemplatingContext';
+import { useDevice } from '@/contexts/DeviceContext';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath, getPathAngleAtProgress, calculateAdaptiveDelta } from '@/utils/pathCalculations';
 import { normalizeAngleForReadability, getPerpendicularOffset } from '@/utils/tangentUtils';
@@ -28,11 +29,8 @@ export default function DynamicPathTangenteComponents({
 }: DynamicPathTangenteComponentsProps) {
   const pathLength = useSelector((state: RootState) => state.scroll.pathLength);
   const { mapScale } = useResponsivePath();
-  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
-  const isDesktop = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 1024; // Desktop breakpoint
-  }, []);
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  const { isDesktop } = useDevice();
 
   // Utiliser le domaine Tangente depuis le context (source unique de vérité)
   const { tangenteDomain } = useTemplatingContext();

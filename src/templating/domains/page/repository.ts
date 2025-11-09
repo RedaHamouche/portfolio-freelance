@@ -7,7 +7,16 @@ import { PageConfig } from './types';
 import pageConfigDesktop from '../../config/desktop/page.json';
 import pageConfigMobile from '../../config/mobile/page.json';
 
-export class PageRepository {
+/**
+ * Interface commune pour les repositories Page
+ * Permet d'utiliser PageRepository ou PageRepositoryWithPreloadedData
+ */
+export interface PageRepositoryLike {
+  load(isDesktop?: boolean): PageConfig;
+  reload(isDesktop?: boolean): PageConfig;
+}
+
+export class PageRepository implements PageRepositoryLike {
   private desktopConfig: PageConfig | null = null;
   private mobileConfig: PageConfig | null = null;
 

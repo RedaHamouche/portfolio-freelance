@@ -7,7 +7,7 @@ import { ScrollStateDetector } from '@/components/app/MapScroller/hooks/useManua
 import { ScrollVelocityService } from '@/components/app/MapScroller/hooks/useManualScrollSync/domain/ScrollVelocityService';
 import { useTemplatingContext } from '@/contexts/TemplatingContext';
 import { ProgressInitializationService } from '@/components/app/MapScroller/hooks/useScrollInitialization/domain/ProgressInitializationService';
-import { useBreakpoint } from '@/hooks/useBreakpointValue';
+import { useDeviceSafe } from '@/contexts/DeviceContext';
 import type { PathDomainAPI } from '@/templating/domains/path/api';
 import {
   SCROLL_INERTIA_FACTOR,
@@ -63,7 +63,9 @@ export const useScrollContext = (): ScrollContextType => {
  * Pattern identique à ModalProvider pour la cohérence
  */
 export const ScrollContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const isDesktop = useBreakpoint('>=desktop');
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  // Fallback automatique sur window.innerWidth si le contexte n'est pas disponible
+  const { isDesktop } = useDeviceSafe();
   const { pathDomain } = useTemplatingContext();
 
   // Configuration de vélocité selon mobile/desktop

@@ -7,6 +7,7 @@ import { RootState } from '@/store';
 import { useResponsivePath } from '@/hooks/useResponsivePath';
 import { getPointOnPath } from '@/utils/pathCalculations';
 import { useTemplatingContext } from '@/contexts/TemplatingContext';
+import { useDeviceSafe } from '@/contexts/DeviceContext';
 import styles from './index.module.scss';
 
 interface SvgPathDebuggerProps {
@@ -22,11 +23,9 @@ export const SvgPathDebugger: React.FC<SvgPathDebuggerProps> = ({
 }) => {
   const progress = useSelector((state: RootState) => state.scroll.progress);
   const { svgSize } = useResponsivePath();
-  // OPTIMISATION: Déterminer isDesktop une seule fois au chargement (pas de resize)
-  const isDesktop = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 1024; // Desktop breakpoint
-  }, []);
+  // Utiliser isDesktop pré-détecté côté serveur (évite le FOUC)
+  // Fallback automatique sur window.innerWidth si le contexte n'est pas disponible
+  const { isDesktop } = useDeviceSafe();
   const [showDebug, setShowDebug] = useState(false);
   const [showPoints, setShowPoints] = useState(true);
   const [showAnchors, setShowAnchors] = useState(true);

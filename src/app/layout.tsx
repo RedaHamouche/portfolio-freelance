@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import '@/styles/global.scss';
 import '@/styles/reset.scss';
-import ReduxProvider from './ReduxProvider';
-import CursorProvider from './CursorProvider';
-import { ModalProvider } from '@/contexts/ModalContext';
+import ReduxProvider from '@/providers/ReduxProvider';
+import CursorProvider from '@/providers/CursorProvider';
+import { ModalProvider } from '@/providers/ModalContext';
 import { ScrollContextProvider } from './MapScroller/contexts/ScrollContext';
 import Header from './Header';
 

@@ -1,4 +1,5 @@
-import { findNextComponentInDirection, type PathComponentData } from './pathCalculations';
+import { binarySearchForward, binarySearchBackward } from './index';
+import { findNextComponentInDirection, type PathComponentData } from '../index';
 
 describe('Recherche binaire optimisée', () => {
   const createComponent = (id: string, progress: number): PathComponentData => ({
@@ -7,6 +8,38 @@ describe('Recherche binaire optimisée', () => {
     displayName: `Component ${id}`,
     anchorId: `anchor-${id}`,
     position: { progress },
+  });
+
+  describe('binarySearchForward', () => {
+    it('devrait trouver le premier composant avec progress > target', () => {
+      const components = [
+        createComponent('1', 0.1),
+        createComponent('2', 0.3),
+        createComponent('3', 0.5),
+        createComponent('4', 0.7),
+        createComponent('5', 0.9),
+      ];
+
+      const sortedAsc = [...components].sort((a, b) => a.position.progress - b.position.progress);
+      const result = binarySearchForward(sortedAsc, 0.4);
+      
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('3'); // 0.5 > 0.4, et c'est le plus proche
+      expect(result?.position.progress).toBe(0.5);
+    });
+
+    it('devrait retourner null si aucun composant avec progress > target', () => {
+      const components = [
+        createComponent('1', 0.1),
+        createComponent('2', 0.3),
+        createComponent('3', 0.5),
+      ];
+
+      const sortedAsc = [...components].sort((a, b) => a.position.progress - b.position.progress);
+      const result = binarySearchForward(sortedAsc, 0.9);
+      
+      expect(result).toBeNull();
+    });
   });
 
   describe('binarySearchForward (via findNextComponentInDirection)', () => {
@@ -44,6 +77,38 @@ describe('Recherche binaire optimisée', () => {
       
       expect(result).toBeDefined();
       expect(result?.id).toBe('1'); // Boucle au début
+    });
+  });
+
+  describe('binarySearchBackward', () => {
+    it('devrait trouver le premier composant avec progress < target', () => {
+      const components = [
+        createComponent('1', 0.1),
+        createComponent('2', 0.3),
+        createComponent('3', 0.5),
+        createComponent('4', 0.7),
+        createComponent('5', 0.9),
+      ];
+
+      const sortedDesc = [...components].sort((a, b) => b.position.progress - a.position.progress);
+      const result = binarySearchBackward(sortedDesc, 0.6);
+      
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('3'); // 0.5 < 0.6
+      expect(result?.position.progress).toBe(0.5);
+    });
+
+    it('devrait retourner null si aucun composant avec progress < target', () => {
+      const components = [
+        createComponent('1', 0.1),
+        createComponent('2', 0.3),
+        createComponent('3', 0.5),
+      ];
+
+      const sortedDesc = [...components].sort((a, b) => b.position.progress - a.position.progress);
+      const result = binarySearchBackward(sortedDesc, 0.05);
+      
+      expect(result).toBeNull();
     });
   });
 

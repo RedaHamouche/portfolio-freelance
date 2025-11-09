@@ -1,4 +1,4 @@
-import { PathPositionCache, globalPathPositionCache } from './pathPositionCache';
+import { PathPositionCache, globalPathPositionCache } from './index';
 import type { PointPosition } from '@/types/path';
 
 describe('PathPositionCache', () => {

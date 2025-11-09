@@ -1,4 +1,4 @@
-import cursorReducer, { setClickable, setDirection } from './cursorSlice';
+import cursorReducer, { setClickable, setDirection } from './index';
 
 describe('cursorSlice', () => {
   const initialState = {

@@ -9,7 +9,7 @@ import scrollReducer, {
   setAutoScrollDirection,
   setAutoScrollTemporarilyPaused,
   setLastScrollDirection,
-} from './scrollSlice';
+} from './index';
 
 describe('scrollSlice', () => {
   const initialState = {

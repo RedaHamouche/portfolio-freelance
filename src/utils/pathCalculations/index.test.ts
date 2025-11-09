@@ -1,9 +1,10 @@
 import {
   findNextComponentInDirection,
   calculateArrowPosition,
-} from './pathCalculations';
+  type PathComponentData,
+} from './index';
 
-jest.mock('@/templating/config/pathComponents.json', () => [
+const mockComponents: PathComponentData[] = [
   {
     id: '1',
     type: 'ProjectCard',
@@ -25,13 +26,13 @@ jest.mock('@/templating/config/pathComponents.json', () => [
     anchorId: 'proj3',
     position: { progress: 0.8 },
   },
-]);
+];
 
 describe('findNextComponentInDirection', () => {
   describe('direction forward', () => {
     it('devrait trouver le prochain composant en avant', () => {
       const currentProgress = 0.3;
-      const result = findNextComponentInDirection(currentProgress, 'forward');
+      const result = findNextComponentInDirection(currentProgress, 'forward', mockComponents);
       expect(result).toBeDefined();
       expect(result?.position.progress).toBe(0.5); // Projet 2
       expect(result?.position.progress).toBeGreaterThan(currentProgress);
@@ -39,7 +40,7 @@ describe('findNextComponentInDirection', () => {
 
     it('devrait boucler au début si on est à la fin', () => {
       const currentProgress = 0.9;
-      const result = findNextComponentInDirection(currentProgress, 'forward');
+      const result = findNextComponentInDirection(currentProgress, 'forward', mockComponents);
       expect(result).toBeDefined();
       // Devrait retourner le premier composant (progress le plus petit)
       expect(result?.position.progress).toBe(0.1);
@@ -47,7 +48,7 @@ describe('findNextComponentInDirection', () => {
 
     it('devrait trouver le composant juste après le progress actuel', () => {
       const currentProgress = 0.6;
-      const result = findNextComponentInDirection(currentProgress, 'forward');
+      const result = findNextComponentInDirection(currentProgress, 'forward', mockComponents);
       expect(result).toBeDefined();
       expect(result?.position.progress).toBe(0.8); // Projet 3
     });
@@ -56,7 +57,7 @@ describe('findNextComponentInDirection', () => {
   describe('direction backward', () => {
     it('devrait trouver le prochain composant en arrière', () => {
       const currentProgress = 0.6;
-      const result = findNextComponentInDirection(currentProgress, 'backward');
+      const result = findNextComponentInDirection(currentProgress, 'backward', mockComponents);
       expect(result).toBeDefined();
       expect(result?.position.progress).toBe(0.5); // Projet 2
       expect(result?.position.progress).toBeLessThan(currentProgress);
@@ -64,7 +65,7 @@ describe('findNextComponentInDirection', () => {
 
     it('devrait boucler à la fin si on est au début', () => {
       const currentProgress = 0.05;
-      const result = findNextComponentInDirection(currentProgress, 'backward');
+      const result = findNextComponentInDirection(currentProgress, 'backward', mockComponents);
       expect(result).toBeDefined();
       // Devrait retourner le dernier composant (progress le plus grand)
       expect(result?.position.progress).toBe(0.8);
@@ -72,7 +73,7 @@ describe('findNextComponentInDirection', () => {
 
     it('devrait trouver le composant juste avant le progress actuel', () => {
       const currentProgress = 0.4;
-      const result = findNextComponentInDirection(currentProgress, 'backward');
+      const result = findNextComponentInDirection(currentProgress, 'backward', mockComponents);
       expect(result).toBeDefined();
       expect(result?.position.progress).toBe(0.1); // Projet 1
     });
@@ -81,7 +82,7 @@ describe('findNextComponentInDirection', () => {
   describe('direction null', () => {
     it('devrait utiliser la logique par défaut quand direction est null', () => {
       const currentProgress = 0.3;
-      const result = findNextComponentInDirection(currentProgress, null);
+      const result = findNextComponentInDirection(currentProgress, null, mockComponents);
       expect(result).toBeDefined();
       // Devrait trouver un composant (logique originale)
     });
@@ -89,17 +90,17 @@ describe('findNextComponentInDirection', () => {
 
   describe('cas limites', () => {
     it('devrait gérer progress = 0', () => {
-      const result = findNextComponentInDirection(0, 'forward');
+      const result = findNextComponentInDirection(0, 'forward', mockComponents);
       expect(result).toBeDefined();
     });
 
     it('devrait gérer progress = 1', () => {
-      const result = findNextComponentInDirection(1, 'backward');
+      const result = findNextComponentInDirection(1, 'backward', mockComponents);
       expect(result).toBeDefined();
     });
 
     it('devrait gérer progress exactement sur un composant', () => {
-      const result = findNextComponentInDirection(0.5, 'forward');
+      const result = findNextComponentInDirection(0.5, 'forward', mockComponents);
       expect(result).toBeDefined();
       // Devrait trouver le prochain composant après 0.5
       if (result) {

@@ -3,7 +3,7 @@
  * Vérifie que les calculs fonctionnent correctement pour mobile et desktop
  */
 
-import { getPathAngleAtProgress, getPointOnPath, calculateAdaptiveDelta } from './pathCalculations';
+import { getPathAngleAtProgress, getPointOnPath, calculateAdaptiveDelta } from '../pathCalculations';
 
 
 /**

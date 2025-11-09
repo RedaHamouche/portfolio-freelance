@@ -1,4 +1,4 @@
-import mapReducer, { setMapSize } from './mapSlice';
+import mapReducer, { setMapSize } from './index';
 
 describe('mapSlice', () => {
   const initialState = {

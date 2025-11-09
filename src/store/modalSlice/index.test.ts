@@ -1,4 +1,4 @@
-import modalReducer, { openModal, closeModal } from './modalSlice';
+import modalReducer, { openModal, closeModal } from './index';
 
 describe('modalSlice', () => {
   const initialState = {

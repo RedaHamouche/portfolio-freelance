@@ -1,6 +1,7 @@
 import { ANCHOR_RANGE } from '@/config';
-import { globalPathPositionCache } from './pathPositionCache';
+import { globalPathPositionCache } from '../pathPositionCache';
 import type { PointPosition } from '@/types/path';
+import { binarySearchForward, binarySearchBackward } from './binarySearch';
 
 export interface PathComponentData {
   id: string;
@@ -24,63 +25,6 @@ function sortComponents(components: PathComponentData[]) {
   };
 }
 
-/**
- * Recherche binaire pour trouver le composant le plus proche avec progress > target
- * Complexité: O(log n) au lieu de O(n)
- * Retourne le composant avec le plus petit progress qui est > target
- */
-function binarySearchForward(
-  sorted: PathComponentData[],
-  target: number
-): PathComponentData | null {
-  let left = 0;
-  let right = sorted.length - 1;
-  let result: PathComponentData | null = null;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (sorted[mid].position.progress > target) {
-      // Ce composant est valide, mais on cherche le plus proche (plus petit progress)
-      result = sorted[mid];
-      right = mid - 1; // Chercher plus tôt (plus petit index = plus petit progress)
-    } else {
-      left = mid + 1;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Recherche binaire pour trouver le composant le plus proche avec progress < target
- * Complexité: O(log n) au lieu de O(n)
- * Retourne le composant avec le plus grand progress qui est < target
- * Note: sorted est trié décroissant (plus grand progress en premier)
- */
-function binarySearchBackward(
-  sorted: PathComponentData[],
-  target: number
-): PathComponentData | null {
-  let left = 0;
-  let right = sorted.length - 1;
-  let result: PathComponentData | null = null;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (sorted[mid].position.progress < target) {
-      // Ce composant est valide
-      // Dans un array trié décroissant, on veut le premier (index le plus petit) qui est < target
-      // car c'est celui avec le plus grand progress
-      result = sorted[mid];
-      right = mid - 1; // Chercher plus tôt (plus petit index = plus grand progress dans desc)
-    } else {
-      // sorted[mid].progress >= target, donc on doit aller plus loin (index plus grand)
-      left = mid + 1;
-    }
-  }
-
-  return result;
-}
 
 /**
  * Trouve le prochain composant sur le path basé sur le progress actuel

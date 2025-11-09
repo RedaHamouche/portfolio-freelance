@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setClickable } from '../store/cursorSlice';
+import { setClickable } from '@/store/cursorSlice';
 
 // Fonction utilitaire pour détecter si un élément est clickable
 const isClickable = (element: HTMLElement | null): boolean => {

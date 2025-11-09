@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useModal } from '@/contexts/ModalContext';
+import { useModal } from '@/providers/ModalContext';
 import styles from './index.module.scss';
 
 interface Project {

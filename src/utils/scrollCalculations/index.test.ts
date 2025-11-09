@@ -5,7 +5,7 @@ import {
   calculateScrollYFromProgress,
   normalizeScrollY,
   calculateAdjustedTargetProgress,
-} from './scrollCalculations';
+} from './index';
 import { SCROLL_CONFIG } from '@/config';
 
 describe('scrollCalculations', () => {

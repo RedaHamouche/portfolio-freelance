@@ -4,7 +4,7 @@ import {
   calculateViewportBounds,
   calculateViewportTransform,
   applyViewportTransform,
-} from './viewportCalculations';
+} from './index';
 import { desktopConfig } from '@/config';
 
 describe('viewportCalculations', () => {

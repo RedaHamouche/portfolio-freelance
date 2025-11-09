@@ -69,10 +69,16 @@ HookName/
 
 ### `actions/` - Actions
 
-- Fonctions avec effets de bord (dispatch Redux, setTimeout, window.scrollTo, etc.)
+- **Fonctions avec effets de bord** (dispatch Redux, setTimeout, window.scrollTo, etc.)
 - Modifient l'état ou déclenchent des effets secondaires
 - Chaque action dans son propre dossier avec tests
-- Exemple : `handlePauseOnAnchor`, `clearPauseTimeout`, `syncScrollPosition`
+- **Critères pour placer dans `actions/`** :
+  - Utilise `dispatch()` Redux
+  - Utilise `ProgressUpdateService` ou autres services avec effets de bord
+  - Appelle `window.scrollTo()`, `setTimeout()`, `requestAnimationFrame()`
+  - Modifie le DOM directement
+  - Accède à `localStorage` ou `sessionStorage`
+- Exemple : `handlePauseOnAnchor`, `clearPauseTimeout`, `syncScrollPosition`, `updateScrollDirection`
 
 ### `hooks/` - Sous-hooks React
 
@@ -84,9 +90,25 @@ HookName/
 ### `utils/` - Utilitaires
 
 - **Fonctions pures uniquement** (sans effets de bord)
-- Pas de dispatch Redux, pas de setTimeout, pas de window.scrollTo
-- Facilement testables (pas besoin de mocker Redux ou window)
-- Exemple : `canPauseOnAnchor`, `createAutoPlayUseCase`
+- **Critères pour placer dans `utils/`** :
+  - Pas de `dispatch()` Redux
+  - Pas de `ProgressUpdateService` ou services avec effets de bord
+  - Pas de `window.scrollTo()`, `setTimeout()`, `requestAnimationFrame()`
+  - Pas de modification du DOM
+  - Pas d'accès à `localStorage` ou `sessionStorage`
+  - Fonction pure : même input → même output
+  - Facilement testable (pas besoin de mocker Redux, window, ou services)
+- Exemple : `canPauseOnAnchor`, `createAutoPlayUseCase`, `isInteractiveElement`, `shouldReinitializeForPathLength`
+
+#### ⚠️ Règle d'Or : Actions vs Utils
+
+**Si la fonction a des effets de bord → `actions/`**  
+**Si la fonction est pure → `utils/`**
+
+**Exemple de confusion résolue** :
+
+- ❌ `updateScrollDirection` était dans `utils/` mais utilise `ProgressUpdateService` (effet de bord)
+- ✅ Déplacé vers `actions/updateScrollDirection/`
 
 ### `providers/` - Providers
 
@@ -99,7 +121,62 @@ HookName/
 - **Fichiers** : `camelCase.ts` ou `PascalCase.tsx` (pour composants)
 - **Dossiers** : `camelCase/`
 - **Tests** : Toujours `index.test.ts` à côté du fichier source
-- **Exports** : Fichier `index.ts` dans chaque dossier pour exports centralisés
+
+## Stratégie des Barrel Files (Index.ts)
+
+### ✅ Utilisation des Barrel Files
+
+**Barrel files utilisés** :
+
+- **Services de domaine** : Chaque service a son `index.ts` dans son dossier
+  - Exemple : `domain/ServiceName/index.ts` exporte `ServiceName`
+  - **Raison** : Organisation claire, chaque service dans son propre dossier avec son test
+
+**Barrel files NON utilisés** :
+
+- **Use Cases** : Pas de `index.ts` dans `application/`
+  - Exemple : `application/UseCaseName/index.ts` (pas de barrel file au niveau application/)
+  - **Raison** : Tree-shaking optimisé, imports directs depuis `application/UseCaseName/`
+- **Actions** : Pas de `index.ts` dans `actions/`
+  - **Raison** : Tree-shaking optimisé, imports directs depuis `actions/actionName/`
+- **Hooks** : Pas de `index.ts` dans `hooks/`
+  - **Raison** : Tree-shaking optimisé, imports directs depuis `hooks/hookName/`
+- **Utils** : Pas de `index.ts` dans `utils/`
+  - **Raison** : Tree-shaking optimisé, imports directs depuis `utils/functionName/`
+
+### 📋 Règle d'Or
+
+**Barrel files uniquement pour les services de domaine** (organisation en dossiers)  
+**Pas de barrel files pour domain/, application/, actions/, hooks/, utils/** (tree-shaking)
+
+### 🎯 Justification
+
+1. **Services de domaine** : Barrel files acceptables car :
+
+   - Chaque service est dans son propre dossier
+   - Facilite l'organisation et la découverte
+   - Impact tree-shaking minimal (services généralement importés individuellement)
+
+2. **Use Cases, Actions, Hooks, Utils** : Pas de barrel files car :
+   - Tree-shaking optimal : imports directs depuis les dossiers spécifiques
+   - Réduction de la taille du bundle
+   - Imports explicites : on voit exactement ce qu'on importe
+
+### 📝 Exemples
+
+```typescript
+// ✅ CORRECT : Import direct (tree-shaking optimal)
+import { AutoPlayUseCase } from "./application/AutoPlayUseCase";
+import { handlePauseOnAnchor } from "./actions/handlePauseOnAnchor";
+import { canPauseOnAnchor } from "./utils/canPauseOnAnchor";
+
+// ✅ CORRECT : Import depuis barrel file du service
+import { AutoPlayProgressService } from "./domain/AutoPlayProgressService";
+
+// ❌ INCORRECT : Import depuis barrel file (n'existe pas)
+import { AutoPlayUseCase } from "./application"; // N'existe pas
+import { handlePauseOnAnchor } from "./actions"; // N'existe pas
+```
 
 ## Exemple Complet : useAutoPlay
 

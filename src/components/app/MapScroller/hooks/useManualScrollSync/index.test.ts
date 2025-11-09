@@ -57,7 +57,7 @@ jest.mock('@uidotdev/usehooks', () => ({
 
 // Mock ScrollContext
 // Note: Dans les mocks Jest, require() est nécessaire car les imports ES6 ne fonctionnent pas dans ce contexte
-jest.mock('../../contexts/ScrollContext', () => {
+jest.mock('@/contexts/ScrollContext', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest
   const { ScrollEasingService, EasingFunctions } = require('./domain/ScrollEasingService');
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Nécessaire dans les mocks Jest

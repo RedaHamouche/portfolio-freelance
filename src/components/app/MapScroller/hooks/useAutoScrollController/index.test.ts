@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useAutoScrollController } from './index';
+import { TemplatingProvider } from '@/contexts/TemplatingContext';
 
 // Mock window.scrollTo
 Object.defineProperty(window, 'scrollTo', {
@@ -9,7 +10,21 @@ Object.defineProperty(window, 'scrollTo', {
 
 // Mock Redux
 jest.mock('react-redux', () => ({
-  useDispatch: () => jest.fn()
+  useDispatch: () => jest.fn(),
+  useSelector: (selector: (state: unknown) => unknown) => {
+    const mockState = {
+      scroll: {
+        progress: 0.5,
+        pathLength: 1000,
+        isAutoPlaying: false,
+        autoScrollDirection: 1,
+      },
+      modal: {
+        isOpen: false,
+      },
+    };
+    return selector(mockState);
+  },
 }));
 
 // Mock useRafLoop
@@ -68,7 +83,9 @@ describe('useAutoScrollController', () => {
       autoScrollDirection: 1,
       globalPathLength: 1000,
       progress: 0.5
-    }));
+    }), {
+      wrapper: TemplatingProvider,
+    });
 
     expect(result.current.startAutoScroll).toBeDefined();
     expect(result.current.stopAutoScroll).toBeDefined();
@@ -80,7 +97,9 @@ describe('useAutoScrollController', () => {
       autoScrollDirection: 1,
       globalPathLength: 1000,
       progress: 0.5
-    }));
+    }), {
+      wrapper: TemplatingProvider,
+    });
 
     act(() => {
       result.current.startAutoScroll();
@@ -95,7 +114,9 @@ describe('useAutoScrollController', () => {
       autoScrollDirection: 1,
       globalPathLength: 1000,
       progress: 0.5
-    }));
+    }), {
+      wrapper: TemplatingProvider,
+    });
 
     act(() => {
       result.current.startAutoScroll();
@@ -110,7 +131,9 @@ describe('useAutoScrollController', () => {
       autoScrollDirection: 1,
       globalPathLength: 1000,
       progress: 0.5
-    }));
+    }), {
+      wrapper: TemplatingProvider,
+    });
 
     act(() => {
       result.current.stopAutoScroll();

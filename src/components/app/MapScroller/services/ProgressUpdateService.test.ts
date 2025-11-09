@@ -52,6 +52,7 @@ describe('ProgressUpdateService', () => {
     });
 
     it('ne devrait pas valider si validate=false', () => {
+      jest.clearAllMocks(); // Réinitialiser les mocks avant ce test
       service.updateProgress(1.5, { validate: false });
 
       expect(isValidProgress).not.toHaveBeenCalled();

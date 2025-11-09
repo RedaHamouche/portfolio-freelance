@@ -1,4 +1,4 @@
-import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '@/components/app/MapScroller/hooks/useManualScrollSync/application/ManualScrollSyncUseCase';
 import type { ScrollContextType } from '@/contexts/ScrollContext';
 import { ProgressUpdateService } from '@/components/app/MapScroller/services/ProgressUpdateService';
 import { isBrowser } from '@/utils/ssr/isBrowser';

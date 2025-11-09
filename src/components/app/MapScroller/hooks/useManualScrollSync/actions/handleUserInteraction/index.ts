@@ -1,7 +1,7 @@
 import type { AppDispatch } from '@/store';
 import { setAutoPlaying } from '@/store/scrollSlice';
-import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
-import { isInteractiveElement } from '../../utils/isInteractiveElement';
+import type { ManualScrollSyncUseCase } from '@/components/app/MapScroller/hooks/useManualScrollSync/application/ManualScrollSyncUseCase';
+import { isInteractiveElement } from '@/components/app/MapScroller/hooks/useManualScrollSync/utils/isInteractiveElement';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 

@@ -1,4 +1,4 @@
-import { isValidProgress } from './isValidProgress';
+import { isValidProgress } from './index';
 
 describe('isValidProgress', () => {
   it('devrait valider les progress dans [0, 1]', () => {

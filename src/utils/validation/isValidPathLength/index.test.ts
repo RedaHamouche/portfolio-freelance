@@ -1,9 +1,9 @@
-import { isValidPathLength } from './isValidPathLength';
+import { isValidPathLength } from './index';
 import { DEFAULT_PATH_LENGTH } from '@/config';
 
 describe('isValidPathLength', () => {
-  it('devrait valider les pathLength positifs', () => {
-    expect(isValidPathLength(1000)).toBe(true);
+  it('devrait valider les pathLength positifs supérieurs à DEFAULT_PATH_LENGTH', () => {
+    expect(isValidPathLength(3000)).toBe(true);
     expect(isValidPathLength(5000)).toBe(true);
   });
 
@@ -20,7 +20,7 @@ describe('isValidPathLength', () => {
     expect(isValidPathLength(DEFAULT_PATH_LENGTH, true)).toBe(true);
   });
 
-  it('devrait rejeter les valeurs juste au-dessus de DEFAULT_PATH_LENGTH', () => {
+  it('devrait accepter les valeurs juste au-dessus de DEFAULT_PATH_LENGTH', () => {
     expect(isValidPathLength(DEFAULT_PATH_LENGTH + 1)).toBe(true);
   });
 });

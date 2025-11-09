@@ -1,4 +1,4 @@
-import type { ManualScrollSyncUseCase } from '../../application/ManualScrollSyncUseCase';
+import type { ManualScrollSyncUseCase } from '@/components/app/MapScroller/hooks/useManualScrollSync/application/ManualScrollSyncUseCase';
 import { isBrowser } from '@/utils/ssr/isBrowser';
 import { isValidPathLength } from '@/utils/validation/isValidPathLength';
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import Page from './index';
+import { TemplatingProvider } from '@/contexts/TemplatingContext';
 
 // Mock des dépendances
 jest.mock('react-redux', () => ({
@@ -15,14 +16,14 @@ jest.mock('@/hooks/useResponsivePath', () => ({
   })),
 }));
 
-jest.mock('../mappingComponent', () => ({
+jest.mock('@/templating/mappingComponent', () => ({
   __esModule: true,
   default: {
     TestComponent: () => <div>Test</div>,
   },
 }));
 
-jest.mock('../domains/page', () => ({
+jest.mock('@/templating/domains/page', () => ({
   createPageDomain: jest.fn(() => ({
     getComponents: jest.fn(() => [
       { type: 'TestComponent', id: '1', position: { x: 0, y: 0 } },
@@ -33,7 +34,11 @@ jest.mock('../domains/page', () => ({
 
 describe('Page', () => {
   it('devrait rendre les composants', () => {
-    const { container } = render(<Page />);
+    const { container } = render(
+      <TemplatingProvider>
+        <Page />
+      </TemplatingProvider>
+    );
     expect(container).toBeTruthy();
   });
 });

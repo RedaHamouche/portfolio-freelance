@@ -1,4 +1,4 @@
-import { isValidScrollY } from './isValidScrollY';
+import { isValidScrollY } from './index';
 
 describe('isValidScrollY', () => {
   it('devrait valider les nombres finis', () => {

@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { usePathCalculations } from './index';
+import { TemplatingProvider } from '@/contexts/TemplatingContext';
 
 // Mock window.matchMedia pour useBreakpoint
 Object.defineProperty(window, 'matchMedia', {
@@ -64,7 +65,9 @@ describe('usePathCalculations', () => {
       configurable: true,
     });
     
-    const { result } = renderHook(() => usePathCalculations(svgPath));
+    const { result } = renderHook(() => usePathCalculations(svgPath), {
+      wrapper: TemplatingProvider,
+    });
 
     expect(result.current).toHaveProperty('nextComponent');
     expect(result.current).toHaveProperty('getCurrentPointPosition');
@@ -73,13 +76,17 @@ describe('usePathCalculations', () => {
   });
 
   it('devrait retourner une position par défaut si svgPath est null', () => {
-    const { result } = renderHook(() => usePathCalculations(null));
+    const { result } = renderHook(() => usePathCalculations(null), {
+      wrapper: TemplatingProvider,
+    });
     const position = result.current.getCurrentPointPosition();
     expect(position).toEqual({ x: 200, y: 300 });
   });
 
   it('devrait retourner un angle à 0 si svgPath est null', () => {
-    const { result } = renderHook(() => usePathCalculations(null));
+    const { result } = renderHook(() => usePathCalculations(null), {
+      wrapper: TemplatingProvider,
+    });
     const angle = result.current.getCurrentPointAngle();
     expect(angle).toBe(0);
   });

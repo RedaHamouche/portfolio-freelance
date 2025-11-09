@@ -1,8 +1,8 @@
 ---
-to: src/components/<%= h.changeCase.pascal(name) %>/index.module.scss
+to: src/components/templatingComponents/<%= componentType %>/<%= h.changeCase.pascal(name) %>/index.module.scss
 ---
-@use '@/styles/global.scss' as *;
+@use 'styles/abstract/index' as *;
 
-// .main {
-//   
-// }
+.main {
+  // Styles du composant <%= h.changeCase.pascal(name) %>
+}

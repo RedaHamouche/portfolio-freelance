@@ -12,7 +12,7 @@
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
     "test:all": "jest --passWithNoTests",
-    "component-create": "hygen component-create new --name"
+    "component-create": "hygen component-create new"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",

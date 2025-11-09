@@ -9,6 +9,8 @@ const PathDebugger = dynamic(() => import('@/components/templatingComponents/pat
 const TitleAboutMe = dynamic(() => import('@/components/templatingComponents/pathTangente/TitleAboutMe'), { ssr: true });
 const TextOnCircle = dynamic(() => import('@/components/templatingComponents/pathTangente/TextOnCircle'), { ssr: true });
 const PieceOfArt = dynamic(() => import('@/components/templatingComponents/path/PieceOfArt'), { ssr: true });
+const Test1 = dynamic(() => import('@/components/templatingComponents/page/Test1'), { ssr: true });
+
 // HYGEN_IMPORT_COMPONENT DO_NOT_REMOVE
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +24,8 @@ const mappingComponent: Record<string, React.ComponentType<any>> = {
   TitleAboutMe,
   TextOnCircle,
   PieceOfArt, 
+  Test1,
+
   // HYGEN_MAP_COMPONENT DO_NOT_REMOVE
 };
 

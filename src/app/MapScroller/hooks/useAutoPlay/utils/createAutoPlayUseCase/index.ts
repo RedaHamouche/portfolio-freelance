@@ -1,5 +1,5 @@
 import { createPathDomain } from '@/templating/domains/path';
-import { AutoPlayUseCase } from '../../application';
+import { AutoPlayUseCase } from '../../application/AutoPlayUseCase';
 import { AutoPlayProgressService } from '../../domain/AutoPlayProgressService';
 import { AutoPlayPauseService } from '../../domain/AutoPlayPauseService';
 import { AutoPlayAnchorDetector } from '../../domain/AutoPlayAnchorDetector';

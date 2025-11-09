@@ -10,18 +10,14 @@ import { useRafLoop } from '@/hooks/useRafLoop';
 import { SCROLL_CONFIG, type AutoScrollDirection } from '@/config';
 import { createPathDomain } from '@/templating/domains/path';
 import { useBreakpoint } from '@/hooks/useBreakpointValue';
-import { AutoPlayUseCase } from './application';
+import { AutoPlayUseCase } from './application/AutoPlayUseCase';
 import { useAutoPlayStateRefs } from './useAutoPlayStateRefs';
-import {
-  createAutoPlayUseCase,
-  canPauseOnAnchor,
-} from './utils';
-import {
-  handlePauseOnAnchor,
-  clearPauseTimeout,
-  resetPauseState,
-  syncScrollPosition,
-} from './actions';
+import { createAutoPlayUseCase } from './utils/createAutoPlayUseCase';
+import { canPauseOnAnchor } from './utils/canPauseOnAnchor';
+import { handlePauseOnAnchor } from './actions/handlePauseOnAnchor';
+import { clearPauseTimeout } from './actions/clearPauseTimeout';
+import { resetPauseState } from './actions/resetPauseState';
+import { syncScrollPosition } from './actions/syncScrollPosition';
 
 // ============================================================================
 // Hook principal

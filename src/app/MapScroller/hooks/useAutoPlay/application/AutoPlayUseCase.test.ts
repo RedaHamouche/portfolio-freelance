@@ -1,8 +1,8 @@
-import { AutoPlayUseCase } from './index';
-import { AutoPlayProgressService } from '../../domain/AutoPlayProgressService';
-import { AutoPlayPauseService } from '../../domain/AutoPlayPauseService';
-import { AutoPlayAnchorDetector } from '../../domain/AutoPlayAnchorDetector';
-import { AutoPlayEasingService } from '../../domain/AutoPlayEasingService';
+import { AutoPlayUseCase } from './AutoPlayUseCase';
+import { AutoPlayProgressService } from '../domain/AutoPlayProgressService';
+import { AutoPlayPauseService } from '../domain/AutoPlayPauseService';
+import { AutoPlayAnchorDetector } from '../domain/AutoPlayAnchorDetector';
+import { AutoPlayEasingService } from '../domain/AutoPlayEasingService';
 import { SCROLL_CONFIG } from '@/config';
 import type { PathComponent } from '@/templating/domains/path/types';
 import type { PathDomainAPI } from '@/templating/domains/path/api';

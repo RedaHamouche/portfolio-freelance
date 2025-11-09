@@ -1,7 +1,7 @@
-import { AutoPlayProgressService } from '../../domain/AutoPlayProgressService';
-import { AutoPlayPauseService } from '../../domain/AutoPlayPauseService';
-import { AutoPlayAnchorDetector } from '../../domain/AutoPlayAnchorDetector';
-import { AutoPlayEasingService } from '../../domain/AutoPlayEasingService';
+import { AutoPlayProgressService } from '../domain/AutoPlayProgressService';
+import { AutoPlayPauseService } from '../domain/AutoPlayPauseService';
+import { AutoPlayAnchorDetector } from '../domain/AutoPlayAnchorDetector';
+import { AutoPlayEasingService } from '../domain/AutoPlayEasingService';
 import { SCROLL_CONFIG, AUTO_SCROLL_CONFIG } from '@/config';
 
 export interface AutoPlayAnimateParams {

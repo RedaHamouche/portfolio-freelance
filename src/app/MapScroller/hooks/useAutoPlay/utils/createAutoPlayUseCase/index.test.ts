@@ -1,6 +1,6 @@
 import { createAutoPlayUseCase } from './index';
 import { createPathDomain } from '@/templating/domains/path';
-import { AutoPlayUseCase } from '../../application';
+import { AutoPlayUseCase } from '../../application/AutoPlayUseCase';
 
 describe('createAutoPlayUseCase', () => {
   it('devrait créer une instance de AutoPlayUseCase', () => {

@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import MapScroller from './index';
+import LoadingScreen from '@/components/app/LoadingScreen';
 import { TemplatingProvider } from '@/contexts/TemplatingContext';
 import { DeviceProvider } from '@/contexts/DeviceContext';
 import { createPageDomainWithPreloadedData } from '@/templating/domains/page/indexWithPreloadedData';
@@ -64,13 +65,18 @@ export default function MapScrollerWrapper({
   // Utiliser le hook d'initialisation avec progress pré-chargé
   useScrollInitializationWithPreloadedProgress(initialProgress);
 
-  // Marquer comme synced après l'hydratation (pour éviter le LoadingScreen)
-  // Le progress est déjà appliqué par le hook, donc on peut afficher le contenu immédiatement
+  // État pour gérer le loading screen
+  const [showLoading, setShowLoading] = useState(true);
   const [isScrollSynced, setIsScrollSynced] = useState(false);
 
   useEffect(() => {
+    // Marquer comme synced après l'hydratation
     setIsScrollSynced(true);
   }, []);
+
+  const handleLoadingComplete = () => {
+    setShowLoading(false);
+  };
 
   // Créer un TemplatingProvider avec les domaines pré-chargés
   // Ce provider override celui du layout pour cette partie de l'arbre
@@ -85,7 +91,11 @@ export default function MapScrollerWrapper({
             tangenteDomain,
           }}
         >
-          <MapScroller isScrollSynced={isScrollSynced} />
+          {showLoading ? (
+            <LoadingScreen onComplete={handleLoadingComplete} isDesktop={isDesktop} />
+          ) : (
+            <MapScroller isScrollSynced={isScrollSynced} />
+          )}
         </TemplatingProvider>
       </ImagePlaceholdersProvider>
     </DeviceProvider>

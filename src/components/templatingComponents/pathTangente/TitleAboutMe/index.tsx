@@ -44,7 +44,7 @@ export default function TitleAboutMe({
         staggerDelay: 0.001, // 1ms entre chaque lettre (quasi instantané)
         duration: 0.01, // Durée de chaque lettre (très court)
         withSlide: true, // Ajouter un effet de slide
-        slideDistance: 10, // Distance du slide en pixels (augmenté pour partir de plus bas)
+        slideDistance: 5, // Distance du slide en pixels (augmenté pour partir de plus bas)
       },
     ],
   });
